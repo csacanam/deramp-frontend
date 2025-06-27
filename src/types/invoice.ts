@@ -34,6 +34,8 @@ export interface Invoice {
   usd_to_fiat_rate?: number;
   status: 'Pending' | 'Paid' | 'Refunded' | 'Expired';
   tokens: Token[];
+  expires_at?: string;
+  commerce_icon_url?: string;
 }
 
 export interface InvoiceError {

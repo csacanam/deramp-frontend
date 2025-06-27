@@ -12,7 +12,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
         return {
           icon: Clock,
           text: 'Pendiente',
-          className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          className: 'bg-yellow-100 text-gray-900 border-yellow-200',
         };
       case 'Paid':
         return {
@@ -29,7 +29,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'Expired':
         return {
           icon: XCircle,
-          text: 'Expirado',
+          text: 'Expirada',
           className: 'bg-red-100 text-red-800 border-red-200',
         };
       default:

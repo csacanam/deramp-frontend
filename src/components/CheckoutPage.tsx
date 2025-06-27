@@ -13,6 +13,7 @@ import { StatusBadge } from './StatusBadge';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { TokenBalance } from './TokenBalance';
 import { PaymentAmount } from './PaymentAmount';
+import { CountdownTimer } from './CountdownTimer';
 import { base, polygon, celo } from 'wagmi/chains';
 
 import { groupTokensBySymbol } from '../utils/tokenUtils';
@@ -31,6 +32,7 @@ export const CheckoutPage: React.FC = () => {
   const { isConnected } = useAccount();
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('');
+  const [forceExpired, setForceExpired] = useState(false);
 
 
   // Get selected token network info
@@ -57,6 +59,23 @@ export const CheckoutPage: React.FC = () => {
     if (!selectedNetwork) return undefined;
     return NETWORK_TO_CHAIN_ID[selectedNetwork];
   }, [selectedNetwork]);
+
+  // Check if invoice is expired based on expires_at field
+  const isExpiredByTime = useMemo(() => {
+    if (!invoice?.expires_at) return false;
+    const now = new Date().getTime();
+    const expiration = new Date(invoice.expires_at).getTime();
+    return now > expiration || forceExpired;
+  }, [invoice?.expires_at, forceExpired]);
+
+  // Get the effective status (considering expiration time)
+  const effectiveStatus = useMemo(() => {
+    if (!invoice) return null;
+    if (isExpiredByTime && invoice.status === 'Pending') {
+      return 'Expired';
+    }
+    return invoice.status;
+  }, [invoice?.status, isExpiredByTime]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -90,7 +109,7 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const renderStatusContent = () => {
-    if (invoice.status === 'Paid') {
+    if (effectiveStatus === 'Paid') {
       return (
         <div className="bg-green-900/20 border border-green-700 rounded-lg p-6 text-center">
           <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
@@ -100,7 +119,7 @@ export const CheckoutPage: React.FC = () => {
       );
     }
 
-    if (invoice.status === 'Expired') {
+    if (effectiveStatus === 'Expired') {
       return (
         <div className="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
           <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
@@ -110,7 +129,7 @@ export const CheckoutPage: React.FC = () => {
       );
     }
 
-    if (invoice.status === 'Refunded') {
+    if (effectiveStatus === 'Refunded') {
       return (
         <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-6 text-center">
           <RefreshCw className="h-16 w-16 text-blue-400 mx-auto mb-4" />
@@ -239,12 +258,24 @@ export const CheckoutPage: React.FC = () => {
         {/* Header */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="bg-gray-700 p-2 rounded-lg">
-              <Store className="h-6 w-6 text-gray-300" />
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-gray-700">
+              {invoice.commerce_icon_url ? (
+                <img 
+                  src={invoice.commerce_icon_url} 
+                  alt={`${invoice.commerce_name} logo`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Si la imagen falla al cargar, mostrar el ícono por defecto
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <Store className={`h-6 w-6 text-gray-300 ${invoice.commerce_icon_url ? 'hidden' : ''}`} />
             </div>
             <div>
               <h1 className="text-white font-medium">{invoice.commerce_name}</h1>
-              <p className="text-gray-400 text-sm">{invoice.commerce_id}</p>
+              <p className="text-gray-400 text-sm">{invoice.id}</p>
             </div>
           </div>
         </div>
@@ -253,7 +284,7 @@ export const CheckoutPage: React.FC = () => {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold">Información de la orden</h2>
-            <StatusBadge status={invoice.status} />
+            <StatusBadge status={effectiveStatus || 'Pending'} />
           </div>
           
           <div className="space-y-3">
@@ -264,19 +295,28 @@ export const CheckoutPage: React.FC = () => {
               </p>
             </div>
             
-            {invoice.status === 'Pending' && (
-              <div>
-                <p className="text-gray-400 text-sm">Tiempo restante</p>
-                <p className="text-orange-300">Esta orden expira en 1 hora</p>
-              </div>
+            {effectiveStatus === 'Pending' && (
+              <CountdownTimer 
+                expiresAt={invoice.expires_at} 
+                onExpire={() => setForceExpired(true)}
+              />
             )}
           </div>
         </div>
 
         {/* Payment Section */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
-          <h2 className="text-white font-semibold mb-4">Método de pago</h2>
+          {effectiveStatus === 'Pending' && (
+            <h2 className="text-white font-semibold mb-4">Método de pago</h2>
+          )}
           {renderStatusContent()}
+        </div>
+
+        {/* Powered by DeRamp */}
+        <div className="text-center mt-8 pb-4">
+          <p className="text-gray-400 text-sm">
+            Powered by <span className="font-bold text-white">DeRamp</span>
+          </p>
         </div>
       </div>
       
