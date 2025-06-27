@@ -1,6 +1,5 @@
 import { useBalance, useAccount, useChainId } from 'wagmi';
 import { useMemo } from 'react';
-import { base, polygon, celo } from 'wagmi/chains';
 
 interface UseTokenBalanceProps {
   tokenAddress?: string;
@@ -9,14 +8,6 @@ interface UseTokenBalanceProps {
   requiredChainId?: number;
   enabled?: boolean;
 }
-
-// Map network names to chain IDs
-const NETWORK_TO_CHAIN_ID: Record<string, number> = {
-  'Base': base.id,
-  'Polygon': polygon.id,
-  'Polygon POS': polygon.id,
-  'Celo': celo.id,
-};
 
 export const useTokenBalance = ({ 
   tokenAddress, 
@@ -37,15 +28,9 @@ export const useTokenBalance = ({
   const { data: balance, isLoading, error } = useBalance({
     address: walletAddress,
     token: tokenAddress as `0x${string}`,
+    chainId: requiredChainId,
     query: {
-      enabled: enabled && isConnected && !!tokenAddress && !!walletAddress && !isWrongNetwork,
-      refetchInterval: 10000, // Refetch every 10 seconds
-      retry: (failureCount, error) => {
-        // Don't retry if we're on wrong network
-        if (isWrongNetwork) return false;
-        // Retry up to 3 times for other errors
-        return failureCount < 3;
-      },
+      enabled: enabled && isConnected && !!tokenAddress && !!walletAddress && !!requiredChainId,
     },
   });
 
@@ -62,8 +47,8 @@ export const useTokenBalance = ({
 
   return {
     balance: formattedBalance,
-    isLoading: isLoading && enabled && !isWrongNetwork,
-    error: isWrongNetwork ? null : error,
+    isLoading: isLoading && enabled,
+    error: error,
     hasBalance: formattedBalance ? Number(formattedBalance.formatted) > 0 : false,
     isConnected,
     isWrongNetwork,
