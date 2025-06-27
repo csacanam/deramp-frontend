@@ -34,6 +34,7 @@ export const en = {
   payment: {
     method: 'Payment Method',
     selectToken: 'Token',
+    selectTokenPlaceholder: 'Select Token',
     selectNetwork: 'Select Network',
     network: 'Network',
     connectWallet: 'Connect Wallet',

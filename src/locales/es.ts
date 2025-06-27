@@ -34,6 +34,7 @@ export const es = {
   payment: {
     method: 'Método de pago',
     selectToken: 'Token',
+    selectTokenPlaceholder: 'Seleccionar token',
     selectNetwork: 'Seleccionar red',
     network: 'Red',
     connectWallet: 'Conectar wallet',

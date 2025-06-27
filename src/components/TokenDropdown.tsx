@@ -30,7 +30,7 @@ export const TokenDropdown: React.FC<TokenDropdownProps> = ({
               <div className="font-bold">{selectedToken.symbol}</div>
               <div className="text-gray-400 text-sm">{selectedToken.name}</div>
             </div>
-          ) : t.payment.selectToken}
+          ) : t.payment.selectTokenPlaceholder}
         </span>
         <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
