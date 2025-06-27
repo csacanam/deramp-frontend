@@ -1,21 +1,13 @@
 import React, { useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useSwitchChain, useDisconnect } from 'wagmi';
-import { base, polygon, celo } from 'wagmi/chains';
 import { useLanguage } from '../contexts/LanguageContext';
+import { findChainIdByBackendName } from '../config/chains';
 
 interface ConnectWalletButtonProps {
   selectedNetwork?: string;
   onConnected?: () => void;
 }
-
-// Map network names to chain IDs
-const NETWORK_TO_CHAIN_ID: Record<string, number> = {
-  'Base': base.id,
-  'Polygon': polygon.id,
-  'Polygon POS': polygon.id, // Backend uses "Polygon POS"
-  'Celo': celo.id,
-};
 
 export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({ 
   selectedNetwork, 
@@ -29,7 +21,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   // Auto-switch to the selected network when connected - DISABLED
   // useEffect(() => {
   //   if (isConnected && selectedNetwork && chain) {
-  //     const targetChainId = NETWORK_TO_CHAIN_ID[selectedNetwork];
+  //     const targetChainId = findChainIdByBackendName(selectedNetwork);
   //     if (targetChainId && chain.id !== targetChainId && !isSwitchingChain) {
   //       // Add a small delay to avoid immediate switching issues on mobile
   //       const timer = setTimeout(() => {

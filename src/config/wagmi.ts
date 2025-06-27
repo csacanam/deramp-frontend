@@ -2,7 +2,7 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { base, polygon, celo, bsc, mainnet, arbitrum, optimism, avalanche } from 'wagmi/chains';
 import type { Chain } from 'wagmi/chains';
 
-// All supported chains
+// All supported chains (exported from centralized config in the future)
 export const allChains: readonly [Chain, ...Chain[]] = [
   mainnet,    // Ethereum mainnet
   base,       // Base

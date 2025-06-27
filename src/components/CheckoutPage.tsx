@@ -14,20 +14,11 @@ import { ConnectWalletButton } from './ConnectWalletButton';
 import { TokenBalance } from './TokenBalance';
 import { PaymentAmount } from './PaymentAmount';
 import { CountdownTimer } from './CountdownTimer';
-import { base, polygon, celo } from 'wagmi/chains';
 import { useLanguage } from '../contexts/LanguageContext';
 import { interpolate } from '../utils/i18n';
 import { LanguageSelector } from './LanguageSelector';
-
 import { groupTokensBySymbol } from '../utils/tokenUtils';
-
-// Map network names to chain IDs
-const NETWORK_TO_CHAIN_ID: Record<string, number> = {
-  'Base': base.id,
-  'Polygon': polygon.id,
-  'Polygon POS': polygon.id, // Backend uses "Polygon POS"
-  'Celo': celo.id,
-};
+import { findChainIdByBackendName } from '../config/chains';
 
 export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
@@ -38,17 +29,16 @@ export const CheckoutPage: React.FC = () => {
   const [selectedNetwork, setSelectedNetwork] = useState<string>('');
   const [forceExpired, setForceExpired] = useState(false);
 
-
   // Get selected token network info
   const selectedTokenNetwork = (() => {
     if (!selectedToken || !selectedNetwork) return null;
     return selectedToken.networks.find(n => n.network === selectedNetwork);
   })();
 
-  // Get the required chain ID for the selected network
+  // Get the required chain ID for the selected network using centralized config
   const requiredChainId = useMemo(() => {
     if (!selectedNetwork) return undefined;
-    return NETWORK_TO_CHAIN_ID[selectedNetwork];
+    return findChainIdByBackendName(selectedNetwork);
   }, [selectedNetwork]);
 
   // Get token balance for the selected token
