@@ -1,5 +1,7 @@
 import React from 'react';
 import { Calculator, Clock } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { interpolate } from '../utils/i18n';
 
 interface PaymentAmountProps {
   amountToPay?: string;
@@ -20,6 +22,7 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
   amountFiat,
   fiatCurrency,
 }) => {
+  const { t, language } = useLanguage();
   if (!amountToPay || !tokenSymbol) {
     return null;
   }
@@ -48,7 +51,8 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
   const formatUpdatedTime = (timestamp: string) => {
     try {
       const date = new Date(timestamp);
-      return date.toLocaleString('es-CO', {
+      const locale = language === 'es' ? 'es-CO' : 'en-US';
+      return date.toLocaleString(locale, {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -56,12 +60,13 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
         hour12: false
       });
     } catch {
-      return 'Fecha no disponible';
+      return t.payment.dateNotAvailable;
     }
   };
 
   const formatFiatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('es-CO', {
+    const locale = language === 'es' ? 'es-CO' : 'en-US';
+    return new Intl.NumberFormat(locale, {
       style: 'decimal',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
@@ -72,7 +77,7 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
     <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
       <div className="flex items-center space-x-2 mb-3">
         <Calculator className="h-5 w-5 text-blue-400" />
-        <h3 className="text-blue-300 font-medium">Monto a pagar</h3>
+        <h3 className="text-blue-300 font-medium">{t.payment.amountToPay}</h3>
       </div>
       
       <div className="space-y-3">
@@ -89,7 +94,7 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
         {/* Rate info */}
         {rateToUsd && (
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-400">Precio {tokenSymbol}:</span>
+            <span className="text-gray-400">{interpolate(t.payment.price, { symbol: tokenSymbol })}:</span>
             <span className="text-gray-300">${formatRate(rateToUsd)} USD</span>
           </div>
         )}
@@ -98,7 +103,7 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
         {updatedAt && (
           <div className="flex items-center space-x-1 text-xs text-gray-500">
             <Clock className="h-3 w-3" />
-            <span>Última actualización: {formatUpdatedTime(updatedAt)}</span>
+            <span>{interpolate(t.payment.lastUpdated, { time: formatUpdatedTime(updatedAt) })}</span>
           </div>
         )}
       </div>

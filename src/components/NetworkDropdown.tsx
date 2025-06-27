@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useDropdown } from '../hooks/useDropdown';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface NetworkDropdownProps {
   networks: string[];
@@ -15,6 +16,7 @@ export const NetworkDropdown: React.FC<NetworkDropdownProps> = ({
   onNetworkSelect,
   disabled = false
 }) => {
+  const { t } = useLanguage();
   const { isOpen, toggleDropdown, closeDropdown, ref, zIndex } = useDropdown('network-dropdown');
 
   const handleToggle = () => {
@@ -34,7 +36,7 @@ export const NetworkDropdown: React.FC<NetworkDropdownProps> = ({
             : 'bg-gray-800 border-gray-700 text-white hover:border-gray-600'
         }`}
       >
-        <span>{selectedNetwork || 'Seleccionar red'}</span>
+        <span>{selectedNetwork || t.payment.selectNetwork}</span>
         <ChevronDown className={`h-5 w-5 transition-transform ${
           disabled ? 'text-gray-600' : 'text-gray-400'
         } ${isOpen ? 'rotate-180' : ''}`} />

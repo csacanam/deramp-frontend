@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useSwitchChain, useDisconnect } from 'wagmi';
 import { base, polygon, celo } from 'wagmi/chains';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ConnectWalletButtonProps {
   selectedNetwork?: string;
@@ -23,6 +24,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const { isConnected, chain } = useAccount();
   const { switchChain, isPending: isSwitchingChain, error: switchError } = useSwitchChain();
   const { disconnect } = useDisconnect();
+  const { t } = useLanguage();
 
   // Auto-switch to the selected network when connected - DISABLED
   // useEffect(() => {
@@ -88,7 +90,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
                     type="button"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
                   >
-                    Conectar Wallet
+                    {t.payment.connectWallet}
                   </button>
                 );
               }
@@ -108,17 +110,17 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
                       type="button"
                       className="text-gray-400 hover:text-red-400 transition-colors underline"
                     >
-                      Desconectar
+                      {t.general.disconnect}
                     </button>
                   </div>
                   {isSwitchingChain && (
                     <div className="text-xs text-yellow-400">
-                      Cambiando red...
+                      {t.network.switching}
                     </div>
                   )}
                   {switchError && (
                     <div className="text-xs text-red-400">
-                      Error al cambiar red
+                      {t.network.switchError}
                     </div>
                   )}
                 </div>

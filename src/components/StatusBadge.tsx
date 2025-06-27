@@ -1,35 +1,38 @@
 import React from 'react';
 import { CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface StatusBadgeProps {
   status: 'Pending' | 'Paid' | 'Refunded' | 'Expired';
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+  const { t } = useLanguage();
+  
   const getStatusConfig = () => {
     switch (status) {
       case 'Pending':
         return {
           icon: Clock,
-          text: 'Pendiente',
+          text: t.status.pending,
           className: 'bg-yellow-100 text-gray-900 border-yellow-200',
         };
       case 'Paid':
         return {
           icon: CheckCircle,
-          text: 'Pagado',
+          text: t.status.paid,
           className: 'bg-green-100 text-green-800 border-green-200',
         };
       case 'Refunded':
         return {
           icon: RefreshCw,
-          text: 'Reembolsado',
+          text: t.status.refunded,
           className: 'bg-blue-100 text-blue-800 border-blue-200',
         };
       case 'Expired':
         return {
           icon: XCircle,
-          text: 'Expirada',
+          text: t.status.expired,
           className: 'bg-red-100 text-red-800 border-red-200',
         };
       default:

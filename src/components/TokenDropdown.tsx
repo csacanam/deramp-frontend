@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { GroupedToken } from '../types/invoice';
 import { useDropdown } from '../hooks/useDropdown';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface TokenDropdownProps {
   tokens: GroupedToken[];
@@ -14,6 +15,7 @@ export const TokenDropdown: React.FC<TokenDropdownProps> = ({
   selectedToken,
   onTokenSelect
 }) => {
+  const { t } = useLanguage();
   const { isOpen, toggleDropdown, closeDropdown, ref, zIndex } = useDropdown('token-dropdown');
 
   return (
@@ -28,7 +30,7 @@ export const TokenDropdown: React.FC<TokenDropdownProps> = ({
               <div className="font-bold">{selectedToken.symbol}</div>
               <div className="text-gray-400 text-sm">{selectedToken.name}</div>
             </div>
-          ) : 'Seleccionar token'}
+          ) : t.payment.selectToken}
         </span>
         <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -47,7 +49,7 @@ export const TokenDropdown: React.FC<TokenDropdownProps> = ({
               <div className="text-white font-bold">{token.symbol}</div>
               <div className="text-gray-400 text-sm">{token.name}</div>
               <div className="text-gray-500 text-xs mt-1">
-                {token.networks.length} red{token.networks.length > 1 ? 'es' : ''}
+                {token.networks.length} {token.networks.length > 1 ? t.networks.networks : t.networks.network}
               </div>
             </button>
           ))}

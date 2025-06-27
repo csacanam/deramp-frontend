@@ -15,6 +15,9 @@ import { TokenBalance } from './TokenBalance';
 import { PaymentAmount } from './PaymentAmount';
 import { CountdownTimer } from './CountdownTimer';
 import { base, polygon, celo } from 'wagmi/chains';
+import { useLanguage } from '../contexts/LanguageContext';
+import { interpolate } from '../utils/i18n';
+import { LanguageSelector } from './LanguageSelector';
 
 import { groupTokensBySymbol } from '../utils/tokenUtils';
 
@@ -30,6 +33,7 @@ export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { invoice, error, loading } = useInvoice(invoiceId || '');
   const { isConnected } = useAccount();
+  const { t, language } = useLanguage();
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('');
   const [forceExpired, setForceExpired] = useState(false);
@@ -83,7 +87,7 @@ export const CheckoutPage: React.FC = () => {
   }
 
   if (error || !invoice) {
-    return <ErrorMessage message={error || 'Esta orden no existe o ha sido eliminada.'} />;
+    return <ErrorMessage message={error || t.errors.invoiceNotFound} />;
   }
 
   const groupedTokens = groupTokensBySymbol(invoice.tokens);
@@ -92,7 +96,8 @@ export const CheckoutPage: React.FC = () => {
   const availableNetworks = [...new Set(invoice.tokens.map(token => token.network))];
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('es-CO', {
+    const locale = language === 'es' ? 'es-CO' : 'en-US';
+    return new Intl.NumberFormat(locale, {
       style: 'decimal',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
@@ -114,8 +119,8 @@ export const CheckoutPage: React.FC = () => {
       return (
         <div className="bg-green-900/20 border border-green-700 rounded-lg p-6 text-center">
           <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-white mb-2">¡Pago completado!</h2>
-          <p className="text-green-300">Esta orden ha sido pagada exitosamente.</p>
+          <h2 className="text-2xl font-semibold text-white mb-2">{t.payment.completed}</h2>
+          <p className="text-green-300">{t.payment.completedDescription}</p>
         </div>
       );
     }
@@ -124,8 +129,8 @@ export const CheckoutPage: React.FC = () => {
       return (
         <div className="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
           <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-white mb-2">Orden expirada</h2>
-          <p className="text-red-300">Esta orden ha expirado y ya no puede ser pagada.</p>
+          <h2 className="text-2xl font-semibold text-white mb-2">{t.payment.expired}</h2>
+          <p className="text-red-300">{t.payment.expiredDescription}</p>
         </div>
       );
     }
@@ -134,8 +139,8 @@ export const CheckoutPage: React.FC = () => {
       return (
         <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-6 text-center">
           <RefreshCw className="h-16 w-16 text-blue-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-white mb-2">Pago reembolsado</h2>
-          <p className="text-blue-300">Esta orden ha sido reembolsada exitosamente.</p>
+          <h2 className="text-2xl font-semibold text-white mb-2">{t.payment.refunded}</h2>
+          <p className="text-blue-300">{t.payment.refundedDescription}</p>
         </div>
       );
     }
@@ -144,7 +149,7 @@ export const CheckoutPage: React.FC = () => {
       <div className="space-y-6">
         {/* Token Selection */}
         <div>
-          <label className="block text-white font-medium mb-2">Seleccionar token</label>
+          <label className="block text-white font-medium mb-2">{t.payment.selectToken}</label>
           <TokenDropdown
             tokens={groupedTokens}
             selectedToken={selectedToken}
@@ -154,7 +159,7 @@ export const CheckoutPage: React.FC = () => {
 
         {/* Network Selection */}
         <div>
-          <label className="block text-white font-medium mb-2">Red</label>
+          <label className="block text-white font-medium mb-2">{t.payment.network}</label>
           <NetworkDropdown
             networks={selectedToken?.networks.map(n => n.network) || []}
             selectedNetwork={selectedNetwork}
@@ -181,7 +186,7 @@ export const CheckoutPage: React.FC = () => {
               {!isConnected ? (
                 <>
                   <p className="text-gray-300 text-sm mb-3">
-                    Conecta tu wallet para continuar con el pago
+                    {t.payment.connectWalletDescription}
                   </p>
                   <div className="w-full">
                     <ConnectWalletButton 
@@ -205,9 +210,13 @@ export const CheckoutPage: React.FC = () => {
                       <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 flex items-center space-x-3">
                         <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
                         <div className="flex-1">
-                          <p className="text-red-300 font-medium">Saldo insuficiente</p>
+                          <p className="text-red-300 font-medium">{t.balance.insufficient}</p>
                           <p className="text-red-400 text-sm">
-                            Necesitas {amountToPay.toFixed(6)} {selectedToken?.symbol} pero solo tienes {userBalance.toFixed(6)} {selectedToken?.symbol}
+                            {interpolate(t.balance.insufficientDescription, {
+                              required: amountToPay.toFixed(6),
+                              current: userBalance.toFixed(6),
+                              symbol: selectedToken?.symbol || ''
+                            })}
                           </p>
                           <div className="mt-2">
                             <a
@@ -215,12 +224,12 @@ export const CheckoutPage: React.FC = () => {
                               onClick={(e) => {
                                 e.preventDefault();
                                 // TODO: Integrate with exchange or buying service
-                                alert(`Función para comprar ${selectedToken?.symbol} próximamente`);
+                                alert(interpolate(t.tokens.buyingSoon, { symbol: selectedToken?.symbol || '' }));
                               }}
                               className="inline-flex items-center space-x-1 text-blue-400 hover:text-blue-300 text-sm transition-colors"
                             >
                               <ExternalLink className="h-3 w-3" />
-                              <span>Comprar {selectedToken?.symbol}</span>
+                              <span>{interpolate(t.tokens.buy, { symbol: selectedToken?.symbol || '' })}</span>
                             </a>
                           </div>
                         </div>
@@ -230,13 +239,13 @@ export const CheckoutPage: React.FC = () => {
                         className="w-full bg-gray-600 text-gray-400 font-medium py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
                       >
                         <Wallet className="h-5 w-5" />
-                        <span>Saldo insuficiente</span>
+                        <span>{t.balance.insufficient}</span>
                       </button>
                     </div>
                   ) : (
                     <button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                       <Wallet className="h-5 w-5" />
-                      <span>Realizar pago</span>
+                      <span>{t.payment.makePayment}</span>
                     </button>
                   )}
                   <div className="mt-3 text-center">
@@ -255,7 +264,13 @@ export const CheckoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="max-w-md mx-auto p-4">
+      {/* Language Selector - Top Right */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
+        <LanguageSelector />
+      </div>
+      
+      <div className="max-w-md mx-auto p-4 pt-16 sm:pt-20">
+
         {/* Header */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
           <div className="flex items-center space-x-3 mb-4">
@@ -284,13 +299,13 @@ export const CheckoutPage: React.FC = () => {
         {/* Order Information */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-semibold">Información de la orden</h2>
+            <h2 className="text-white font-semibold">{t.order.title}</h2>
             <StatusBadge status={effectiveStatus || 'Pending'} />
           </div>
           
           <div className="space-y-3">
             <div>
-              <p className="text-gray-400 text-sm">Total a pagar</p>
+              <p className="text-gray-400 text-sm">{t.order.totalToPay}</p>
               <p className="text-2xl font-bold text-white">
                 {formatAmount(invoice.amount_fiat, invoice.fiat_currency)}
               </p>
@@ -308,7 +323,7 @@ export const CheckoutPage: React.FC = () => {
         {/* Payment Section */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           {effectiveStatus === 'Pending' && (
-            <h2 className="text-white font-semibold mb-4">Método de pago</h2>
+            <h2 className="text-white font-semibold mb-4">{t.payment.method}</h2>
           )}
           {renderStatusContent()}
         </div>
@@ -316,7 +331,7 @@ export const CheckoutPage: React.FC = () => {
         {/* Powered by DeRamp */}
         <div className="text-center mt-8 pb-4">
           <p className="text-gray-400 text-sm">
-            Powered by <span className="font-bold text-white">DeRamp</span>
+            {t.footer.poweredBy} <span className="font-bold text-white">{t.footer.deRamp}</span>
           </p>
         </div>
       </div>

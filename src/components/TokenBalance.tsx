@@ -1,6 +1,7 @@
 import React from 'react';
 import { Wallet, AlertCircle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { useTokenBalance } from '../hooks/useTokenBalance';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface TokenBalanceProps {
   tokenAddress?: string;
@@ -19,6 +20,7 @@ export const TokenBalance: React.FC<TokenBalanceProps> = ({
   requiredAmount,
   className = '',
 }) => {
+  const { t } = useLanguage();
   const { balance, isLoading, error, hasBalance, isConnected, isWrongNetwork, currentChainId } = useTokenBalance({
     tokenAddress,
     tokenSymbol,
@@ -36,7 +38,7 @@ export const TokenBalance: React.FC<TokenBalanceProps> = ({
     return (
       <div className={`flex items-center space-x-2 text-red-400 text-sm ${className}`}>
         <AlertCircle className="h-4 w-4" />
-        <span>Error al cargar balance</span>
+        <span>{t.balance.error}</span>
       </div>
     );
   }
@@ -45,7 +47,7 @@ export const TokenBalance: React.FC<TokenBalanceProps> = ({
     return (
       <div className={`flex items-center space-x-2 text-gray-400 text-sm animate-pulse ${className}`}>
         <RefreshCw className="h-4 w-4 animate-spin" />
-        <span>Cargando balance...</span>
+        <span>{t.balance.loading}</span>
       </div>
     );
   }
@@ -54,7 +56,7 @@ export const TokenBalance: React.FC<TokenBalanceProps> = ({
     return (
       <div className={`flex items-center space-x-2 text-gray-400 text-sm ${className}`}>
         <Wallet className="h-4 w-4" />
-        <span>Balance no disponible</span>
+        <span>{t.balance.notAvailable}</span>
       </div>
     );
   }
@@ -90,15 +92,15 @@ export const TokenBalance: React.FC<TokenBalanceProps> = ({
   return (
     <div className={`flex items-center space-x-2 text-sm ${className}`}>
       {getBalanceIcon()}
-      <span className="text-gray-300">Balance:</span>
+      <span className="text-gray-300">{t.balance.label}</span>
       <span className={`font-medium ${getBalanceColor()}`}>
         {formatBalance(balance.formatted)} {balance.symbol}
       </span>
       {!hasBalance && (
-        <span className="text-red-400 text-xs">(Sin fondos)</span>
+        <span className="text-red-400 text-xs">{t.balance.noFunds}</span>
       )}
       {requiredAmount && hasBalance && !hasSufficientBalance && (
-        <span className="text-orange-400 text-xs">(Insuficiente)</span>
+        <span className="text-orange-400 text-xs">({t.balance.insufficient})</span>
       )}
     </div>
   );

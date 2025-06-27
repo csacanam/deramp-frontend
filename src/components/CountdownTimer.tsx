@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { useCountdown } from '../hooks/useCountdown';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CountdownTimerProps {
   expiresAt?: string;
@@ -13,6 +14,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   className = '',
   onExpire,
 }) => {
+  const { t } = useLanguage();
   const { timeLeft, isExpired, hasExpiration } = useCountdown({ expiresAt, onExpire });
 
   if (!hasExpiration) {
@@ -23,7 +25,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
     return (
       <div className={`flex items-center space-x-2 text-red-400 ${className}`}>
         <AlertTriangle className="h-4 w-4" />
-        <span className="text-sm font-medium">Orden expirada</span>
+        <span className="text-sm font-medium">{t.countdown.expired}</span>
       </div>
     );
   }
@@ -44,20 +46,20 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <Clock className="h-4 w-4 text-gray-400" />
-      <span className="text-gray-400 text-sm">Tiempo restante:</span>
+      <span className="text-gray-400 text-sm">{t.countdown.timeRemaining}</span>
       <div className={`font-mono font-medium ${getTimeColor()}`}>
         {timeLeft.hours > 0 && (
           <>
             <span>{formatTime(timeLeft.hours)}</span>
-            <span className="text-gray-500">h</span>
+            <span className="text-gray-500">{t.countdown.hours}</span>
             <span className="mx-1">:</span>
           </>
         )}
         <span>{formatTime(timeLeft.minutes)}</span>
-        <span className="text-gray-500">m</span>
+        <span className="text-gray-500">{t.countdown.minutes}</span>
         <span className="mx-1">:</span>
         <span>{formatTime(timeLeft.seconds)}</span>
-        <span className="text-gray-500">s</span>
+        <span className="text-gray-500">{t.countdown.seconds}</span>
       </div>
     </div>
   );
