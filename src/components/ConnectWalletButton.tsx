@@ -93,16 +93,6 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
                 );
               }
 
-              if (chain.unsupported) {
-                return (
-                  <div className="text-center">
-                    <span className="text-red-400 text-sm">
-                      Red no soportada - Cambiar token/red arriba
-                    </span>
-                  </div>
-                );
-              }
-
               return (
                 <div className="text-center space-y-2">
                   <div className="flex items-center justify-between text-sm">
