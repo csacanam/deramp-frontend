@@ -21,18 +21,27 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   onConnected 
 }) => {
   const { isConnected, chain } = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { switchChain, isPending: isSwitchingChain, error: switchError } = useSwitchChain();
   const { disconnect } = useDisconnect();
 
   // Auto-switch to the selected network when connected
   useEffect(() => {
     if (isConnected && selectedNetwork && chain) {
       const targetChainId = NETWORK_TO_CHAIN_ID[selectedNetwork];
-      if (targetChainId && chain.id !== targetChainId) {
-        switchChain({ chainId: targetChainId });
+      if (targetChainId && chain.id !== targetChainId && !isSwitchingChain) {
+        // Add a small delay to avoid immediate switching issues on mobile
+        const timer = setTimeout(() => {
+          try {
+            switchChain({ chainId: targetChainId });
+          } catch (error) {
+            console.warn('Failed to auto-switch chain:', error);
+            // Don't throw error, let user handle it manually through TokenBalance component
+          }
+        }, 500);
+        return () => clearTimeout(timer);
       }
     }
-  }, [isConnected, selectedNetwork, chain, switchChain]);
+  }, [isConnected, selectedNetwork, chain, switchChain, isSwitchingChain]);
 
   // Call onConnected callback when wallet connects
   useEffect(() => {
@@ -112,6 +121,16 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
                       Desconectar
                     </button>
                   </div>
+                  {isSwitchingChain && (
+                    <div className="text-xs text-yellow-400">
+                      Cambiando red...
+                    </div>
+                  )}
+                  {switchError && (
+                    <div className="text-xs text-red-400">
+                      Error al cambiar red
+                    </div>
+                  )}
                 </div>
               );
             })()}

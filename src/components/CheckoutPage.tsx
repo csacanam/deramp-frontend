@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -13,8 +13,17 @@ import { StatusBadge } from './StatusBadge';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { TokenBalance } from './TokenBalance';
 import { PaymentAmount } from './PaymentAmount';
+import { base, polygon, celo } from 'wagmi/chains';
 
 import { groupTokensBySymbol } from '../utils/tokenUtils';
+
+// Map network names to chain IDs
+const NETWORK_TO_CHAIN_ID: Record<string, number> = {
+  'Base': base.id,
+  'Polygon': polygon.id,
+  'Polygon POS': polygon.id, // Backend uses "Polygon POS"
+  'Celo': celo.id,
+};
 
 export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
@@ -42,6 +51,12 @@ export const CheckoutPage: React.FC = () => {
   const amountToPay = selectedTokenNetwork?.amount_to_pay ? Number(selectedTokenNetwork.amount_to_pay) : 0;
   const userBalance = balance ? Number(balance.formatted) : 0;
   const hasSufficientBalance = userBalance >= amountToPay;
+
+  // Get the required chain ID for the selected network
+  const requiredChainId = useMemo(() => {
+    if (!selectedNetwork) return undefined;
+    return NETWORK_TO_CHAIN_ID[selectedNetwork];
+  }, [selectedNetwork]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -161,6 +176,7 @@ export const CheckoutPage: React.FC = () => {
                       tokenAddress={selectedTokenNetwork.contract_address}
                       tokenSymbol={selectedToken?.symbol}
                       tokenDecimals={selectedTokenNetwork.decimals}
+                      requiredChainId={requiredChainId}
                     />
                   </div>
                   {/* Payment button with balance validation */}
@@ -176,11 +192,11 @@ export const CheckoutPage: React.FC = () => {
                           <div className="mt-2">
                             <a
                               href="#"
-                                                              onClick={(e) => {
-                                  e.preventDefault();
-                                  // TODO: Integrate with exchange or buying service
-                                  alert(`Función para comprar ${selectedToken?.symbol} próximamente`);
-                                }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                // TODO: Integrate with exchange or buying service
+                                alert(`Función para comprar ${selectedToken?.symbol} próximamente`);
+                              }}
                               className="inline-flex items-center space-x-1 text-blue-400 hover:text-blue-300 text-sm transition-colors"
                             >
                               <ExternalLink className="h-3 w-3" />
@@ -200,7 +216,7 @@ export const CheckoutPage: React.FC = () => {
                   ) : (
                     <button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                       <Wallet className="h-5 w-5" />
-                                              <span>Realizar pago</span>
+                      <span>Realizar pago</span>
                     </button>
                   )}
                   <div className="mt-3 text-center">
