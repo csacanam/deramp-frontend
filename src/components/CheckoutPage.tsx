@@ -41,11 +41,18 @@ export const CheckoutPage: React.FC = () => {
     return selectedToken.networks.find(n => n.network === selectedNetwork);
   })();
 
+  // Get the required chain ID for the selected network
+  const requiredChainId = useMemo(() => {
+    if (!selectedNetwork) return undefined;
+    return NETWORK_TO_CHAIN_ID[selectedNetwork];
+  }, [selectedNetwork]);
+
   // Get token balance for the selected token
   const { balance } = useTokenBalance({
     tokenAddress: selectedTokenNetwork?.contract_address,
     tokenSymbol: selectedToken?.symbol,
     tokenDecimals: selectedTokenNetwork?.decimals,
+    requiredChainId: requiredChainId,
     enabled: !!selectedTokenNetwork && isConnected,
   });
 
@@ -53,12 +60,6 @@ export const CheckoutPage: React.FC = () => {
   const amountToPay = selectedTokenNetwork?.amount_to_pay ? Number(selectedTokenNetwork.amount_to_pay) : 0;
   const userBalance = balance ? Number(balance.formatted) : 0;
   const hasSufficientBalance = userBalance >= amountToPay;
-
-  // Get the required chain ID for the selected network
-  const requiredChainId = useMemo(() => {
-    if (!selectedNetwork) return undefined;
-    return NETWORK_TO_CHAIN_ID[selectedNetwork];
-  }, [selectedNetwork]);
 
   // Check if invoice is expired based on expires_at field
   const isExpiredByTime = useMemo(() => {
