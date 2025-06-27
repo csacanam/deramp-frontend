@@ -1,36 +1,42 @@
 import React from 'react';
-import { Clock, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
 
 interface StatusBadgeProps {
-  status: 'pending' | 'paid' | 'expired';
+  status: 'Pending' | 'Paid' | 'Refunded' | 'Expired';
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getStatusConfig = () => {
     switch (status) {
-      case 'pending':
+      case 'Pending':
         return {
           icon: Clock,
           text: 'Pendiente',
-          className: 'bg-yellow-900 text-yellow-300 border-yellow-700'
+          className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
         };
-      case 'paid':
+      case 'Paid':
         return {
           icon: CheckCircle,
           text: 'Pagado',
-          className: 'bg-green-900 text-green-300 border-green-700'
+          className: 'bg-green-100 text-green-800 border-green-200',
         };
-      case 'expired':
+      case 'Refunded':
+        return {
+          icon: RefreshCw,
+          text: 'Reembolsado',
+          className: 'bg-blue-100 text-blue-800 border-blue-200',
+        };
+      case 'Expired':
         return {
           icon: XCircle,
           text: 'Expirado',
-          className: 'bg-red-900 text-red-300 border-red-700'
+          className: 'bg-red-100 text-red-800 border-red-200',
         };
       default:
         return {
           icon: Clock,
           text: status,
-          className: 'bg-gray-800 text-gray-300 border-gray-700'
+          className: 'bg-gray-100 text-gray-800 border-gray-200',
         };
     }
   };
@@ -38,9 +44,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const { icon: Icon, text, className } = getStatusConfig();
 
   return (
-    <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm border ${className}`}>
-      <Icon className="h-4 w-4" />
-      <span>{text}</span>
-    </div>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${className}`}>
+      <Icon className="w-3 h-3 mr-1" />
+      {text}
+    </span>
   );
 };

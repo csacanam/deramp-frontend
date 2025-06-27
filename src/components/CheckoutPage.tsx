@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useInvoice } from '../hooks/useInvoice';
 import { useTokenBalance } from '../hooks/useTokenBalance';
@@ -75,7 +75,7 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const renderStatusContent = () => {
-    if (invoice.status === 'paid') {
+    if (invoice.status === 'Paid') {
       return (
         <div className="bg-green-900/20 border border-green-700 rounded-lg p-6 text-center">
           <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
@@ -85,12 +85,22 @@ export const CheckoutPage: React.FC = () => {
       );
     }
 
-    if (invoice.status === 'expired') {
+    if (invoice.status === 'Expired') {
       return (
         <div className="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
           <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold text-white mb-2">Orden expirada</h2>
           <p className="text-red-300">Esta orden ha expirado y ya no puede ser pagada.</p>
+        </div>
+      );
+    }
+
+    if (invoice.status === 'Refunded') {
+      return (
+        <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-6 text-center">
+          <RefreshCw className="h-16 w-16 text-blue-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold text-white mb-2">Pago reembolsado</h2>
+          <p className="text-blue-300">Esta orden ha sido reembolsada exitosamente.</p>
         </div>
       );
     }
@@ -184,13 +194,13 @@ export const CheckoutPage: React.FC = () => {
                         className="w-full bg-gray-600 text-gray-400 font-medium py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
                       >
                         <Wallet className="h-5 w-5" />
-                        <span>Saldo Insuficiente</span>
+                        <span>Saldo insuficiente</span>
                       </button>
                     </div>
                   ) : (
                     <button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                       <Wallet className="h-5 w-5" />
-                      <span>Realizar Pago</span>
+                                              <span>Realizar pago</span>
                     </button>
                   )}
                   <div className="mt-3 text-center">
@@ -238,7 +248,7 @@ export const CheckoutPage: React.FC = () => {
               </p>
             </div>
             
-            {invoice.status === 'pending' && (
+            {invoice.status === 'Pending' && (
               <div>
                 <p className="text-gray-400 text-sm">Tiempo restante</p>
                 <p className="text-orange-300">Esta orden expira en 1 hora</p>

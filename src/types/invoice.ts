@@ -32,7 +32,7 @@ export interface Invoice {
   fiat_currency: string;
   amount_usd?: string;
   usd_to_fiat_rate?: number;
-  status: 'pending' | 'paid' | 'expired';
+  status: 'Pending' | 'Paid' | 'Refunded' | 'Expired';
   tokens: Token[];
 }
 
