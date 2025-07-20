@@ -200,20 +200,17 @@ export const CommercePage: React.FC = () => {
 
         {/* Payment Section */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-semibold text-white mb-2">
+          <div className="text-left mb-6">
+            <h2 className="text-xl font-semibold text-white">
               {interpolate(t.commerce.title, { name: commerce.name })}
             </h2>
-            <p className="text-gray-300 text-sm">
-              {interpolate(t.commerce.subtitle, { name: commerce.name })}
-            </p>
           </div>
 
           {/* Amount Input */}
           <div className="space-y-4">
             <div>
               <label className="block text-white font-medium mb-2">
-                {t.commerce.amountLabel}
+                {t.commerce.amountLabel} {language === 'es' ? 'en' : 'in'} {commerce.currency}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
