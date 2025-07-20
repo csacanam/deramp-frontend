@@ -26,6 +26,42 @@ export const DemoPage: React.FC = () => {
     window.open(`${window.location.origin}/pay/ad4837a4-c66a-43fe-a1f5-0cc63843dee4`, '_blank');
   };
 
+  const handleDownloadQR = async () => {
+    try {
+      // Get the entire QR container element
+      const qrContainer = document.querySelector('.qr-code-container')?.parentElement?.parentElement as HTMLElement;
+      if (!qrContainer) return;
+
+      // Use html2canvas to capture the exact visual representation
+      const html2canvas = (await import('html2canvas')).default;
+      
+      const canvas = await html2canvas(qrContainer, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher quality
+        width: qrContainer.offsetWidth,
+        height: qrContainer.offsetHeight,
+        useCORS: true,
+        allowTaint: true
+      });
+
+      // Convert to blob and download
+      canvas.toBlob((blob: Blob | null) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'voulti-qr-code.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+    }
+  };
+
   return (
     <>
       <MetaTags 
@@ -91,7 +127,7 @@ export const DemoPage: React.FC = () => {
                           </div>
                           
                           {/* QR Code */}
-                          <div className="mb-3 md:mb-4">
+                          <div className="mb-3 md:mb-4 qr-code-container">
                             <QRCodeComponent 
                               value={`${window.location.origin}/pay/ad4837a4-c66a-43fe-a1f5-0cc63843dee4`}
                               size={120}
@@ -108,6 +144,14 @@ export const DemoPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Download QR Button */}
+                  <button 
+                    onClick={handleDownloadQR}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 md:py-3 px-4 md:px-6 rounded-lg transition-colors duration-200 text-sm md:text-base w-full md:w-auto mt-4"
+                  >
+                    📥 {t.demo.inStore.downloadCta}
+                  </button>
                 </div>
               </div>
             </div>
@@ -135,7 +179,7 @@ export const DemoPage: React.FC = () => {
                           </div>
                           <button 
                             onClick={handleCopy}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-colors duration-200 w-full sm:w-auto"
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-colors duration-200 w-auto self-end"
                           >
                             {copied ? t.general.copied : t.general.copy}
                           </button>
@@ -153,7 +197,7 @@ export const DemoPage: React.FC = () => {
                     onClick={handleOpenLink}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 md:py-3 px-4 md:px-6 rounded-lg transition-colors duration-200 text-sm md:text-base w-full md:w-auto"
                   >
-                    {t.demo.online.demoCta}
+                    🔗 {t.demo.online.demoCta}
                   </button>
                 </div>
               </div>
@@ -268,17 +312,12 @@ export const DemoPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                    <button 
-                      disabled
-                      className="bg-gray-600 text-gray-400 font-semibold py-2 md:py-3 px-4 md:px-6 rounded-lg text-sm md:text-base w-full cursor-not-allowed"
-                    >
-                      {t.demo.api.demoCta}
-                    </button>
-                    <span className="text-orange-400 text-sm md:text-base font-medium text-center sm:text-left">
-                      Coming Soon
-                    </span>
-                  </div>
+                  <button 
+                    disabled
+                    className="bg-gray-600 text-gray-400 font-semibold py-2 md:py-3 px-4 md:px-6 rounded-lg text-sm md:text-base w-full md:w-auto cursor-not-allowed"
+                  >
+                    📚 {t.demo.api.demoCta}
+                  </button>
                 </div>
               </div>
             </div>

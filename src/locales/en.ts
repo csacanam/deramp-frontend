@@ -164,7 +164,8 @@ export const en = {
       cta: 'Try this',
       demoTitle: 'QR Code Demo',
       demoDescription: 'Imagine this QR displayed at a physical store\'s checkout.',
-      demoCta: 'Scan QR and continue'
+      demoCta: 'Scan QR and continue',
+      downloadCta: 'Download QR Code'
     },
     online: {
       title: 'Receive crypto payments online',
@@ -172,7 +173,7 @@ export const en = {
       cta: 'Try this',
       demoTitle: 'Online Payment Link',
       demoDescription: 'Merchants can share this payment link directly with customers online.',
-      demoCta: 'Open payment link'
+      demoCta: 'Open Payment Link'
     },
     api: {
       title: 'Integrate crypto payments into your systems',
@@ -180,7 +181,7 @@ export const en = {
       cta: 'View API Docs',
       demoTitle: 'API Integration',
       demoDescription: 'Example API call to create an invoice:',
-      demoCta: 'View API Docs',
+      demoCta: 'View API Docs (Coming Soon)',
       step1Title: 'Step 1: Make a request for an invoice',
       step1Description: 'Send a POST request to Voulti\'s API to create a new invoice.',
       step2Title: 'Step 2: Get the invoice ID from the response',

@@ -164,7 +164,8 @@ export const es = {
       cta: 'Probar este',
       demoTitle: 'Demo de Código QR',
       demoDescription: 'Imagina este QR en la caja de un comercio.',
-      demoCta: 'Escanear QR y continuar'
+      demoCta: 'Escanear QR y continuar',
+      downloadCta: 'Descargar Código QR'
     },
     online: {
       title: 'Recibe pagos en cripto en línea',
@@ -172,7 +173,7 @@ export const es = {
       cta: 'Probar este',
       demoTitle: 'Link de Pago Online',
       demoDescription: 'Los comercios pueden compartir este link directamente con sus clientes en línea.',
-      demoCta: 'Abrir link de pago'
+      demoCta: 'Abrir Link de Pago'
     },
     api: {
       title: 'Integra pagos en cripto en tus sistemas',
@@ -180,7 +181,7 @@ export const es = {
       cta: 'Ver documentación API',
       demoTitle: 'Integración API',
       demoDescription: 'Ejemplo de llamada API para crear una factura:',
-      demoCta: 'Ver documentación API',
+      demoCta: 'Ver documentación API (Próximamente)',
       step1Title: 'Paso 1: Haz una solicitud para un cobro',
       step1Description: 'Envía una solicitud POST a la API de Voulti para crear un nuevo cobro.',
       step2Title: 'Paso 2: Obtén el ID del cobro desde la respuesta',
