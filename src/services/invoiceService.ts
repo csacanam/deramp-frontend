@@ -21,7 +21,16 @@ export interface CreateInvoiceResponse {
 
 export const createInvoice = async (request: CreateInvoiceRequest): Promise<CreateInvoiceResponse> => {
   try {
-    const response = await fetch('/api/invoices', {
+    // Use proxy in development, full URL in production
+    const baseUrl = import.meta.env.DEV ? '' : import.meta.env.VITE_BACKEND_URL;
+    
+    // Validate that backend URL is configured in production
+    if (!import.meta.env.DEV && !import.meta.env.VITE_BACKEND_URL) {
+      console.error('VITE_BACKEND_URL environment variable is not configured');
+      return { success: false, error: 'Backend configuration error' };
+    }
+
+    const response = await fetch(`${baseUrl}/api/invoices`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
