@@ -336,7 +336,7 @@ export const CheckoutPage: React.FC = () => {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           {effectiveStatus === 'Pending' && (
             <>
-              <div className="text-center mb-6">
+              <div className="text-left mb-6">
                 <h2 className="text-xl font-semibold text-white mb-2">
                   {t.order.pageTitle}
                 </h2>
