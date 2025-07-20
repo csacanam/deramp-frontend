@@ -38,6 +38,8 @@ export const getCommerce = async (commerceId: string): Promise<CommerceResponse>
     console.log('  - Commerce ID:', commerceId);
     console.log('  - Full URL:', fullUrl);
     console.log('  - VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL || 'NOT SET');
+    console.log('  - VITE_BACKEND_URL length:', (import.meta.env.VITE_BACKEND_URL || '').length);
+    console.log('  - VITE_BACKEND_URL last char:', (import.meta.env.VITE_BACKEND_URL || '').slice(-1));
 
     // Make API call to backend
     const response = await fetch(fullUrl, {
