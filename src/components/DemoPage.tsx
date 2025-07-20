@@ -268,14 +268,14 @@ export const DemoPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                     <button 
                       disabled
-                      className="bg-gray-600 text-gray-400 font-semibold py-2 md:py-3 px-4 md:px-6 rounded-lg text-sm md:text-base w-full md:w-auto cursor-not-allowed"
+                      className="bg-gray-600 text-gray-400 font-semibold py-2 md:py-3 px-4 md:px-6 rounded-lg text-sm md:text-base w-full cursor-not-allowed"
                     >
                       {t.demo.api.demoCta}
                     </button>
-                    <span className="text-orange-400 text-sm md:text-base font-medium">
+                    <span className="text-orange-400 text-sm md:text-base font-medium text-center sm:text-left">
                       Coming Soon
                     </span>
                   </div>
