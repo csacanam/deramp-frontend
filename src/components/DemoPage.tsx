@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LanguageSelector } from './LanguageSelector';
 import { QRCodeComponent } from './QRCode';
+import { MetaTags } from './MetaTags';
 
 export const DemoPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -26,7 +27,12 @@ export const DemoPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <>
+      <MetaTags 
+        title="Test crypto payments – QR, Links & API | Voulti"
+        description="Try Voulti: crypto payments with QR codes, payment links, and API integration. Instant, simple, and 1% fee."
+      />
+      <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 px-4 py-3">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
@@ -297,5 +303,6 @@ export const DemoPage: React.FC = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 }; 

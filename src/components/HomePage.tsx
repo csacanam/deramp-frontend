@@ -2,12 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LanguageSelector } from './LanguageSelector';
+import { MetaTags } from './MetaTags';
 
 export const HomePage: React.FC = () => {
   const { t, language } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <>
+      <MetaTags 
+        title="Crypto payments made simple for merchants | Voulti"
+        description="Accept crypto payments anywhere: in-store or online. No middlemen. Only 1% fee."
+      />
+      <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 px-4 py-3">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
@@ -166,5 +172,6 @@ export const HomePage: React.FC = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 }; 
