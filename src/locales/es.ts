@@ -15,12 +15,17 @@ export const es = {
     disconnect: 'Desconectar',
     cancel: 'Cancelar',
     confirm: 'Confirmar',
-    close: 'Cerrar'
+    close: 'Cerrar',
+    back: 'Volver',
+    copy: 'Copiar',
+    copied: '¡Copiado!',
+    copiedMessage: 'Link copiado al portapapeles'
   },
 
   // Header
   header: {
-    orderNumber: 'Pedido #'
+    orderNumber: 'Pedido #',
+    logo: 'Voulti'
   },
 
   // Order Information
@@ -97,8 +102,7 @@ export const es = {
 
   // Footer
   footer: {
-    poweredBy: 'Powered by',
-    deRamp: 'Voulti'
+    builtWithLove: 'Hecho con ❤️ por'
   },
 
   // Commerce
@@ -112,20 +116,95 @@ export const es = {
     amountRequired: 'Por favor ingresa un monto válido',
     amountMin: 'El monto debe ser al menos {min} {currency}',
     amountMax: 'El monto no puede exceder {max} {currency}',
-    createInvoiceError: 'Error al crear la factura',
+    createInvoiceError: 'Error al crear el cobro',
     networkError: 'Error de red. Por favor verifica tu conexión e intenta de nuevo.',
     minimum: 'Mínimo',
     maximum: 'Máximo',
     supportedTokens: 'Tokens soportados'
   },
 
+  // Home
+  home: {
+    heroTitle: '💸 Pagos con cripto simples para comercios',
+    heroSubtitle: 'Acepta pagos en cripto en cualquier lugar: tienda física u online. Sin intermediarios. Solo 1% de comisión.',
+    ctaButton: 'Probar el demo ahora',
+    subcopy: 'Soportamos cCOP, cUSD, cEUR y más próximamente.',
+    howItWorksTitle: '🚀 Cómo funciona',
+    step1Title: 'Genera un link de pago',
+    step1Description: 'Desde la API o el dashboard, crea un link único para tu comercio.',
+    step2Title: 'Muéstralo o compártelo',
+    step2Description: 'Pon el QR en tu tienda física o envía el link por chat a tus clientes.',
+    step3Title: 'Recibe pagos en cripto',
+    step3Description: 'Recibe el pago al instante. Sin intermediarios. Solo 1% de comisión.',
+    tagline: 'La forma más fácil de aceptar cripto. En cualquier lugar.',
+    whyChooseTitle: '¿Por qué los comercios eligen Voulti?',
+    whyChoose: {
+      instantPayments: {
+        title: 'Recibe pagos al instante',
+        description: 'Recibe pagos al instante, sin esperas ni intermediarios.'
+      },
+      lowFees: {
+        title: 'Solo 1% de comisión',
+        description: 'Solo 1% de comisión. Sin costos ocultos ni custodia.'
+      },
+      realWorld: {
+        title: 'Diseñado para el mundo real',
+        description: 'Perfecto para tiendas físicas, ventas online y APIs personalizadas.'
+      }
+    }
+  },
+
+  // Demo
+  demo: {
+    title: 'Descubre todas las formas de usar Voulti',
+    subtitle: 'Entiende cómo Voulti habilita pagos con cripto en tiendas físicas, en línea y sistemas personalizados.',
+    inStore: {
+      title: 'Recibe pagos en cripto en tu tienda física',
+      description: 'Muestra este código QR en tu caja y recibe pagos al instante en criptomonedas.',
+      cta: 'Probar este',
+      demoTitle: 'Demo de Código QR',
+      demoDescription: 'Imagina este QR en la caja de un comercio.',
+      demoCta: 'Escanear QR y continuar'
+    },
+    online: {
+      title: 'Recibe pagos en cripto en línea',
+      description: 'Comparte un link de pago con tus clientes por redes sociales o correo para recibir pagos al instante en criptomonedas.',
+      cta: 'Probar este',
+      demoTitle: 'Link de Pago Online',
+      demoDescription: 'Los comercios pueden compartir este link directamente con sus clientes en línea.',
+      demoCta: 'Abrir link de pago'
+    },
+    api: {
+      title: 'Integra pagos en cripto en tus sistemas',
+      description: 'Usa la API de Voulti para aceptar pagos en cripto directamente en tu sitio web, app o sistema de punto de venta.',
+      cta: 'Ver documentación API',
+      demoTitle: 'Integración API',
+      demoDescription: 'Ejemplo de llamada API para crear una factura:',
+      demoCta: 'Ver documentación API',
+      step1Title: 'Paso 1: Haz una solicitud para un cobro',
+      step1Description: 'Envía una solicitud POST a la API de Voulti para crear un nuevo cobro.',
+      step2Title: 'Paso 2: Obtén el ID del cobro desde la respuesta',
+      step2Description: 'La API devolverá un id para el cobro creado.',
+      step3Title: 'Paso 3: Redirige a tu cliente a la página de checkout',
+      step3Description: 'Envía a tu cliente al link de checkout devuelto en la respuesta de la API para completar el pago.',
+      step3Example: '🌐 Ejemplo:',
+      note: '📢 Si configuraste las URLs de confirmación y respuesta, Voulti notificará a la URL de confirmación cuando se complete el pago y redirigirá al usuario a la URL de respuesta.'
+    }
+  },
+
   // Errors
   errors: {
-    invoiceNotFound: 'Este pedido no existe o ha sido eliminado.',
+    invoiceNotFound: 'Este cobro no existe o ha sido eliminado.',
     commerceNotFound: 'Este comercio no existe o ha sido eliminado.',
     networkError: 'Error de red. Por favor verifica tu conexión e intenta de nuevo.',
     serverError: 'Error del servidor. Por favor intenta más tarde.',
     unknownError: 'Ocurrió un error inesperado. Por favor intenta de nuevo.',
     configError: 'Error de configuración del backend'
+  },
+
+  // QR Code
+  qrCode: {
+    header: 'Paga con Cripto',
+    subtitle: 'en Trutix'
   }
 }; 

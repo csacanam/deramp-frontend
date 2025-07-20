@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useInvoice } from '../hooks/useInvoice';
+import { useCommerce } from '../hooks/useCommerce';
 import { useTokenBalance } from '../hooks/useTokenBalance';
 import { GroupedToken } from '../types/invoice';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -23,6 +24,7 @@ import { findChainIdByBackendName } from '../config/chains';
 export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { invoice, error, loading } = useInvoice(invoiceId || '');
+  const { commerce, loading: commerceLoading } = useCommerce(invoice?.commerce_id || '');
   const { isConnected } = useAccount();
   const { t, language } = useLanguage();
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
@@ -293,8 +295,15 @@ export const CheckoutPage: React.FC = () => {
               <Store className={`h-6 w-6 text-gray-300 ${invoice.commerce_icon_url ? 'hidden' : ''}`} />
             </div>
             <div>
-              <h1 className="text-white font-medium">{invoice.commerce_name}</h1>
-              <p className="text-gray-400 text-sm">{invoice.id}</p>
+              <h1 className="text-white font-medium text-lg">{invoice.commerce_name}</h1>
+              {(commerce?.description_spanish || commerce?.description_english) && (
+                <p className="text-gray-400 text-sm">
+                  {language === 'es' 
+                    ? (commerce.description_spanish || commerce.description_english)
+                    : (commerce.description_english || commerce.description_spanish)
+                  }
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -344,7 +353,7 @@ export const CheckoutPage: React.FC = () => {
         <div className="text-center mt-8 pb-4">
           <Link to="/" className="inline-block">
             <p className="text-gray-400 text-sm hover:text-gray-300 transition-colors">
-              {t.footer.poweredBy} <span className="font-bold text-white hover:text-blue-400 transition-colors">{t.footer.deRamp}</span>
+              ⚡ Powered by <span className="font-bold text-white hover:text-blue-400 transition-colors">Voulti</span>
             </p>
           </Link>
         </div>
