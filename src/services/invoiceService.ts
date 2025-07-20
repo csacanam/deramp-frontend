@@ -71,16 +71,35 @@ export const getInvoice = async (invoiceId: string): Promise<InvoiceResponse> =>
       return { error: 'Backend configuration error' };
     }
 
+    // Build the full URL for debugging
+    const fullUrl = `${baseUrl}/api/invoices/${invoiceId}`;
+    
+    // Debug logging
+    console.log('🔍 getInvoice Debug Info:');
+    console.log('  - Environment:', import.meta.env.DEV ? 'DEVELOPMENT' : 'PRODUCTION');
+    console.log('  - Base URL:', baseUrl || '(using proxy)');
+    console.log('  - Invoice ID:', invoiceId);
+    console.log('  - Full URL:', fullUrl);
+    console.log('  - VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL || 'NOT SET');
+
     // Make API call to backend
-    const response = await fetch(`${baseUrl}/api/invoices/${invoiceId}`, {
+    const response = await fetch(fullUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
+    // Debug response info
+    console.log('📡 Response Info:');
+    console.log('  - Status:', response.status);
+    console.log('  - Status Text:', response.statusText);
+    console.log('  - OK:', response.ok);
+    console.log('  - URL:', response.url);
+
     // Handle HTTP errors
     if (!response.ok) {
+      console.error('❌ HTTP Error:', response.status, response.statusText);
       if (response.status === 404) {
         return { error: 'Invoice not found' };
       }

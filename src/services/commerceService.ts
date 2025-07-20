@@ -28,16 +28,35 @@ export const getCommerce = async (commerceId: string): Promise<CommerceResponse>
       return { success: false, error: 'Backend configuration error' };
     }
 
+    // Build the full URL for debugging
+    const fullUrl = `${baseUrl}/api/commerces/${commerceId}`;
+    
+    // Debug logging
+    console.log('🔍 getCommerce Debug Info:');
+    console.log('  - Environment:', import.meta.env.DEV ? 'DEVELOPMENT' : 'PRODUCTION');
+    console.log('  - Base URL:', baseUrl || '(using proxy)');
+    console.log('  - Commerce ID:', commerceId);
+    console.log('  - Full URL:', fullUrl);
+    console.log('  - VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL || 'NOT SET');
+
     // Make API call to backend
-    const response = await fetch(`${baseUrl}/api/commerces/${commerceId}`, {
+    const response = await fetch(fullUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
+    // Debug response info
+    console.log('📡 Response Info:');
+    console.log('  - Status:', response.status);
+    console.log('  - Status Text:', response.statusText);
+    console.log('  - OK:', response.ok);
+    console.log('  - URL:', response.url);
+
     // Handle HTTP errors
     if (!response.ok) {
+      console.error('❌ HTTP Error:', response.status, response.statusText);
       if (response.status === 404) {
         return { success: false, error: 'Commerce not found' };
       }
