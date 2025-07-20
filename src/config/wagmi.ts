@@ -1,18 +1,28 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { base, polygon, celo, bsc, mainnet, arbitrum, optimism, avalanche } from 'wagmi/chains';
+import { celo } from 'wagmi/chains';
 import type { Chain } from 'wagmi/chains';
 
-// All supported chains (exported from centralized config in the future)
-export const allChains: readonly [Chain, ...Chain[]] = [
-  mainnet,    // Ethereum mainnet
-  base,       // Base
-  polygon,    // Polygon
-  arbitrum,   // Arbitrum
-  optimism,   // Optimism
-  avalanche,  // Avalanche
-  bsc,        // Binance Smart Chain
-  celo        // Celo
-];
+// Definir Celo Alfajores manualmente (igual que en chains.ts)
+const celoAlfajores: Chain = {
+  id: 44787,
+  name: 'Celo Alfajores',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Celo',
+    symbol: 'CELO',
+  },
+  rpcUrls: {
+    default: { http: ['https://alfajores-forno.celo-testnet.org'] },
+    public: { http: ['https://alfajores-forno.celo-testnet.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Celo Explorer', url: 'https://explorer.celo.org/alfajores' },
+  },
+  testnet: true,
+};
+
+// Solo Celo y Celo Alfajores están habilitados
+export const allChains: readonly [Chain, ...Chain[]] = [celo, celoAlfajores];
 
 export const config = getDefaultConfig({
   appName: 'Crypto Stablecoins Checkout',

@@ -1,55 +1,17 @@
 # 🔗 Configuración de Blockchains
 
-Esta aplicación usa una configuración centralizada para manejar todas las blockchains soportadas. Esto hace que sea muy fácil agregar nuevas redes sin tener que actualizar múltiples archivos.
+Esta aplicación usa una configuración centralizada para manejar todas las blockchains soportadas. Actualmente solo soporta **Celo** y **Celo Alfajores**.
 
 ## 📁 Archivo Principal: `src/config/chains.ts`
 
 Toda la configuración de blockchains está centralizada en este archivo. Para agregar una nueva blockchain, solo necesitas modificar este archivo.
 
-## ✅ Cómo Agregar una Nueva Blockchain
+## ✅ Blockchains Actualmente Soportadas
 
-### 1. Instalar la Chain (si es necesario)
-
-Si la blockchain no está incluida en `wagmi/chains`, primero agrégala:
-
-```bash
-npm install @wagmi/chains
-```
-
-### 2. Agregar a la Configuración Central
-
-Edita `src/config/chains.ts` y agrega la nueva blockchain al array `SUPPORTED_CHAINS`:
-
-```typescript
-import { newChain } from "wagmi/chains"; // Importar la nueva chain
-
-export const SUPPORTED_CHAINS: ChainConfig[] = [
-  // ... blockchains existentes ...
-
-  // ✅ NUEVA BLOCKCHAIN
-  {
-    chain: newChain,
-    backendNames: [
-      "Nombre Principal",
-      "Nombre Alternativo 1",
-      "Nombre Alternativo 2",
-      "Abreviación",
-    ],
-    enabled: true,
-    priority: 9, // Orden en dropdowns (número más bajo = mayor prioridad)
-  },
-];
-```
-
-### 3. ¡Eso es todo!
-
-No necesitas actualizar ningún otro archivo. La configuración centralizada automáticamente:
-
-- ✅ **Agregará la chain a wagmi** (para conectar wallets)
-- ✅ **Actualizará los mapeos** de nombres del backend
-- ✅ **Habilitará el balance de tokens** en esa red
-- ✅ **Permitirá cambiar de red** en la wallet
-- ✅ **Incluirá la red en dropdowns**
+| Blockchain     | Chain ID | Backend Names                                 | Priority |
+| -------------- | -------- | --------------------------------------------- | -------- |
+| Celo           | 42220    | `Celo`, `CELO`, `Celo Mainnet`                | 1        |
+| Celo Alfajores | 44787    | `Celo Alfajores`, `Alfajores`, `Celo Testnet` | 2        |
 
 ## 🔧 Configuración por Blockchain
 
@@ -57,7 +19,7 @@ Cada blockchain tiene estas propiedades:
 
 ### `chain: Chain`
 
-El objeto chain de wagmi (ej: `mainnet`, `polygon`, `bsc`)
+El objeto chain de wagmi (ej: `celo`) o definido manualmente (ej: `celoAlfajores`)
 
 ### `backendNames: string[]`
 
@@ -68,10 +30,10 @@ Lista de nombres que puede usar el backend para referirse a esta blockchain:
 - Abreviaciones
 - Variaciones comunes
 
-**Ejemplo para BSC:**
+**Ejemplo para Celo:**
 
 ```typescript
-backendNames: ["BSC", "BNB Smart Chain", "Binance Smart Chain", "BNB"];
+backendNames: ["Celo", "CELO", "Celo Mainnet"];
 ```
 
 ### `enabled: boolean`
@@ -85,19 +47,6 @@ enabled: false;
 ### `priority: number`
 
 Orden en dropdowns. Número más bajo = mayor prioridad.
-
-## 📋 Blockchains Actualmente Soportadas
-
-| Blockchain | Chain ID | Backend Names                                          | Priority |
-| ---------- | -------- | ------------------------------------------------------ | -------- |
-| Ethereum   | 1        | `Ethereum`, `Ethereum Mainnet`, `ETH`                  | 1        |
-| Base       | 8453     | `Base`, `Base Mainnet`                                 | 2        |
-| Polygon    | 137      | `Polygon`, `Polygon POS`, `MATIC`                      | 3        |
-| Arbitrum   | 42161    | `Arbitrum`, `Arbitrum One`, `ARB`                      | 4        |
-| Optimism   | 10       | `Optimism`, `OP Mainnet`, `OP`                         | 5        |
-| BSC        | 56       | `BSC`, `BNB Smart Chain`, `Binance Smart Chain`, `BNB` | 6        |
-| Avalanche  | 43114    | `Avalanche`, `Avalanche C-Chain`, `AVAX`               | 7        |
-| Celo       | 42220    | `Celo`, `CELO`                                         | 8        |
 
 ## 🛠️ Funciones Disponibles
 
@@ -134,7 +83,7 @@ Si una blockchain no funciona, revisa:
 1. **¿Está en `SUPPORTED_CHAINS`?** - Debe estar agregada al array
 2. **¿Está `enabled: true`?** - Debe estar habilitada
 3. **¿Los nombres coinciden?** - Los `backendNames` deben incluir el nombre exacto que usa el backend
-4. **¿Está importada?** - La chain debe estar importada de `wagmi/chains`
+4. **¿Está importada?** - La chain debe estar importada de `wagmi/chains` o definida manualmente
 
 ### Debug en Consola
 
@@ -144,22 +93,38 @@ La aplicación muestra warnings útiles en la consola del navegador:
 ⚠️ Unknown network: "Nombre Desconocido". {found: false, availableNames: [...]}
 ```
 
-## 📝 Ejemplo Completo: Agregar Fantom
+## 📝 Ejemplo: Celo Alfajores
+
+Celo Alfajores no está disponible en `wagmi/chains`, por lo que se define manualmente:
 
 ```typescript
-// 1. Importar
-import { fantom } from 'wagmi/chains';
+// Definir Celo Alfajores manualmente
+const celoAlfajores: Chain = {
+  id: 44787,
+  name: 'Celo Alfajores',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Celo',
+    symbol: 'CELO',
+  },
+  rpcUrls: {
+    default: { http: ['https://alfajores-forno.celo-testnet.org'] },
+    public: { http: ['https://alfajores-forno.celo-testnet.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Celo Explorer', url: 'https://explorer.celo.org/alfajores' },
+  },
+  testnet: true,
+};
 
-// 2. Agregar a SUPPORTED_CHAINS
+// Agregar a SUPPORTED_CHAINS
 {
-  chain: fantom,
-  backendNames: ['Fantom', 'FTM', 'Fantom Opera'],
+  chain: celoAlfajores,
+  backendNames: ['Celo Alfajores', 'Alfajores', 'Celo Testnet'],
   enabled: true,
-  priority: 9
+  priority: 2
 }
 ```
-
-¡Y eso es todo! Fantom estará disponible en toda la aplicación automáticamente.
 
 ## 🎯 Beneficios de esta Arquitectura
 
@@ -169,3 +134,4 @@ import { fantom } from 'wagmi/chains';
 - ✅ **Configuración flexible** (habilitar/deshabilitar, prioridades)
 - ✅ **Nombres alternativos** para compatibilidad con backend
 - ✅ **Type safety** con TypeScript
+- ✅ **Soporte para chains personalizadas** (como Celo Alfajores)

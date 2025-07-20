@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useSwitchChain, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
-import { findChainIdByBackendName } from '../config/chains';
 
 interface ConnectWalletButtonProps {
   selectedNetwork?: string;
@@ -10,11 +9,9 @@ interface ConnectWalletButtonProps {
 }
 
 export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({ 
-  selectedNetwork, 
   onConnected 
 }) => {
-  const { isConnected, chain } = useAccount();
-  const { switchChain, isPending: isSwitchingChain, error: switchError } = useSwitchChain();
+  const { isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { t } = useLanguage();
 
@@ -105,16 +102,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
                       {t.general.disconnect}
                     </button>
                   </div>
-                  {isSwitchingChain && (
-                    <div className="text-xs text-yellow-400">
-                      {t.network.switching}
-                    </div>
-                  )}
-                  {switchError && (
-                    <div className="text-xs text-red-400">
-                      {t.network.switchError}
-                    </div>
-                  )}
+                  {/* Network switching status removed as auto-switching is disabled */}
                 </div>
               );
             })()}

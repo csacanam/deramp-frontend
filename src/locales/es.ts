@@ -27,7 +27,9 @@ export const es = {
   order: {
     title: 'Detalles del pedido',
     totalToPay: 'Importe total',
-    timeRemaining: 'Tiempo restante'
+    timeRemaining: 'Tiempo restante',
+    pageTitle: 'Completa tu pago',
+    pageDescription: 'Selecciona tu método de pago preferido y completa la transacción.'
   },
 
   // Payment
@@ -96,12 +98,31 @@ export const es = {
   // Footer
   footer: {
     poweredBy: 'Powered by',
-    deRamp: 'DeRamp'
+    deRamp: 'Voulti'
+  },
+
+  // Commerce
+  commerce: {
+    title: 'Paga con cripto en {name}',
+    subtitle: 'Realiza tu pago de forma segura usando {name} con Voulti.',
+    amountLabel: 'Ingresa el valor a pagar',
+    amountPlaceholder: '0',
+    generateButton: 'Continuar',
+    generating: 'Generando...',
+    amountRequired: 'Por favor ingresa un monto válido',
+    amountMin: 'El monto debe ser al menos {min} {currency}',
+    amountMax: 'El monto no puede exceder {max} {currency}',
+    createInvoiceError: 'Error al crear la factura',
+    networkError: 'Error de red. Por favor verifica tu conexión e intenta de nuevo.',
+    minimum: 'Mínimo',
+    maximum: 'Máximo',
+    supportedTokens: 'Tokens soportados'
   },
 
   // Errors
   errors: {
     invoiceNotFound: 'Este pedido no existe o ha sido eliminado.',
+    commerceNotFound: 'Este comercio no existe o ha sido eliminado.',
     networkError: 'Error de red. Por favor verifica tu conexión e intenta de nuevo.',
     serverError: 'Error del servidor. Por favor intenta más tarde.',
     unknownError: 'Ocurrió un error inesperado. Por favor intenta de nuevo.',

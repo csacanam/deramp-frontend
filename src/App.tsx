@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CheckoutPage } from './components/CheckoutPage';
+import { CommercePage } from './components/CommercePage';
 import { HomePage } from './components/HomePage';
 import { LanguageProvider } from './contexts/LanguageContext';
 
@@ -11,6 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/checkout/:invoiceId" element={<CheckoutPage />} />
+          <Route path="/pay/:commerceId" element={<CommercePage />} />
           <Route path="/checkout" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

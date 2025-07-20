@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useInvoice } from '../hooks/useInvoice';
@@ -28,6 +28,16 @@ export const CheckoutPage: React.FC = () => {
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<string>('');
   const [forceExpired, setForceExpired] = useState(false);
+
+  // Update document title when invoice data is available
+  useEffect(() => {
+    if (invoice) {
+      const title = language === 'es' 
+        ? `Paga con Cripto en ${invoice.commerce_name} - Voulti`
+        : `Pay with Crypto at ${invoice.commerce_name} - Voulti`;
+      document.title = title;
+    }
+  }, [invoice, language]);
 
   // Get selected token network info
   const selectedTokenNetwork = (() => {
@@ -82,16 +92,19 @@ export const CheckoutPage: React.FC = () => {
 
   const groupedTokens = groupTokensBySymbol(invoice.tokens);
 
-  // Get available networks from invoice tokens
-  const availableNetworks = [...new Set(invoice.tokens.map(token => token.network))];
+  // Get available networks from invoice tokens (commented out as not currently used)
+  // const availableNetworks = [...new Set(invoice.tokens.map(token => token.network))];
 
   const formatAmount = (amount: number, currency: string) => {
     const locale = language === 'es' ? 'es-CO' : 'en-US';
-    return new Intl.NumberFormat(locale, {
+    const formattedNumber = new Intl.NumberFormat(locale, {
       style: 'decimal',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount) + ' ' + currency;
+    }).format(amount);
+    
+    // Format like "COP $ 50,000" to be consistent with pay page
+    return `${currency} $ ${formattedNumber}`;
   };
 
   const handleTokenSelect = (token: GroupedToken) => {
@@ -313,16 +326,27 @@ export const CheckoutPage: React.FC = () => {
         {/* Payment Section */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           {effectiveStatus === 'Pending' && (
-            <h2 className="text-white font-semibold mb-4">{t.payment.method}</h2>
+            <>
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-semibold text-white mb-2">
+                  {t.order.pageTitle}
+                </h2>
+                <p className="text-gray-300 text-sm">
+                  {t.order.pageDescription}
+                </p>
+              </div>
+            </>
           )}
           {renderStatusContent()}
         </div>
 
-        {/* Powered by DeRamp */}
+        {/* Powered by Voulti */}
         <div className="text-center mt-8 pb-4">
-          <p className="text-gray-400 text-sm">
-            {t.footer.poweredBy} <span className="font-bold text-white">{t.footer.deRamp}</span>
-          </p>
+          <Link to="/" className="inline-block">
+            <p className="text-gray-400 text-sm hover:text-gray-300 transition-colors">
+              {t.footer.poweredBy} <span className="font-bold text-white hover:text-blue-400 transition-colors">{t.footer.deRamp}</span>
+            </p>
+          </Link>
         </div>
       </div>
       

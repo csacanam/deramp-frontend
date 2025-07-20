@@ -27,7 +27,9 @@ export const en = {
   order: {
     title: 'Order details',
     totalToPay: 'Total amount',
-    timeRemaining: 'Time left'
+    timeRemaining: 'Time left',
+    pageTitle: 'Complete your payment',
+    pageDescription: 'Select your preferred payment method and complete the transaction.'
   },
 
   // Payment
@@ -96,12 +98,31 @@ export const en = {
   // Footer
   footer: {
     poweredBy: 'Powered by',
-    deRamp: 'DeRamp'
+    deRamp: 'Voulti'
+  },
+
+  // Commerce
+  commerce: {
+    title: 'Pay with crypto at {name}',
+    subtitle: 'Make your payment securely at {name} using crypto with Voulti.',
+    amountLabel: 'Enter the amount to pay',
+    amountPlaceholder: '0',
+    generateButton: 'Continue',
+    generating: 'Generating...',
+    amountRequired: 'Please enter a valid amount',
+    amountMin: 'Amount must be at least {min} {currency}',
+    amountMax: 'Amount cannot exceed {max} {currency}',
+    createInvoiceError: 'Failed to create invoice',
+    networkError: 'Network error. Please check your connection and try again.',
+    minimum: 'Minimum',
+    maximum: 'Maximum',
+    supportedTokens: 'Supported tokens'
   },
 
   // Errors
   errors: {
     invoiceNotFound: 'This order does not exist or has been deleted.',
+    commerceNotFound: 'This commerce does not exist or has been deleted.',
     networkError: 'Network error. Please check your connection and try again.',
     serverError: 'Server error. Please try again later.',
     unknownError: 'An unexpected error occurred. Please try again.',

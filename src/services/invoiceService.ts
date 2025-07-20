@@ -1,5 +1,56 @@
 import { InvoiceResponse } from '../types/invoice';
 
+export interface CreateInvoiceRequest {
+  commerce_id: string;
+  amount_fiat: number;
+}
+
+export interface CreateInvoiceResponse {
+  success: boolean;
+  data?: {
+    id: string;
+    commerce_id: string;
+    amount_fiat: number;
+    fiat_currency: string;
+    status: string;
+    expires_at: string | null;
+    created_at: string;
+  };
+  error?: string;
+}
+
+export const createInvoice = async (request: CreateInvoiceRequest): Promise<CreateInvoiceResponse> => {
+  try {
+    const response = await fetch('/api/invoices', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.error || 'Failed to create invoice'
+      };
+    }
+
+    return {
+      success: true,
+      data: data.data
+    };
+  } catch (error) {
+    console.error('Error creating invoice:', error);
+    return {
+      success: false,
+      error: 'Network error. Please check your connection and try again.'
+    };
+  }
+};
+
 export const getInvoice = async (invoiceId: string): Promise<InvoiceResponse> => {
   try {
     // Use proxy in development, full URL in production

@@ -1,5 +1,5 @@
 import { Chain } from 'wagmi/chains';
-import { base, polygon, celo, bsc, mainnet, arbitrum, optimism, avalanche } from 'wagmi/chains';
+import { celo } from 'wagmi/chains';
 
 // Configuración centralizada de todas las blockchains soportadas
 export interface ChainConfig {
@@ -12,56 +12,39 @@ export interface ChainConfig {
   priority: number;
 }
 
+// Definir Celo Alfajores manualmente ya que no está en wagmi/chains
+const celoAlfajores: Chain = {
+  id: 44787,
+  name: 'Celo Alfajores',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Celo',
+    symbol: 'CELO',
+  },
+  rpcUrls: {
+    default: { http: ['https://alfajores-forno.celo-testnet.org'] },
+    public: { http: ['https://alfajores-forno.celo-testnet.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Celo Explorer', url: 'https://explorer.celo.org/alfajores' },
+  },
+  testnet: true,
+};
+
 // ✅ CONFIGURACIÓN CENTRAL DE BLOCKCHAINS
-// Para agregar una nueva blockchain, solo hay que añadirla aquí
+// Solo Celo y Celo Alfajores están habilitados
 export const SUPPORTED_CHAINS: ChainConfig[] = [
   {
-    chain: mainnet,
-    backendNames: ['Ethereum', 'Ethereum Mainnet', 'ETH'],
+    chain: celo,
+    backendNames: ['Celo', 'CELO', 'Celo Mainnet'],
     enabled: true,
     priority: 1
   },
   {
-    chain: base,
-    backendNames: ['Base', 'Base Mainnet'],
+    chain: celoAlfajores,
+    backendNames: ['Celo Alfajores', 'Alfajores', 'Celo Testnet'],
     enabled: true,
     priority: 2
-  },
-  {
-    chain: polygon,
-    backendNames: ['Polygon', 'Polygon POS', 'MATIC'],
-    enabled: true,
-    priority: 3
-  },
-  {
-    chain: arbitrum,
-    backendNames: ['Arbitrum', 'Arbitrum One', 'ARB'],
-    enabled: true,
-    priority: 4
-  },
-  {
-    chain: optimism,
-    backendNames: ['Optimism', 'OP Mainnet', 'OP'],
-    enabled: true,
-    priority: 5
-  },
-  {
-    chain: bsc,
-    backendNames: ['BSC', 'BNB Smart Chain', 'Binance Smart Chain', 'BNB'],
-    enabled: true,
-    priority: 6
-  },
-  {
-    chain: avalanche,
-    backendNames: ['Avalanche', 'Avalanche C-Chain', 'AVAX'],
-    enabled: true,
-    priority: 7
-  },
-  {
-    chain: celo,
-    backendNames: ['Celo', 'CELO'],
-    enabled: true,
-    priority: 8
   }
 ];
 
