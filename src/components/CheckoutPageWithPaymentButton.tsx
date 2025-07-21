@@ -23,7 +23,7 @@ import { groupTokensBySymbol } from '../utils/tokenUtils';
 import { findChainIdByBackendName } from '../config/chains';
 import { PaymentOption } from '../blockchain/types';
 
-export const CheckoutPage: React.FC = () => {
+export const CheckoutPageWithPaymentButton: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { invoice, error, loading } = useInvoice(invoiceId || '');
   const { commerce, loading: commerceLoading } = useCommerce(invoice?.commerce_id || '');
@@ -99,14 +99,12 @@ export const CheckoutPage: React.FC = () => {
     // Handle successful payment
     console.log('Payment completed successfully!');
     // You could redirect to a success page or show a success message
-    window.location.reload(); // Refresh to show updated status
   };
 
   const handlePaymentError = (error: string) => {
     // Handle payment error
     console.error('Payment error:', error);
     // You could show an error message to the user
-    alert(`Payment error: ${error}`);
   };
 
   if (loading) {
@@ -119,25 +117,16 @@ export const CheckoutPage: React.FC = () => {
 
   const groupedTokens = groupTokensBySymbol(invoice.tokens);
 
-  // Get available networks from invoice tokens (commented out as not currently used)
-  // const availableNetworks = [...new Set(invoice.tokens.map(token => token.network))];
-
   const formatAmount = (amount: number, currency: string) => {
-    const locale = language === 'es' ? 'es-CO' : 'en-US';
-    const formattedNumber = new Intl.NumberFormat(locale, {
-      style: 'decimal',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+    return new Intl.NumberFormat(language === 'es' ? 'es-CO' : 'en-US', {
+      style: 'currency',
+      currency: currency,
     }).format(amount);
-    
-    // Format like "COP $ 50,000" to be consistent with pay page
-    return `${currency} $ ${formattedNumber}`;
   };
 
   const handleTokenSelect = (token: GroupedToken) => {
     setSelectedToken(token);
-    // Reset network selection when token changes
-    setSelectedNetwork('');
+    setSelectedNetwork(''); // Reset network when token changes
   };
 
   const handleNetworkSelect = (network: string) => {
@@ -234,6 +223,7 @@ export const CheckoutPage: React.FC = () => {
                       requiredChainId={requiredChainId}
                     />
                   </div>
+                  
                   {/* Payment button with balance validation */}
                   {!hasSufficientBalance && amountToPay > 0 ? (
                     <div className="space-y-3">
@@ -273,13 +263,13 @@ export const CheckoutPage: React.FC = () => {
                       </button>
                     </div>
                   ) : (
+                    // NEW: Using PaymentButton component instead of regular button
                     <PaymentButton
                       invoiceId={invoiceId || ''}
                       paymentOptions={paymentOptions}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
-                      disabled={!hasSufficientBalance || amountToPay <= 0}
-                      hasSufficientBalance={hasSufficientBalance}
+                      className="flex items-center justify-center space-x-2"
                     />
                   )}
                   <div className="mt-3 text-center">
@@ -345,16 +335,6 @@ export const CheckoutPage: React.FC = () => {
           </div>
           
           <div className="space-y-3">
-            {/* Show Order ID when invoice is paid */}
-            {effectiveStatus === 'Paid' && (
-              <div>
-                <p className="text-gray-400 text-sm">{t.order.orderId}</p>
-                <p className="text-lg font-semibold text-white">
-                  {invoice.id}
-                </p>
-              </div>
-            )}
-            
             <div>
               <p className="text-gray-400 text-sm">{t.order.totalToPay}</p>
               <p className="text-2xl font-bold text-white">
@@ -400,4 +380,4 @@ export const CheckoutPage: React.FC = () => {
       
     </div>
   );
-};
+}; 

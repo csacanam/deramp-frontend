@@ -31,6 +31,7 @@ export const es = {
   // Order Information
   order: {
     title: 'Detalles del pedido',
+    orderId: 'Número de Orden',
     totalToPay: 'Importe total',
     timeRemaining: 'Tiempo restante',
     pageTitle: 'Completa tu pago',
@@ -47,7 +48,11 @@ export const es = {
     connectWallet: 'Conectar wallet',
     connectWalletDescription: 'Conecta tu wallet para continuar con el pago',
     makePayment: 'Pagar ahora',
-    processing: 'Procesando...',
+    preparing: 'Preparando tu pago...',
+    authorize: 'Autorizar {token}',
+    authorizing: 'Autorizando {token}...',
+    confirm: 'Confirmar pago',
+    processing: 'Procesando pago...',
     completed: '¡Pago completado!',
     completedDescription: 'Este pedido ha sido pagado exitosamente.',
     expired: 'Pedido expirado',
@@ -57,7 +62,24 @@ export const es = {
     amountToPay: 'Importe a pagar',
     price: 'Precio {symbol}',
     lastUpdated: 'Actualizado {time}',
-    dateNotAvailable: 'Fecha no disponible'
+    dateNotAvailable: 'Fecha no disponible',
+    paymentCancelled: 'Cancelaste el pago. Puede intentar de nuevo.',
+    // Error messages
+    networkConfigError: 'Problema de configuración de red. Intenta de nuevo o contacta soporte.',
+    unableToPrepare: 'No se pudo preparar el pago. Intenta de nuevo.',
+    unableToCreateBlockchain: 'No se pudo crear el pago en blockchain. Intenta de nuevo.',
+    unableToVerifyStatus: 'No se pudo verificar el estado del pago. Intenta de nuevo.',
+    tokenAuthRequired: 'Autorización de tokens requerida. Autoriza los tokens primero.',
+    transactionFailed: 'La transacción de pago falló. Intenta de nuevo.',
+    insufficientBalance: 'Saldo insuficiente. Revisa tu wallet.',
+    networkIssue: 'Problema de red. Revisa tu conexión e intenta de nuevo.',
+    connectionIssue: 'Problema de conexión. Revisa tu internet e intenta de nuevo.',
+    tokenNotSupported: 'El token seleccionado no es compatible. Elige otro token.',
+    networkNotSupported: 'La red seleccionada no es compatible. Elige otra red.',
+    walletNotFound: 'Wallet no encontrada. Conecta tu wallet primero.',
+    paymentOptionNotFound: 'Opción de pago no disponible. Intenta de nuevo.',
+    tokenAuthFailed: 'Autorización de tokens falló. Intenta de nuevo.',
+    paymentFailed: 'El pago falló. Intenta de nuevo.',
   },
 
   // Balance

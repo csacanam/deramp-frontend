@@ -2,7 +2,7 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { celo } from 'wagmi/chains';
 import type { Chain } from 'wagmi/chains';
 
-// Definir Celo Alfajores manualmente (igual que en chains.ts)
+// Define Celo Alfajores manually (same as in chains.ts)
 const celoAlfajores: Chain = {
   id: 44787,
   name: 'Celo Alfajores',
@@ -21,7 +21,7 @@ const celoAlfajores: Chain = {
   testnet: true,
 };
 
-// Solo Celo y Celo Alfajores están habilitados
+  // Only Celo and Celo Alfajores are enabled
 export const allChains: readonly [Chain, ...Chain[]] = [celo, celoAlfajores];
 
 export const config = getDefaultConfig({

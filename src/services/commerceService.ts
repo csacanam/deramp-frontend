@@ -19,11 +19,11 @@ export interface CommerceResponse {
 
 export const getCommerce = async (commerceId: string): Promise<CommerceResponse> => {
   try {
-    // Use proxy in development, full URL in production
-    const baseUrl = import.meta.env.DEV ? '' : import.meta.env.VITE_BACKEND_URL;
+    // Use direct URL from environment variable
+    const baseUrl = import.meta.env.VITE_BACKEND_URL;
     
-    // Validate that backend URL is configured in production
-    if (!import.meta.env.DEV && !import.meta.env.VITE_BACKEND_URL) {
+    // Validate that backend URL is configured
+    if (!import.meta.env.VITE_BACKEND_URL) {
       console.error('VITE_BACKEND_URL environment variable is not configured');
       return { success: false, error: 'Backend configuration error' };
     }
@@ -31,16 +31,6 @@ export const getCommerce = async (commerceId: string): Promise<CommerceResponse>
     // Build the full URL for debugging
     const fullUrl = `${baseUrl}/api/commerces/${commerceId}`;
     
-    // Debug logging
-    console.log('🔍 getCommerce Debug Info:');
-    console.log('  - Environment:', import.meta.env.DEV ? 'DEVELOPMENT' : 'PRODUCTION');
-    console.log('  - Base URL:', baseUrl || '(using proxy)');
-    console.log('  - Commerce ID:', commerceId);
-    console.log('  - Full URL:', fullUrl);
-    console.log('  - VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL || 'NOT SET');
-    console.log('  - VITE_BACKEND_URL length:', (import.meta.env.VITE_BACKEND_URL || '').length);
-    console.log('  - VITE_BACKEND_URL last char:', (import.meta.env.VITE_BACKEND_URL || '').slice(-1));
-
     // Make API call to backend
     const response = await fetch(fullUrl, {
       method: 'GET',
@@ -49,16 +39,8 @@ export const getCommerce = async (commerceId: string): Promise<CommerceResponse>
       },
     });
 
-    // Debug response info
-    console.log('📡 Response Info:');
-    console.log('  - Status:', response.status);
-    console.log('  - Status Text:', response.statusText);
-    console.log('  - OK:', response.ok);
-    console.log('  - URL:', response.url);
-
     // Handle HTTP errors
     if (!response.ok) {
-      console.error('❌ HTTP Error:', response.status, response.statusText);
       if (response.status === 404) {
         return { success: false, error: 'Commerce not found' };
       }

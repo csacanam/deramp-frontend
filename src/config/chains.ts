@@ -1,18 +1,18 @@
 import { Chain } from 'wagmi/chains';
 import { celo } from 'wagmi/chains';
 
-// Configuración centralizada de todas las blockchains soportadas
+// Centralized configuration of all supported blockchains
 export interface ChainConfig {
   chain: Chain;
-  // Nombres alternativos que puede usar el backend
+  // Alternative names that the backend can use
   backendNames: string[];
-  // Si está activa o no (para poder desactivar temporalmente)
+  // Whether it's active or not (to be able to temporarily disable)
   enabled: boolean;
-  // Orden de prioridad para mostrar en dropdowns
+  // Priority order for displaying in dropdowns
   priority: number;
 }
 
-// Definir Celo Alfajores manualmente ya que no está en wagmi/chains
+// Define Celo Alfajores manually since it's not in wagmi/chains
 const celoAlfajores: Chain = {
   id: 44787,
   name: 'Celo Alfajores',
@@ -31,8 +31,8 @@ const celoAlfajores: Chain = {
   testnet: true,
 };
 
-// ✅ CONFIGURACIÓN CENTRAL DE BLOCKCHAINS
-// Solo Celo y Celo Alfajores están habilitados
+// ✅ CENTRAL BLOCKCHAIN CONFIGURATION
+// Only Celo and Celo Alfajores are enabled
 export const SUPPORTED_CHAINS: ChainConfig[] = [
   {
     chain: celo,
@@ -48,16 +48,16 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
   }
 ];
 
-// ✅ FUNCIONES DERIVADAS DE LA CONFIGURACIÓN CENTRAL
+// ✅ FUNCTIONS DERIVED FROM CENTRAL CONFIGURATION
 
-// Obtener todas las chains habilitadas para wagmi
+// Get all enabled chains for wagmi
 export const getAllEnabledChains = () => {
   const enabledChains = SUPPORTED_CHAINS
     .filter(config => config.enabled)
     .sort((a, b) => a.priority - b.priority)
     .map(config => config.chain);
   
-  // Asegurar que siempre tengamos al menos una chain
+  // Ensure we always have at least one chain
   if (enabledChains.length === 0) {
     throw new Error('No hay blockchains habilitadas. Revisa la configuración en SUPPORTED_CHAINS.');
   }
@@ -65,7 +65,7 @@ export const getAllEnabledChains = () => {
   return enabledChains;
 };
 
-// Mapeo de nombres del backend a chain objects
+// Mapping of backend names to chain objects
 export const getBackendNameToChainMap = (): Record<string, Chain> => {
   const map: Record<string, Chain> = {};
   
@@ -80,7 +80,7 @@ export const getBackendNameToChainMap = (): Record<string, Chain> => {
   return map;
 };
 
-// Mapeo de nombres del backend a chain IDs
+// Mapping of backend names to chain IDs
 export const getBackendNameToChainIdMap = (): Record<string, number> => {
   const map: Record<string, number> = {};
   
@@ -95,7 +95,7 @@ export const getBackendNameToChainIdMap = (): Record<string, number> => {
   return map;
 };
 
-// Buscar chain por nombre del backend
+// Find chain by backend name
 export const findChainByBackendName = (backendName: string): Chain | undefined => {
   const chainConfig = SUPPORTED_CHAINS
     .filter(config => config.enabled)
@@ -104,13 +104,13 @@ export const findChainByBackendName = (backendName: string): Chain | undefined =
   return chainConfig?.chain;
 };
 
-// Buscar chain ID por nombre del backend
+// Find chain ID by backend name
 export const findChainIdByBackendName = (backendName: string): number | undefined => {
   const chain = findChainByBackendName(backendName);
   return chain?.id;
 };
 
-// Obtener información de debug para una chain
+// Get debug information for a chain
 export const getChainDebugInfo = (backendName: string) => {
   const chainConfig = SUPPORTED_CHAINS
     .filter(config => config.enabled)

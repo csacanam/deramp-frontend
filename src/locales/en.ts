@@ -31,6 +31,7 @@ export const en = {
   // Order Information
   order: {
     title: 'Order details',
+    orderId: 'Order ID',
     totalToPay: 'Total amount',
     timeRemaining: 'Time left',
     pageTitle: 'Complete your payment',
@@ -47,7 +48,11 @@ export const en = {
     connectWallet: 'Connect Wallet',
     connectWalletDescription: 'Connect your wallet to continue with payment',
     makePayment: 'Pay Now',
-    processing: 'Processing...',
+    preparing: 'Preparing your payment...',
+    authorize: 'Authorize {token}',
+    authorizing: 'Authorizing {token}...',
+    confirm: 'Confirm Payment',
+    processing: 'Processing payment...',
     completed: 'Payment Completed!',
     completedDescription: 'This order has been paid successfully.',
     expired: 'Order Expired',
@@ -57,7 +62,24 @@ export const en = {
     amountToPay: 'Payment Amount',
     price: '{symbol} Price',
     lastUpdated: 'Updated {time}',
-    dateNotAvailable: 'Date not available'
+    dateNotAvailable: 'Date not available',
+    paymentCancelled: 'Payment cancelled. You can try again.',
+    // Error messages
+    networkConfigError: 'Network configuration issue. Please try again or contact support.',
+    unableToPrepare: 'Unable to prepare payment. Please try again.',
+    unableToCreateBlockchain: 'Unable to create payment on blockchain. Please try again.',
+    unableToVerifyStatus: 'Unable to verify payment status. Please try again.',
+    tokenAuthRequired: 'Token authorization required. Please authorize tokens first.',
+    transactionFailed: 'Payment transaction failed. Please try again.',
+    insufficientBalance: 'Insufficient balance. Please check your wallet.',
+    networkIssue: 'Network issue. Please check your connection and try again.',
+    connectionIssue: 'Connection issue. Please check your internet and try again.',
+    tokenNotSupported: 'Selected token is not supported. Please choose another token.',
+    networkNotSupported: 'Selected network is not supported. Please choose another network.',
+    walletNotFound: 'Wallet not found. Please connect your wallet first.',
+    paymentOptionNotFound: 'Payment option not available. Please try again.',
+    tokenAuthFailed: 'Token authorization failed. Please try again.',
+    paymentFailed: 'Payment failed. Please try again.',
   },
 
   // Balance
