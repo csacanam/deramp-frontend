@@ -66,12 +66,6 @@ export class BlockchainService {
     }
   ): Promise<any> {
     try {
-      console.log('🔧 DEBUG: updatePaymentData called with:', {
-        baseUrl,
-        fullUrl: `${baseUrl}/api/invoices/${invoiceId}/payment-data`,
-        paymentData
-      });
-      
       const response = await fetch(`${baseUrl}/api/invoices/${invoiceId}/payment-data`, {
         method: 'PUT',
         headers: {
@@ -80,20 +74,12 @@ export class BlockchainService {
         body: JSON.stringify(paymentData),
       });
 
-      console.log('🔧 DEBUG: updatePaymentData response:', {
-        status: response.status,
-        ok: response.ok,
-        url: response.url
-      });
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('🔧 DEBUG: updatePaymentData error:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('🔧 DEBUG: updatePaymentData success:', data);
       return data;
     } catch (error) {
       console.error('Error updating payment data:', error);
@@ -103,12 +89,6 @@ export class BlockchainService {
 
   static async updateInvoiceStatus(invoiceId: string, status: string): Promise<void> {
     try {
-      console.log('🔧 DEBUG: updateInvoiceStatus called with:', {
-        baseUrl,
-        fullUrl: `${baseUrl}/api/invoices/${invoiceId}/status`,
-        status
-      });
-      
       const response = await fetch(`${baseUrl}/api/invoices/${invoiceId}/status`, {
         method: 'POST',
         headers: {
@@ -117,15 +97,8 @@ export class BlockchainService {
         body: JSON.stringify({ status }),
       });
 
-      console.log('🔧 DEBUG: updateInvoiceStatus response:', {
-        status: response.status,
-        ok: response.ok,
-        url: response.url
-      });
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('🔧 DEBUG: updateInvoiceStatus error:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {

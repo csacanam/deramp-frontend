@@ -1,17 +1,20 @@
-# Crypto Stablecoins Checkout Page
+# DeRamp - Crypto Payment Checkout
 
-A modern web application for processing payments with stable cryptocurrencies (stablecoins) developed with React, TypeScript, and Tailwind CSS.
+A modern web application for processing payments with stable cryptocurrencies (stablecoins) on the Celo blockchain. Built with React, TypeScript, and Tailwind CSS.
 
 ## 🚀 Features
 
-- **Modern and responsive interface** with dark theme design
-- **Support for multiple tokens** (USDC, USDT, cCOP, cREAL)
-- **Multiple blockchain networks** (Base, Polygon, Celo)
-- **Order status** (pending, paid, expired)
-- **Smart token grouping** by symbol
-- **Dynamic network selection** based on chosen token
-- **Error handling** for non-existent orders
-- **Mock data** for development and testing
+- **Complete crypto payment flow** with wallet connection and smart contract integration
+- **Multi-state payment button** (initial, loading, ready, approving, confirm, processing)
+- **Celo blockchain integration** with DerampProxy smart contract
+- **Token approval and payment execution** using ethers.js
+- **Support for multiple tokens** (cCOP, CUSD, CEUR, USDC on Celo Alfajores)
+- **Real-time balance checking** and insufficient balance validation
+- **Backend integration** for invoice creation, status checking, and payment updates
+- **User-friendly error messages** in English and Spanish
+- **Responsive design** with dark theme
+- **Order status tracking** (pending, paid, expired)
+- **Order ID display** when payment is completed
 
 ## 🛠️ Technologies
 
@@ -19,6 +22,8 @@ A modern web application for processing payments with stable cryptocurrencies (s
 - **Vite** as bundler and dev server
 - **Tailwind CSS** for styling
 - **React Router DOM** for navigation
+- **Wagmi** for wallet connection
+- **Ethers.js v6** for blockchain interaction
 - **Lucide React** for icons
 - **ESLint** for linting
 
@@ -28,7 +33,7 @@ A modern web application for processing payments with stable cryptocurrencies (s
 
    ```bash
    git clone <repository-url>
-   cd crypto-checkout
+   cd deramp
    ```
 
 2. **Install dependencies**
@@ -37,74 +42,130 @@ A modern web application for processing payments with stable cryptocurrencies (s
    npm install
    ```
 
-3. **Start the development server**
+3. **Configure environment variables**
+
+   ```bash
+   # Create .env file
+   VITE_BACKEND_URL=http://127.0.0.1:3000
+   VITE_WALLETCONNECT_PROJECT_ID=your_project_id
+   ```
+
+4. **Start the development server**
 
    ```bash
    npm run dev
    ```
 
-4. **Open in browser**
+5. **Open in browser**
    ```
-   http://localhost:5173
+   http://localhost:5175
    ```
 
 ## 🎯 Usage
 
-### Available test URLs:
+### Payment Flow
 
-- **Pending order**: `/checkout/invoice-abc123`
-- **Paid order**: `/checkout/invoice-paid123`
-- **Expired order**: `/checkout/invoice-expired123`
-- **Non-existent order**: `/checkout/any-other-id`
+1. **Access checkout URL** with invoice ID: `/checkout/{invoice-id}`
+2. **Connect wallet** (MetaMask, WalletConnect, etc.)
+3. **Select token and network** (currently Celo Alfajores)
+4. **Click "Pay Now"** to create invoice on blockchain
+5. **Click "Authorize {TOKEN}"** to approve token spending
+6. **Click "Confirm Payment"** to execute payment
+7. **View Order ID** when payment is completed
 
-### User flow:
+### Available Test URLs
 
-1. **Access a checkout URL** with an invoice ID
-2. **View order information** (amount, status, merchant)
-3. **Select payment token** (USDC, USDT, cCOP, cREAL)
-4. **Choose blockchain network** available for the token
-5. **Connect wallet** (functionality pending implementation)
+- **Commerce page**: `/commerce/{commerce-id}`
+- **Checkout page**: `/checkout/{invoice-id}`
 
-## 🏗️ Project structure
+## 🏗️ Project Structure
 
 ```
 src/
-├── components/          # React components
-│   ├── CheckoutPage.tsx    # Main checkout page
-│   ├── TokenDropdown.tsx   # Token selector
-│   ├── NetworkDropdown.tsx # Network selector
-│   ├── StatusBadge.tsx     # Status badge
-│   ├── LoadingSpinner.tsx  # Loading spinner
-│   └── ErrorMessage.tsx    # Error message
-├── hooks/               # Custom hooks
-│   ├── useInvoice.ts       # Hook for loading invoices
-│   └── useCopyToClipboard.ts # Hook for copying to clipboard
-├── services/            # Services and APIs
-│   └── invoiceService.ts   # Invoice service (mock)
-├── types/               # Type definitions
-│   └── invoice.ts          # Invoice and token types
-├── utils/               # Utilities
-│   └── tokenUtils.ts       # Utilities for token grouping
-├── App.tsx              # Main component
-└── main.tsx             # Entry point
+├── blockchain/              # Blockchain configuration
+│   ├── abi/                    # Smart contract ABIs
+│   │   └── DerampProxy.json    # Main contract ABI
+│   ├── config/                 # Blockchain configuration
+│   │   ├── chains.ts           # Chain configuration
+│   │   ├── contracts.ts        # Contract addresses
+│   │   ├── networks.ts         # Network settings
+│   │   └── tokens.ts           # Token configuration
+│   └── types.ts                # Blockchain types
+├── components/              # React components
+│   ├── CheckoutPage.tsx        # Main checkout page
+│   ├── PaymentButton.tsx       # Payment button component
+│   ├── TokenDropdown.tsx       # Token selector
+│   ├── NetworkDropdown.tsx     # Network selector
+│   ├── StatusBadge.tsx         # Status badge
+│   ├── LoadingSpinner.tsx      # Loading spinner
+│   └── ErrorMessage.tsx        # Error message
+├── hooks/                   # Custom hooks
+│   ├── usePaymentButton.ts     # Payment button logic
+│   ├── useInvoice.ts           # Invoice loading
+│   ├── useCommerce.ts          # Commerce loading
+│   ├── useTokenBalance.ts      # Token balance checking
+│   └── useCopyToClipboard.ts   # Copy to clipboard
+├── services/                # API services
+│   ├── blockchainService.ts    # Blockchain API calls
+│   ├── invoiceService.ts       # Invoice API calls
+│   └── commerceService.ts      # Commerce API calls
+├── types/                   # Type definitions
+│   ├── invoice.ts              # Invoice types
+│   └── global.d.ts             # Global types
+├── utils/                   # Utilities
+│   ├── i18n.ts                 # Internationalization
+│   └── tokenUtils.ts           # Token utilities
+├── locales/                 # Translations
+│   ├── en.ts                   # English translations
+│   └── es.ts                   # Spanish translations
+├── config/                  # App configuration
+│   ├── chains.ts               # Chain configuration
+│   └── wagmi.ts                # Wagmi configuration
+├── App.tsx                  # Main component
+└── main.tsx                 # Entry point
 ```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Backend URL (required)
+VITE_BACKEND_URL=http://127.0.0.1:3000
+
+# WalletConnect Project ID (optional, has fallback)
+VITE_WALLETCONNECT_PROJECT_ID=your_project_id
+```
+
+### Blockchain Configuration
+
+The app is currently configured for **Celo Alfajores testnet**:
+
+- **Network**: Celo Alfajores (Chain ID: 44787)
+- **Main Contract**: DerampProxy at `0xc44cDAdf371DFCa94e325d1B35e27968921Ef668`
+- **Supported Tokens**: cCOP, CUSD, CEUR, USDC
+
+### Backend Endpoints
+
+The app expects these backend endpoints:
+
+- `GET /api/blockchain/status/:invoiceId?network=:network`
+- `POST /api/blockchain/create`
+- `PUT /api/invoices/:id/payment-data`
+- `POST /api/invoices/:id/status`
+- `GET /api/invoices/:id`
+- `GET /api/commerces/:id`
 
 ## 🧪 Testing
 
-### Available tokens in mock:
+### Development Testing
 
-- **USDC**: Base, Polygon
-- **USDT**: Polygon
-- **cCOP**: Celo
-- **cREAL**: Celo
+1. **Start backend server** on port 3000
+2. **Connect MetaMask** to Celo Alfajores
+3. **Get test tokens** from [Celo Faucet](https://faucet.celo.org/)
+4. **Test payment flow** with real transactions
 
-### Order statuses:
-
-- `pending`: Active order waiting for payment
-- `paid`: Successfully completed order
-- `expired`: Expired order, cannot be paid
-
-## 📝 Available scripts
+### Available Scripts
 
 ```bash
 # Development
@@ -120,31 +181,6 @@ npm run lint         # Run ESLint
 npm run preview      # Preview production build
 ```
 
-## 🔧 Configuration
-
-### Environment variables
-
-Currently no environment variables are required as it uses mock data.
-
-### Customization
-
-To modify mock data, edit the file `src/services/invoiceService.ts`:
-
-```typescript
-const mockInvoices: Record<string, InvoiceResponse> = {
-  "your-invoice-id": {
-    id: "your-invoice-id",
-    commerce_id: "your-merchant",
-    amount_fiat: 100000,
-    fiat_currency: "COP",
-    status: "pending",
-    tokens: [
-      // Your tokens here
-    ],
-  },
-};
-```
-
 ## 🚀 Deployment
 
 1. **Build for production**
@@ -157,10 +193,39 @@ const mockInvoices: Record<string, InvoiceResponse> = {
 
 3. **Deploy** to your preferred platform (Netlify, Vercel, etc.)
 
+4. **Configure environment variables** in production:
+   ```bash
+   VITE_BACKEND_URL=https://your-backend.com
+   ```
+
+## 🔒 Security
+
+- **Wallet connection** handled by Wagmi
+- **Smart contract calls** use ethers.js with proper error handling
+- **Backend communication** uses HTTPS in production
+- **No sensitive data** stored in frontend
+
+## 🚨 Error Handling
+
+The app handles various error scenarios:
+
+- **Wallet not connected**: Shows connection prompt
+- **Wrong network**: Requests network switch
+- **Insufficient balance**: Shows balance error
+- **Transaction failures**: Shows user-friendly error messages
+- **Backend errors**: Graceful fallback with retry options
+
+## 📚 Documentation
+
+- [Payment Flow Documentation](./PAYMENT_FLOW_README.md) - Detailed payment flow implementation
+- [Blockchain Configuration](./src/blockchain/config/) - Smart contract and network setup
+- [API Documentation](./src/services/) - Backend integration details
+- [TODO List](./TODO.md) - Pending features and improvements
+
 ## 🤝 Contributing
 
 1. Fork the project
-2. Create a branch for your feature (`git checkout -b feature/new-functionality`)
+2. Create a feature branch (`git checkout -b feature/new-functionality`)
 3. Commit your changes (`git commit -m 'Add new functionality'`)
 4. Push to the branch (`git push origin feature/new-functionality`)
 5. Open a Pull Request
@@ -171,12 +236,15 @@ This project is under the MIT License - see the [LICENSE](LICENSE) file for deta
 
 ## 🆘 Support
 
-If you encounter any issues or have questions:
+If you encounter any issues:
 
 1. Check [existing issues](../../issues)
-2. Create a [new issue](../../issues/new) if necessary
-3. Provide details about the problem and steps to reproduce it
+2. Create a [new issue](../../issues/new) with:
+   - Error description
+   - Steps to reproduce
+   - Browser and wallet information
+   - Network and transaction details
 
 ---
 
-Developed with ❤️ using React + TypeScript + Tailwind CSS
+**DeRamp** - Making crypto payments simple and accessible 🚀

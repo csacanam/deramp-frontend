@@ -1,8 +1,8 @@
-# 🚀 Simplified Payment Flow - DeRamp Frontend
+# 🚀 DeRamp Payment Flow Implementation
 
 ## 📋 Summary
 
-This document describes the implementation of the simplified payment flow for the DeRamp frontend, which handles interaction with smart contracts on the Celo blockchain.
+This document describes the complete payment flow implementation for the DeRamp frontend, which handles crypto payments on the Celo blockchain using smart contracts.
 
 ## 🏗️ Architecture
 
@@ -17,7 +17,7 @@ src/
 │   │   ├── contracts.ts      # Contract addresses
 │   │   └── tokens.ts         # Token configuration
 │   ├── abi/
-│   │   └── README.md         # ABI documentation
+│   │   └── DerampProxy.json  # Main contract ABI
 │   └── types.ts              # Blockchain types
 ├── services/
 │   └── blockchainService.ts  # Blockchain API services
@@ -25,48 +25,63 @@ src/
 │   └── usePaymentButton.ts   # Payment button hook
 ├── components/
 │   ├── PaymentButton.tsx     # Payment button component
-│   └── CheckoutPageWithPaymentButton.tsx  # Integration example
+│   └── CheckoutPage.tsx      # Main checkout page
 └── types/
     └── global.d.ts           # Global types (window.ethereum)
 ```
 
-## 🔄 Button State Flow
+## 🔄 Payment Button State Flow
 
-### States and Texts
+### States and User Experience
 
-| State       | English                     | Spanish                  | Action                          |
-| ----------- | --------------------------- | ------------------------ | ------------------------------- |
-| `initial`   | "Pay Now"                   | "Pagar ahora"            | Click → Check blockchain status |
-| `loading`   | "Preparing your payment..." | "Preparando tu pago..."  | Verifying/creating invoice      |
-| `ready`     | "Authorize {TOKEN}"         | "Autorizar {TOKEN}"      | Click → Approve token           |
-| `approving` | "Authorizing {TOKEN}..."    | "Autorizando {TOKEN}..." | Executing approve()             |
-| `confirm`   | "Confirm Payment"           | "Confirmar pago"         | Click → Confirm payment         |
+| State        | English                     | Spanish                  | Action                          | User Experience          |
+| ------------ | --------------------------- | ------------------------ | ------------------------------- | ------------------------ |
+| `initial`    | "Pay Now"                   | "Pagar ahora"            | Click → Check blockchain status | User sees payment amount |
+| `loading`    | "Preparing your payment..." | "Preparando tu pago..."  | Verifying/creating invoice      | Loading spinner          |
+| `ready`      | "Authorize {TOKEN}"         | "Autorizar {TOKEN}"      | Click → Approve token           | Ready to authorize       |
+| `approving`  | "Authorizing {TOKEN}..."    | "Autorizando {TOKEN}..." | Executing approve()             | Waiting for approval     |
+| `confirm`    | "Confirm Payment"           | "Confirmar pago"         | Click → Execute payment         | Ready to confirm         |
+| `processing` | "Processing payment..."     | "Procesando pago..."     | Executing payInvoice()          | Waiting for payment      |
 
-### Simplified Flow
+### Complete Payment Flow
 
-1. **Click "Pay Now"**
+1. **Initial State - "Pay Now"**
 
-   - Changes to "Preparing your payment..." state
-   - Verifies GET `/api/blockchain/status/:invoiceId?network=:network`
+   - User connects wallet and selects token
+   - Clicks "Pay Now" button
+   - Button changes to "Preparing your payment..."
 
-2. **Process Verification**
+2. **Loading State - Invoice Creation**
 
-   - If NOT exists in blockchain: Create with POST `/api/blockchain/create`
-   - If exists and is PENDING: Change directly to "Authorize {TOKEN}"
-   - If exists but is EXPIRED/REFUNDED/PAID: Update backend and refresh page
+   - Checks GET `/api/blockchain/status/:invoiceId?network=:network`
+   - If invoice doesn't exist: Creates with POST `/api/blockchain/create`
+   - Converts token symbols to contract addresses for backend
+   - If successful: Changes to "Authorize {TOKEN}"
 
-3. **Click "Authorize {TOKEN}"**
+3. **Ready State - Token Authorization**
 
-   - Changes to "Authorizing {TOKEN}..." state
-   - Executes approve() for selected token
-   - Changes to "Confirm Payment"
+   - User clicks "Authorize {TOKEN}"
+   - Button changes to "Authorizing {TOKEN}..."
+   - Executes `approve()` function on token contract
+   - If successful: Changes to "Confirm Payment"
 
-4. **Click "Confirm Payment"**
-   - Executes payment confirmation logic (TODO)
+4. **Confirm State - Payment Execution**
+
+   - User clicks "Confirm Payment"
+   - Button changes to "Processing payment..."
+   - Executes `payInvoice()` on DerampProxy contract
+   - Updates backend with payment data and status
+
+5. **Success State**
+   - Payment completed successfully
+   - Order ID displayed above total amount
+   - Backend updated with payment details
 
 ## 🔧 Configuration
 
-### Supported Networks
+### Supported Network
+
+Currently configured for **Celo Alfajores testnet**:
 
 ```typescript
 // src/blockchain/config/networks.ts
@@ -85,17 +100,14 @@ export const NETWORKS = {
 };
 ```
 
-### Contracts
+### Main Contract
 
 ```typescript
 // src/blockchain/config/contracts.ts
 export const CONTRACTS = {
   alfajores: {
     DERAMP_PROXY: "0xc44cDAdf371DFCa94e325d1B35e27968921Ef668",
-    DERAMP_STORAGE: "0x25f5A82B9B021a35178A25540bb0f052fF22e6b4",
-    ACCESS_MANAGER: "0x776D9E84D5DAaecCb014f8aa8D64a6876B47a696",
-    INVOICE_MANAGER: "0xe7c011eB0328287B11aC711885a2f76d5797012f",
-    PAYMENT_PROCESSOR: "0x23b353F6B8F90155f7854Ca3813C0216819543B1",
+    // Other contracts for future use
   },
 };
 ```
@@ -106,18 +118,39 @@ export const CONTRACTS = {
 // src/blockchain/config/tokens.ts
 export const TOKENS = {
   alfajores: {
-    CELO: { address: "0x0000000000000000000000000000000000000000", ... },
-    CCOP: { address: "0xe6A57340f0df6E020c1c0a80bC6E13048601f0d4", ... },
-    CUSD: { address: "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1", ... },
-    CEUR: { address: "0x10c892A6EC43a53E45D0B916B4b7D383B1b78C0F", ... },
-    USDC: { address: "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B", ... },
+    cCOP: {
+      address: "0xe6A57340f0df6E020c1c0a80bC6E13048601f0d4",
+      symbol: "cCOP",
+      decimals: 18,
+      name: "Celo Colombian Peso",
+    },
+    CUSD: {
+      address: "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1",
+      symbol: "CUSD",
+      decimals: 18,
+      name: "Celo Dollar",
+    },
+    CEUR: {
+      address: "0x10c892A6EC43a53E45D0B916B4b7D383B1b78C0F",
+      symbol: "CEUR",
+      decimals: 18,
+      name: "Celo Euro",
+    },
+    USDC: {
+      address: "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B",
+      symbol: "USDC",
+      decimals: 6,
+      name: "USD Coin",
+    },
   },
 };
 ```
 
-## 🌐 Backend Endpoints
+## 🌐 Backend Integration
 
-### GET /api/blockchain/status/:invoiceId
+### Required Endpoints
+
+#### GET /api/blockchain/status/:invoiceId
 
 **Query params:** `network`
 
@@ -134,18 +167,15 @@ export const TOKENS = {
     "expiresAt": number,
     "paymentOptions": [
       {
-        "token": "string",
+        "token": "string", // Contract address
         "amount": "string"
       }
-    ],
-    "paidAmount": "string",
-    "paidToken": "string",
-    "paidAt": number
+    ]
   }
 }
 ```
 
-### POST /api/blockchain/create
+#### POST /api/blockchain/create
 
 **Request:**
 
@@ -154,58 +184,59 @@ export const TOKENS = {
   "invoiceId": "string",
   "paymentOptions": [
     {
-      "token": "string",
+      "token": "string", // Contract address
       "amount": "string"
     }
   ],
-  "network": "string",
-  "expiresAt": number
+  "network": "string"
 }
 ```
 
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "success": boolean,
-    "transactionHash": "string",
-    "invoiceId": "string",
-    "blockNumber": number,
-    "blockchainInvoiceId": "string",
-    "commerce": "string",
-    "expiresAt": number,
-    "paymentOptions": [...]
-  }
-}
-```
-
-### PUT /api/invoices/:id/status
+#### PUT /api/invoices/:id/payment-data
 
 **Request:**
 
 ```json
 {
-  "status": "string"
+  "paid_token": "0xe6A57340f0df6E020c1c0a80bC6E13048601f0d4",
+  "paid_network": "alfajores",
+  "paid_tx_hash": "0x35cc5d36f5d550ad4dc78b28791bb1adfc048d94d00be39bfe65c865f7097386",
+  "wallet_address": "0x1234567890abcdef1234567890abcdef12345678",
+  "paid_amount": 102.806000963941002624
+}
+```
+
+#### POST /api/invoices/:id/status
+
+**Request:**
+
+```json
+{
+  "status": "paid"
 }
 ```
 
 ## 🎯 Component Usage
 
-### PaymentButton
+### PaymentButton Component
 
 ```tsx
 import { PaymentButton } from "./components/PaymentButton";
 import { PaymentOption } from "./blockchain/types";
 
-const paymentOptions: PaymentOption[] = [{ token: "CUSD", amount: "10.5" }];
+const paymentOptions: PaymentOption[] = [
+  {
+    token: "cCOP",
+    amount: "102.806000963941002624",
+  },
+];
 
 <PaymentButton
   invoiceId="invoice-123"
   paymentOptions={paymentOptions}
   onSuccess={() => console.log("Payment successful!")}
   onError={(error) => console.error("Payment error:", error)}
+  hasSufficientBalance={true}
   className="custom-button-class"
 />;
 ```
@@ -223,132 +254,199 @@ const {
   selectedToken,
 } = usePaymentButton({
   invoiceId: "invoice-123",
-  paymentOptions: [{ token: "CUSD", amount: "10.5" }],
+  paymentOptions: [{ token: "cCOP", amount: "102.806000963941002624" }],
   onSuccess: () => console.log("Success!"),
   onError: (error) => console.error("Error:", error),
+  hasSufficientBalance: true,
 });
 ```
 
-## 🔒 Validations
+## 🔒 Smart Contract Integration
 
-- ✅ Verify network is valid
-- ✅ Verify invoiceId is valid
-- ✅ Verify paymentOptions is not empty
-- ✅ Handle network errors
-- ✅ Handle timeouts
-- ✅ Verify wallet connection
-- ✅ Verify sufficient balance
+### Token Approval
+
+```typescript
+// Approve token spending
+const tokenContract = new ethers.Contract(
+  tokenConfig.address,
+  ["function approve(address spender, uint256 amount) external returns (bool)"],
+  signer
+);
+
+const approveTx = await tokenContract.approve(
+  networkContracts.DERAMP_PROXY,
+  amount
+);
+```
+
+### Payment Execution
+
+```typescript
+// Execute payment
+const derampProxyContract = new ethers.Contract(
+  networkContracts.DERAMP_PROXY,
+  derampProxyAbi,
+  signer
+);
+
+const invoiceIdBytes32 = ethers.id(invoiceId);
+const amount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
+
+const payTx = await derampProxyContract.payInvoice(
+  invoiceIdBytes32,
+  tokenConfig.address,
+  amount,
+  { gasLimit: 500000, value: 0 }
+);
+```
 
 ## 🚨 Error Handling
 
-### Common Errors
+### Common Error Scenarios
 
 1. **Wallet not connected**
 
    - Message: "Please connect your wallet first"
-   - Action: Show connection button
+   - Action: Show wallet connection prompt
 
-2. **Unsupported network**
+2. **Wrong network**
 
-   - Message: "Unsupported network"
-   - Action: Request network change
+   - Message: "Please switch to Celo Alfajores network"
+   - Action: Request network switch
 
-3. **Unsupported token**
+3. **Insufficient balance**
 
-   - Message: "Unsupported token"
-   - Action: Show available tokens
+   - Message: "Insufficient {TOKEN} balance"
+   - Action: Show balance information
 
-4. **Insufficient balance**
+4. **Insufficient allowance**
 
-   - Message: "Insufficient balance"
-   - Action: Show purchase options
+   - Message: "Please authorize {TOKEN} first"
+   - Action: Request token approval
 
-5. **Network error**
-   - Message: "Network error. Please check your connection"
-   - Action: Retry automatically
+5. **Transaction failed**
+
+   - Message: "Payment failed. Please try again."
+   - Action: Allow retry
+
+6. **Backend error**
+   - Message: "Unable to process payment. Please try again."
+   - Action: Graceful fallback
+
+### Error Messages in Both Languages
+
+All error messages are localized in English and Spanish:
+
+```typescript
+// English
+"Please connect your wallet first";
+"Payment failed. Please try again.";
+
+// Spanish
+"Por favor conecta tu wallet primero";
+"El pago falló. Por favor intenta de nuevo.";
+```
+
+## 🔧 Development Configuration
+
+### Environment Variables
+
+```bash
+# Required
+VITE_BACKEND_URL=http://127.0.0.1:3000
+
+# Optional (has fallback)
+VITE_WALLETCONNECT_PROJECT_ID=your_project_id
+```
+
+### CORS Configuration
+
+The app uses Vite's proxy in development to avoid CORS issues:
+
+```typescript
+// vite.config.ts
+proxy: {
+  '/api': {
+    target: env.VITE_BACKEND_URL || 'http://127.0.0.1:3005',
+    changeOrigin: true,
+    secure: false,
+  },
+}
+```
+
+### URL Configuration
+
+```typescript
+// All services use this pattern
+const baseUrl = import.meta.env.DEV ? "" : import.meta.env.VITE_BACKEND_URL;
+
+// Development: /api/... (uses proxy)
+// Production: https://backend.com/api/... (direct URL)
+```
 
 ## 📦 Dependencies
 
 ```json
 {
   "dependencies": {
-    "ethers": "^6.0.0",
-    "wagmi": "^1.0.0"
+    "ethers": "^6.8.1",
+    "wagmi": "^1.4.7",
+    "react": "^18.2.0",
+    "typescript": "^5.0.2"
   }
 }
 ```
 
-## 🔄 Next Steps
-
-### Pending
-
-1. **Contract ABIs**
-
-   - Add real ABIs in `src/blockchain/abi/`
-   - DERAMP_PROXY.json
-   - DERAMP_STORAGE.json
-   - ACCESS_MANAGER.json
-   - INVOICE_MANAGER.json
-   - PAYMENT_PROCESSOR.json
-
-2. **Confirmation Logic**
-
-   - Implement `handleConfirm` in `usePaymentButton`
-   - Integrate with PAYMENT_PROCESSOR contract
-
-3. **Backend Endpoints**
-
-   - Implement endpoints in backend
-   - GET /api/blockchain/status/:invoiceId
-   - POST /api/blockchain/create
-   - PUT /api/invoices/:id/status
-
-4. **Testing**
-   - Unit tests for hooks
-   - Integration tests for components
-   - End-to-end flow tests
-
-### Future Improvements
-
-1. **Multiple Tokens**
-
-   - Support for simultaneous multi-token payments
-   - UI for token selection
-
-2. **Gas Optimization**
-
-   - Gas estimation before transactions
-   - Gas optimization for approve
-
-3. **Retry Logic**
-
-   - Automatic retries on network failures
-   - Failed transaction handling
-
-4. **Analytics**
-   - Payment event tracking
-   - Conversion metrics
-
 ## 🧪 Testing
 
-### Run Tests
+### Manual Testing Steps
+
+1. **Setup**
+
+   - Start backend server on port 3000
+   - Connect MetaMask to Celo Alfajores
+   - Get test tokens from [Celo Faucet](https://faucet.celo.org/)
+
+2. **Test Payment Flow**
+
+   - Navigate to `/checkout/{invoice-id}`
+   - Connect wallet
+   - Select token (cCOP, CUSD, etc.)
+   - Click "Pay Now"
+   - Authorize token
+   - Confirm payment
+   - Verify Order ID appears
+
+3. **Test Error Scenarios**
+   - Try with insufficient balance
+   - Try with wrong network
+   - Try with disconnected wallet
+   - Verify error messages appear correctly
+
+## 🚀 Production Deployment
+
+### Build Process
 
 ```bash
-npm test
+npm run build
 ```
 
-### Specific Tests
+### Environment Configuration
 
 ```bash
-# Payment hook test
-npm test usePaymentButton
-
-# PaymentButton component test
-npm test PaymentButton
-
-# Blockchain service test
-npm test blockchainService
+# Production .env
+VITE_BACKEND_URL=https://your-backend.com
+VITE_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
+
+### Deployment Checklist
+
+- [ ] Backend endpoints are implemented and tested
+- [ ] Smart contracts are deployed and verified
+- [ ] Environment variables are configured
+- [ ] CORS is properly configured on backend
+- [ ] SSL certificates are valid
+- [ ] Error monitoring is set up
 
 ## 📚 Resources
 
@@ -357,6 +455,32 @@ npm test blockchainService
 - [Celo Documentation](https://docs.celo.org/)
 - [DeRamp Smart Contracts](https://github.com/deramp/contracts)
 
+## 🔄 Future Improvements
+
+### Planned Features
+
+1. **Multiple Networks**
+
+   - Support for Celo Mainnet
+   - Support for other EVM chains
+
+2. **Enhanced UX**
+
+   - Gas estimation before transactions
+   - Transaction progress indicators
+   - Payment history
+
+3. **Advanced Features**
+
+   - Batch payments
+   - Recurring payments
+   - Payment scheduling
+
+4. **Analytics**
+   - Payment success rates
+   - User behavior tracking
+   - Performance metrics
+
 ---
 
-**Note:** This implementation is designed to be simple and robust, handling the most common error cases and providing a smooth user experience.
+**Note:** This implementation provides a complete, production-ready crypto payment flow with proper error handling, user feedback, and backend integration.
