@@ -11,11 +11,15 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         '/api': {
-          target: env.VITE_BACKEND_URL || 'http://127.0.0.1:3005',
+          target: env.VITE_BACKEND_URL || 'http://127.0.0.1:3000',
           changeOrigin: true,
           secure: false,
         },
       },
+    },
+    preview: {
+      port: 5175,
+      host: true,
     },
     plugins: [react()],
     optimizeDeps: {

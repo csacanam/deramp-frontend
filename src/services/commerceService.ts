@@ -19,16 +19,10 @@ export interface CommerceResponse {
 
 export const getCommerce = async (commerceId: string): Promise<CommerceResponse> => {
   try {
-    // Use direct URL from environment variable
-    const baseUrl = import.meta.env.VITE_BACKEND_URL;
+    // Use proxy in development, direct URL in production
+    const baseUrl = import.meta.env.DEV ? '' : (import.meta.env.VITE_BACKEND_URL || '');
     
-    // Validate that backend URL is configured
-    if (!import.meta.env.VITE_BACKEND_URL) {
-      console.error('VITE_BACKEND_URL environment variable is not configured');
-      return { success: false, error: 'Backend configuration error' };
-    }
-
-    // Build the full URL for debugging
+    // Build the full URL
     const fullUrl = `${baseUrl}/api/commerces/${commerceId}`;
     
     // Make API call to backend

@@ -21,14 +21,8 @@ export interface CreateInvoiceResponse {
 
 export const createInvoice = async (request: CreateInvoiceRequest): Promise<CreateInvoiceResponse> => {
   try {
-    // Use direct URL from environment variable
-    const baseUrl = import.meta.env.VITE_BACKEND_URL;
-    
-    // Validate that backend URL is configured
-    if (!import.meta.env.VITE_BACKEND_URL) {
-      console.error('VITE_BACKEND_URL environment variable is not configured');
-      return { success: false, error: 'Backend configuration error' };
-    }
+    // Use proxy in development, direct URL in production
+    const baseUrl = import.meta.env.DEV ? '' : (import.meta.env.VITE_BACKEND_URL || '');
 
     const response = await fetch(`${baseUrl}/api/invoices`, {
       method: 'POST',
@@ -62,14 +56,8 @@ export const createInvoice = async (request: CreateInvoiceRequest): Promise<Crea
 
 export const getInvoice = async (invoiceId: string): Promise<InvoiceResponse> => {
   try {
-    // Use direct URL from environment variable
-    const baseUrl = import.meta.env.VITE_BACKEND_URL;
-    
-    // Validate that backend URL is configured
-    if (!import.meta.env.VITE_BACKEND_URL) {
-      console.error('VITE_BACKEND_URL environment variable is not configured');
-      return { error: 'Backend configuration error' };
-    }
+    // Use proxy in development, direct URL in production
+    const baseUrl = import.meta.env.DEV ? '' : (import.meta.env.VITE_BACKEND_URL || '');
 
     // Make API call to backend
     const response = await fetch(`${baseUrl}/api/invoices/${invoiceId}`, {

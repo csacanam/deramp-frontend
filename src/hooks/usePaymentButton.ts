@@ -172,6 +172,8 @@ export const usePaymentButton = ({
 
     setButtonState('approving');
 
+    let tokenConfig: any = null;
+    
     try {
       const networkName = getNetworkName(chainId);
       
@@ -182,7 +184,7 @@ export const usePaymentButton = ({
       }
 
       // Find token config by symbol (case-insensitive)
-      const tokenConfig = Object.values(networkTokens).find(
+      tokenConfig = Object.values(networkTokens).find(
         token => token.symbol.toLowerCase() === selectedToken.toLowerCase()
       );
       if (!tokenConfig) {
@@ -197,16 +199,6 @@ export const usePaymentButton = ({
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      // Create token contract instance
-      const tokenContract = new ethers.Contract(
-        tokenConfig.address,
-        [
-          'function approve(address spender, uint256 amount) external returns (bool)',
-          'function allowance(address owner, address spender) external view returns (uint256)',
-        ],
-        signer
-      );
-
       // Get payment option for selected token
       const paymentOption = paymentOptions.find(option => option.token === selectedToken);
       if (!paymentOption) {
@@ -217,6 +209,16 @@ export const usePaymentButton = ({
       if (!networkContracts) {
         throw new Error('Network contracts not found');
       }
+
+      // Create token contract instance
+      const tokenContract = new ethers.Contract(
+        tokenConfig.address,
+        [
+          'function approve(address spender, uint256 amount) external returns (bool)',
+          'function allowance(address owner, address spender) external view returns (uint256)',
+        ],
+        signer
+      );
 
       // Check if approval is needed
       const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
