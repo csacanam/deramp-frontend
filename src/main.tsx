@@ -10,12 +10,10 @@ import './index.css';
 import '@rainbow-me/rainbowkit/styles.css';
 
 // Initialize vConsole for mobile debugging
-if (import.meta.env.DEV) {
-  import('vconsole').then(({ default: VConsole }) => {
-    new VConsole();
-    console.log('🔧 vConsole initialized for mobile debugging');
-  });
-}
+import('vconsole').then(({ default: VConsole }) => {
+  new VConsole();
+  console.log('🔧 vConsole initialized for mobile debugging');
+});
 
 const queryClient = new QueryClient();
 

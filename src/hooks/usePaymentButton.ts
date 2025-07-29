@@ -194,6 +194,19 @@ export const usePaymentButton = ({
     
     try {
       const networkName = getNetworkName(chainId);
+      console.log('🌐 Network Name:', networkName);
+      console.log('🌐 Chain ID:', chainId);
+      console.log('🌐 Expected Chain ID for Alfajores: 44787');
+      
+      // Verify we're on the correct network
+      if (chainId !== 44787) {
+        console.error('❌ Wrong network detected');
+        console.error('❌ Current Chain ID:', chainId);
+        console.error('❌ Expected Chain ID: 44787');
+        setButtonState('ready');
+        onError?.('Por favor, cambia a la red Celo Alfajores en tu wallet.');
+        return;
+      }
       
       // Get token configuration
       const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
@@ -243,6 +256,10 @@ export const usePaymentButton = ({
 
       // Verify contract is working
       try {
+        console.log('🔍 Verifying contract accessibility...');
+        console.log('🔍 Contract Address:', tokenConfig.address);
+        console.log('🔍 Network Name:', networkName);
+        
         const symbol = await tokenContract.symbol();
         const decimals = await tokenContract.decimals();
         console.log('✅ Contract verification successful');
@@ -250,6 +267,11 @@ export const usePaymentButton = ({
         console.log('✅ Token Decimals:', decimals);
       } catch (contractError) {
         console.error('❌ Contract verification failed:', contractError);
+        console.error('❌ Error details:', {
+          message: contractError instanceof Error ? contractError.message : 'Unknown error',
+          code: contractError && typeof contractError === 'object' && 'code' in contractError ? contractError.code : 'No code',
+          data: contractError && typeof contractError === 'object' && 'data' in contractError ? contractError.data : 'No data'
+        });
         throw new Error('Token contract not accessible');
       }
 
