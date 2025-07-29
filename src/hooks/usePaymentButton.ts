@@ -234,9 +234,24 @@ export const usePaymentButton = ({
         [
           'function approve(address spender, uint256 amount) external returns (bool)',
           'function allowance(address owner, address spender) external view returns (uint256)',
+          'function balanceOf(address account) external view returns (uint256)',
+          'function decimals() external view returns (uint8)',
+          'function symbol() external view returns (string)',
         ],
         signer
       );
+
+      // Verify contract is working
+      try {
+        const symbol = await tokenContract.symbol();
+        const decimals = await tokenContract.decimals();
+        console.log('✅ Contract verification successful');
+        console.log('✅ Token Symbol:', symbol);
+        console.log('✅ Token Decimals:', decimals);
+      } catch (contractError) {
+        console.error('❌ Contract verification failed:', contractError);
+        throw new Error('Token contract not accessible');
+      }
 
       // Check if approval is needed
       console.log('🔍 Checking allowance...');
@@ -311,6 +326,9 @@ export const usePaymentButton = ({
                 tokenConfig.address,
                 [
                   'function allowance(address owner, address spender) external view returns (uint256)',
+                  'function balanceOf(address account) external view returns (uint256)',
+                  'function decimals() external view returns (uint8)',
+                  'function symbol() external view returns (string)',
                 ],
                 signer
               );
