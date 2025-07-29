@@ -204,35 +204,60 @@ export const usePaymentButton = ({
         console.error('❌ Current Chain ID:', chainId);
         console.error('❌ Expected Chain ID: 44787');
         
-        // Try to switch to the correct network automatically
+        // Get more detailed network info
         try {
-          console.log('🔄 Attempting to switch to Celo Alfajores...');
-          await walletClient?.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0xaeef' }], // 44787 in hex
-          });
-          console.log('✅ Successfully switched to Celo Alfajores');
-          
-          // Wait a moment for the switch to complete
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          // Check if the switch was successful
-          const newChainId = await walletClient?.request({ method: 'eth_chainId' });
-          console.log('🔍 New Chain ID:', newChainId);
-          
-          if (newChainId === '0xaeef') {
-            console.log('✅ Network switch successful, continuing...');
-            // Continue with the flow
-          } else {
-            throw new Error('Network switch failed');
-          }
-          
-        } catch (switchError) {
-          console.error('❌ Failed to switch network:', switchError);
-          setButtonState('ready');
-          onError?.('Por favor, cambia manualmente a la red Celo Alfajores en tu wallet.');
-          return;
+          const currentChainId = await walletClient?.request({ method: 'eth_chainId' });
+          const accounts = await walletClient?.request({ method: 'eth_accounts' });
+          console.log('🔍 Detailed Network Info:');
+          console.log('   - Chain ID from wallet:', currentChainId);
+          console.log('   - Connected accounts:', accounts);
+          console.log('   - Chain ID from app:', chainId);
+          console.log('   - Is connected:', isConnected);
+        } catch (error) {
+          console.error('❌ Error getting network details:', error);
         }
+        
+        // Show manual network switch option
+        setButtonState('ready');
+        onError?.('Red incorrecta detectada. Por favor, cambia a Celo Alfajores en tu wallet o haz click aquí para cambiar automáticamente.');
+        
+        // Add a button to switch network manually
+        const switchButton = document.createElement('button');
+        switchButton.textContent = 'Cambiar a Celo Alfajores';
+        switchButton.style.cssText = `
+          background: #35d07f;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          margin-top: 10px;
+          cursor: pointer;
+          font-size: 14px;
+        `;
+        
+        switchButton.onclick = async () => {
+          try {
+            console.log('🔄 User clicked to switch network...');
+            await walletClient?.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0xaeef' }], // 44787 in hex
+            });
+            console.log('✅ Network switch successful');
+            // Reload the page to refresh the connection
+            window.location.reload();
+          } catch (error) {
+            console.error('❌ Failed to switch network:', error);
+            onError?.('Error al cambiar de red. Por favor, cambia manualmente a Celo Alfajores en MetaMask.');
+          }
+        };
+        
+        // Find the payment button container and add the switch button
+        const buttonContainer = document.querySelector('[data-payment-button]');
+        if (buttonContainer) {
+          buttonContainer.appendChild(switchButton);
+        }
+        
+        return;
       }
       
       // Get token configuration
