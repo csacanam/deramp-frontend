@@ -137,8 +137,7 @@ export const DemoPage: React.FC = () => {
                           
                           {/* Footer */}
                           <div className="flex items-center justify-center text-xs text-gray-500">
-                            <span className="mr-1">⚡</span>
-                            <span className="text-xs">Powered by Voulti</span>
+                            <span className="text-xs">{t.poweredBy} Voulti</span>
                           </div>
                         </div>
                       </div>

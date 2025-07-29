@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
+import { getBlockExplorerUrl } from '../blockchain/config/networks';
 import { useInvoice } from '../hooks/useInvoice';
 import { useCommerce } from '../hooks/useCommerce';
 import { useTokenBalance } from '../hooks/useTokenBalance';
@@ -106,7 +107,7 @@ export const CheckoutPage: React.FC = () => {
     // Handle payment error
     console.error('Payment error:', error);
     // You could show an error message to the user
-    alert(`Payment error: ${error}`);
+    alert(`${t.general.error}: ${error}`);
   };
 
   if (loading) {
@@ -362,6 +363,28 @@ export const CheckoutPage: React.FC = () => {
               </p>
             </div>
             
+            {/* Show Blockchain Transaction when invoice is paid */}
+            {effectiveStatus === 'Paid' && invoice.paid_tx_hash && invoice.paid_network && (
+              <div>
+                <p className="text-gray-400 text-sm">{t.order.blockchainTransaction}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-semibold text-white font-mono text-sm">
+                    {invoice.paid_tx_hash.slice(0, 10)}...{invoice.paid_tx_hash.slice(-8)}
+                  </p>
+                  {getBlockExplorerUrl(invoice.paid_network, invoice.paid_tx_hash) && (
+                    <a
+                      href={getBlockExplorerUrl(invoice.paid_network, invoice.paid_tx_hash)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                    >
+                      {t.order.viewOnExplorer}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+            
             {effectiveStatus === 'Pending' && (
               <CountdownTimer 
                 expiresAt={invoice.expires_at} 
@@ -392,7 +415,7 @@ export const CheckoutPage: React.FC = () => {
         <div className="text-center mt-8 pb-4">
           <Link to="/" className="inline-block">
             <p className="text-gray-400 text-sm hover:text-gray-300 transition-colors">
-              ⚡ Powered by <span className="font-bold text-white hover:text-blue-400 transition-colors">Voulti</span>
+              {t.poweredBy} <span className="font-bold text-white hover:text-blue-400 transition-colors">Voulti</span>
             </p>
           </Link>
         </div>

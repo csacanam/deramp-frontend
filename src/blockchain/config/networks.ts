@@ -14,4 +14,13 @@ export const NETWORKS = {
 };
 
 export type NetworkKey = keyof typeof NETWORKS;
-export type NetworkConfig = typeof NETWORKS[NetworkKey]; 
+export type NetworkConfig = typeof NETWORKS[NetworkKey];
+
+// Helper function to get block explorer URL for a transaction
+export const getBlockExplorerUrl = (networkName: string, txHash: string): string | null => {
+  const network = NETWORKS[networkName as NetworkKey];
+  if (!network || !network.blockExplorer) {
+    return null;
+  }
+  return `${network.blockExplorer}/tx/${txHash}`;
+}; 

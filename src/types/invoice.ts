@@ -36,6 +36,13 @@ export interface Invoice {
   tokens: Token[];
   expires_at?: string;
   commerce_icon_url?: string;
+  // Payment information
+  paid_tx_hash?: string;
+  paid_network?: string;
+  paid_token?: string;
+  wallet_address?: string;
+  paid_amount?: number;
+  paid_at?: string;
 }
 
 export interface InvoiceError {

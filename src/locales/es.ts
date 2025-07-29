@@ -35,7 +35,9 @@ export const es = {
     totalToPay: 'Importe total',
     timeRemaining: 'Tiempo restante',
     pageTitle: 'Completa tu pago',
-    pageDescription: 'Selecciona tu método de pago preferido y completa la transacción.'
+    pageDescription: 'Selecciona tu método de pago preferido y completa la transacción.',
+    blockchainTransaction: 'Transacción en blockchain',
+    viewOnExplorer: 'Ver en explorador 🔗'
   },
 
   // Payment
@@ -125,6 +127,13 @@ export const es = {
   // Footer
   footer: {
     builtWithLove: 'Hecho con ❤️ por'
+  },
+
+  // Features
+  features: {
+    noSetupFees: 'Sin costos de configuración',
+    instantSettlement: 'Liquidación instantánea',
+    globalReach: 'Alcance global'
   },
 
   // Commerce
@@ -229,5 +238,8 @@ export const es = {
   qrCode: {
     header: 'Paga con Cripto',
     subtitle: 'en Trutix'
-  }
+  },
+
+  // Powered by
+  poweredBy: '⚡ Desarrollado por'
 }; 

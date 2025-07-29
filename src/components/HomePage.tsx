@@ -140,15 +140,15 @@ export const HomePage: React.FC = () => {
             <div className="flex justify-center space-x-4 mt-6">
               <div className="flex items-center space-x-2 text-gray-300">
                 <span className="text-green-400">✓</span>
-                <span className="text-sm">No setup fees</span>
+                <span className="text-sm">{t.features.noSetupFees}</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
                 <span className="text-green-400">✓</span>
-                <span className="text-sm">Instant settlement</span>
+                <span className="text-sm">{t.features.instantSettlement}</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
                 <span className="text-green-400">✓</span>
-                <span className="text-sm">Global reach</span>
+                <span className="text-sm">{t.features.globalReach}</span>
               </div>
             </div>
           </div>

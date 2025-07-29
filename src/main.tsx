@@ -9,11 +9,13 @@ import { config } from './config/wagmi.ts';
 import './index.css';
 import '@rainbow-me/rainbowkit/styles.css';
 
-// Initialize vConsole for mobile debugging
-import('vconsole').then(({ default: VConsole }) => {
-  new VConsole();
-  console.log('🔧 vConsole initialized for mobile debugging');
-});
+// Initialize vConsole for mobile debugging only in development
+if (import.meta.env.DEV) {
+  import('vconsole').then(({ default: VConsole }) => {
+    new VConsole();
+    console.log('🔧 vConsole initialized for mobile debugging');
+  });
+}
 
 const queryClient = new QueryClient();
 

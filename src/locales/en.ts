@@ -35,7 +35,9 @@ export const en = {
     totalToPay: 'Total amount',
     timeRemaining: 'Time left',
     pageTitle: 'Complete your payment',
-    pageDescription: 'Select your preferred payment method and complete the transaction.'
+    pageDescription: 'Select your preferred payment method and complete the transaction.',
+    blockchainTransaction: 'Blockchain Transaction',
+    viewOnExplorer: 'View on explorer 🔗'
   },
 
   // Payment
@@ -125,6 +127,13 @@ export const en = {
   // Footer
   footer: {
     builtWithLove: 'Built with ❤️ by'
+  },
+
+  // Features
+  features: {
+    noSetupFees: 'No setup fees',
+    instantSettlement: 'Instant settlement',
+    globalReach: 'Global reach'
   },
 
   // Commerce
@@ -229,5 +238,8 @@ export const en = {
   qrCode: {
     header: 'Pay with Crypto',
     subtitle: 'at Trutix'
-  }
+  },
+
+  // Powered by
+  poweredBy: '⚡ Powered by'
 }; 

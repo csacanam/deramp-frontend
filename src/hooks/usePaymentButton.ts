@@ -629,8 +629,7 @@ export const usePaymentButton = ({
       // Check if user cancelled the transaction
       if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
         setButtonState('confirm');
-        const isSpanish = language === 'es';
-        alert(isSpanish ? 'Cancelaste el pago. Puede intentar de nuevo.' : 'Payment cancelled. You can try again.');
+        alert(t.payment.paymentCancelled);
       } else {
         setButtonState('confirm');
         
