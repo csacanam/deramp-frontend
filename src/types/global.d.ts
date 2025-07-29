@@ -7,4 +7,8 @@ interface Window {
     selectedAddress?: string;
     chainId?: string;
   };
+  vConsole?: {
+    show: () => void;
+    hide: () => void;
+  };
 } 

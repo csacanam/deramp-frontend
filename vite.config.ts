@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       port: 5175,
-      host: true,
+      host: '0.0.0.0', // Allow connections from any IP
       proxy: {
         '/api': {
           target: env.VITE_BACKEND_URL || 'http://127.0.0.1:3000',

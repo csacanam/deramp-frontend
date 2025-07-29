@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount, useChainId, useWalletClient, usePublicClient } from 'wagmi';
 import { ethers } from 'ethers';
 import { BlockchainService } from '../services/blockchainService';
 import { ButtonState, PaymentOption } from '../blockchain/types';
@@ -27,6 +27,8 @@ export const usePaymentButton = ({
   const [selectedToken, setSelectedToken] = useState<string>('');
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
   const { language, t } = useLanguage();
 
   // Get network name from chainId
@@ -165,7 +167,23 @@ export const usePaymentButton = ({
   }, [invoiceId, paymentOptions, isConnected, address, chainId, onError, getNetworkName]);
 
   const handleAuthorize = useCallback(async () => {
+    console.log('🔐 ===== AUTHORIZE START =====');
+    console.log('🔐 Selected Token:', selectedToken);
+    console.log('🔐 Is Connected:', isConnected);
+    console.log('🔐 Address:', address);
+    console.log('🔐 Chain ID:', chainId);
+    console.log('🔐 Wallet Client:', !!walletClient);
+    console.log('🔐 Public Client:', !!publicClient);
+    console.log('🔐 Window Ethereum:', !!window.ethereum);
+    console.log('🔐 User Agent:', navigator.userAgent);
+    console.log('🔐 ==========================');
+    
     if (!isConnected || !address || !chainId || !selectedToken) {
+      console.error('❌ Missing required data for authorization');
+      console.error('❌ Is Connected:', isConnected);
+      console.error('❌ Address:', address);
+      console.error('❌ Chain ID:', chainId);
+      console.error('❌ Selected Token:', selectedToken);
       onError?.('Please connect your wallet and select a token');
       return;
     }
@@ -191,12 +209,12 @@ export const usePaymentButton = ({
         throw new Error('Unsupported token');
       }
 
-      // Create provider and signer
-      if (!window.ethereum) {
-        throw new Error('No Ethereum provider found');
+      // Create provider and signer using Wagmi
+      if (!walletClient) {
+        throw new Error('No wallet client available');
       }
       
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(walletClient);
       const signer = await provider.getSigner();
 
       // Get payment option for selected token
@@ -221,18 +239,118 @@ export const usePaymentButton = ({
       );
 
       // Check if approval is needed
+      console.log('🔍 Checking allowance...');
       const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
       const requiredAmount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
 
+      console.log('📊 Allowance:', ethers.formatUnits(allowance, tokenConfig.decimals), 'Required:', ethers.formatUnits(requiredAmount, tokenConfig.decimals));
+
       if (allowance < requiredAmount) {
         // Approve token
-        const approveTx = await tokenContract.approve(
-          networkContracts.DERAMP_PROXY,
-          requiredAmount
-        );
-        await approveTx.wait();
+        console.log('🔄 Sending approval transaction...');
+        console.log('🔄 Approving spender (DERAMP_PROXY):', networkContracts.DERAMP_PROXY);
+        console.log('🔄 To spend amount:', ethers.formatUnits(requiredAmount, tokenConfig.decimals));
+        
+        try {
+          const approveTx = await tokenContract.approve(
+            networkContracts.DERAMP_PROXY,
+            requiredAmount
+          );
+          
+          console.log('📊 Transaction hash:', approveTx.hash);
+          console.log('⏳ Waiting for confirmation...');
+          
+          // Wait for transaction confirmation
+          const receipt = await approveTx.wait();
+          console.log('✅ Transaction confirmed');
+          console.log('📊 Receipt status:', receipt.status);
+          console.log('📊 Gas used:', receipt.gasUsed?.toString());
+          console.log('📊 Block number:', receipt.blockNumber);
+          
+        } catch (approvalError) {
+          console.error('❌ Approval transaction failed:', approvalError);
+          
+          // Log detailed error information in one line for easy copying
+          console.log('🔍 ===== COMPLETE ERROR FOR COPYING =====');
+          console.log('🔍 Error:', JSON.stringify(approvalError, null, 2));
+          console.log('🔍 ===========================================');
+          
+          // Check specifically for "could not coalesce" error
+          const isCoalesceError = approvalError && 
+            typeof approvalError === 'object' && 
+            'message' in approvalError && 
+            typeof approvalError.message === 'string' &&
+            (approvalError.message.includes('could not coalesce') ||
+             approvalError.message.includes('Internal JSON-RPC error'));
+          
+          if (isCoalesceError) {
+            console.log('⚠️ MetaMask mobile browser error detected');
+            console.log('⚠️ This is common when using MetaMask browser on mobile');
+            console.log('⚠️ Transaction might still be processing in background');
+            
+            // For this specific error, try to get transaction hash if available
+            let transactionHash = null;
+            if (approvalError && typeof approvalError === 'object' && 'transaction' in approvalError) {
+              const transaction = approvalError.transaction as any;
+              transactionHash = transaction?.hash;
+              console.log('🔍 Transaction hash from error:', transactionHash);
+            }
+            
+            // Wait a bit and check if transaction was actually processed
+            console.log('⏳ Waiting 20 seconds to check if transaction processed...');
+            await new Promise(resolve => setTimeout(resolve, 20000));
+            
+            try {
+              console.log('🔍 Checking if allowance was updated despite error...');
+              console.log('🔍 Token Address:', tokenConfig.address);
+              console.log('🔍 User Address (owner):', address);
+              console.log('🔍 Spender Address (DERAMP_PROXY):', networkContracts.DERAMP_PROXY);
+              
+              // Create a fresh token contract with current provider
+              const freshTokenContract = new ethers.Contract(
+                tokenConfig.address,
+                [
+                  'function allowance(address owner, address spender) external view returns (uint256)',
+                ],
+                signer
+              );
+              
+              // Verify we're checking the right allowance: owner = user, spender = DERAMP_PROXY
+              console.log('🔍 Calling allowance(owner, spender):');
+              console.log('🔍   owner =', address);
+              console.log('🔍   spender =', networkContracts.DERAMP_PROXY);
+              
+              const newAllowance = await freshTokenContract.allowance(address, networkContracts.DERAMP_PROXY);
+              console.log('📊 New Allowance after error:', newAllowance.toString());
+              console.log('📊 New Allowance in ETH:', ethers.formatUnits(newAllowance, tokenConfig.decimals));
+              console.log('📊 Required Amount:', requiredAmount.toString());
+              console.log('📊 Required Amount in ETH:', ethers.formatUnits(requiredAmount, tokenConfig.decimals));
+              console.log('📊 Comparison:', newAllowance >= requiredAmount ? '✅ SUFFICIENT' : '❌ INSUFFICIENT');
+              
+              if (newAllowance >= requiredAmount) {
+                console.log('✅ Allowance was updated despite error!');
+                console.log('✅ Transaction was successful in background');
+                setButtonState('confirm');
+                return; // Success!
+              } else {
+                console.log('❌ Allowance was not updated, transaction failed');
+                console.log('💡 Suggestion: Try again, this error is often temporary');
+              }
+            } catch (checkError) {
+              console.log('⚠️ Could not check allowance after error:', checkError);
+            }
+            
+            // For MetaMask mobile browser, suggest checking wallet and retrying
+            setButtonState('ready');
+            onError?.('Error temporal de MetaMask móvil. La transacción puede haberse procesado. Verifica tu wallet y vuelve a intentar si es necesario.');
+            return;
+          }
+          
+          // For other errors, re-throw
+          throw approvalError;
+        }
       }
-
+      
       setButtonState('confirm');
     } catch (error) {
       console.error('Error in handleAuthorize:', error);
@@ -295,12 +413,12 @@ export const usePaymentButton = ({
         throw new Error('Network contracts not found');
       }
 
-      // Create provider and signer
-      if (!window.ethereum) {
-        throw new Error('No Ethereum provider found');
+      // Create provider and signer using Wagmi
+      if (!walletClient) {
+        throw new Error('No wallet client available');
       }
       
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(walletClient);
       const signer = await provider.getSigner();
 
       // Import the full ABI from the JSON file

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect, useWalletClient, usePublicClient } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ConnectWalletButtonProps {
@@ -11,9 +11,23 @@ interface ConnectWalletButtonProps {
 export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({ 
   onConnected 
 }) => {
-  const { isConnected } = useAccount();
+  const { isConnected, address, chainId } = useAccount();
   const { disconnect } = useDisconnect();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
   const { t } = useLanguage();
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 ConnectWalletButton Debug:');
+    console.log('  - Is Connected:', isConnected);
+    console.log('  - Address:', address);
+    console.log('  - Chain ID:', chainId);
+    console.log('  - Wallet Client:', !!walletClient);
+    console.log('  - Public Client:', !!publicClient);
+    console.log('  - Window Ethereum:', !!window.ethereum);
+    console.log('  - User Agent:', navigator.userAgent);
+  }, [isConnected, address, chainId, walletClient, publicClient]);
 
   // Auto-switch to the selected network when connected - DISABLED
   // useEffect(() => {
@@ -37,6 +51,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   // Call onConnected callback when wallet connects
   useEffect(() => {
     if (isConnected && onConnected) {
+      console.log('✅ Wallet connected, calling onConnected callback');
       onConnected();
     }
   }, [isConnected, onConnected]);
@@ -60,6 +75,14 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
           (!authenticationStatus ||
             authenticationStatus === 'authenticated');
 
+        console.log('🔍 ConnectButton Debug:', {
+          ready,
+          connected,
+          authenticationStatus,
+          account: account?.address,
+          chain: chain?.id
+        });
+
         return (
           <div
             {...(!ready && {
@@ -74,13 +97,34 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
             {(() => {
               if (!connected) {
                 return (
-                  <button
-                    onClick={openConnectModal}
-                    type="button"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-                  >
-                    {t.payment.connectWallet}
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        console.log('🔗 Opening connect modal...');
+                        openConnectModal();
+                      }}
+                      type="button"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      {t.payment.connectWallet}
+                    </button>
+                    {/* Debug button for mobile */}
+                    {import.meta.env.DEV && (
+                      <button
+                        onClick={() => {
+                          console.log('🔧 Debug button clicked');
+                          // This will trigger vConsole if available
+                          if (window.vConsole) {
+                            window.vConsole.show();
+                          }
+                        }}
+                        type="button"
+                        className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                      >
+                        🔧 Debug Console
+                      </button>
+                    )}
+                  </div>
                 );
               }
 
@@ -88,7 +132,10 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
                 <div className="text-center space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <button
-                      onClick={openAccountModal}
+                      onClick={() => {
+                        console.log('🔗 Opening account modal...');
+                        openAccountModal();
+                      }}
                       type="button"
                       className="text-gray-300 hover:text-white transition-colors"
                     >
@@ -102,6 +149,22 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
                       {t.general.disconnect}
                     </button>
                   </div>
+                  {/* Debug button for mobile */}
+                  {import.meta.env.DEV && (
+                    <button
+                      onClick={() => {
+                        console.log('🔧 Debug button clicked');
+                        // This will trigger vConsole if available
+                        if (window.vConsole) {
+                          window.vConsole.show();
+                        }
+                      }}
+                      type="button"
+                      className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                    >
+                      🔧 Debug Console
+                    </button>
+                  )}
                   {/* Network switching status removed as auto-switching is disabled */}
                 </div>
               );
