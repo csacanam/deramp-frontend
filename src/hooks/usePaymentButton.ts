@@ -457,6 +457,10 @@ export const usePaymentButton = ({
           // For other errors, re-throw
           throw approvalError;
         }
+      } else {
+        // Allowance is already sufficient, skip approval
+        setButtonState('confirm');
+        return;
       }
     } catch (error) {
       console.error('Error in handleAuthorize:', error);
