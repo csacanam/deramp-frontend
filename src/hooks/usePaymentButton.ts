@@ -356,6 +356,22 @@ export const usePaymentButton = ({
           console.log('📊 Gas used:', receipt.gasUsed?.toString());
           console.log('📊 Block number:', receipt.blockNumber);
           
+          // Verify allowance was actually updated
+          console.log('🔍 Verifying allowance was updated...');
+          const updatedAllowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
+          console.log('📊 Updated Allowance:', ethers.formatUnits(updatedAllowance, tokenConfig.decimals));
+          console.log('📊 Required Amount:', ethers.formatUnits(requiredAmount, tokenConfig.decimals));
+          console.log('📊 Comparison:', updatedAllowance >= requiredAmount ? '✅ SUFFICIENT' : '❌ INSUFFICIENT');
+          
+          if (updatedAllowance >= requiredAmount) {
+            console.log('✅ Allowance verification successful!');
+            setButtonState('confirm');
+            return;
+          } else {
+            console.log('❌ Allowance was not updated properly');
+            throw new Error('Allowance was not updated after approval transaction');
+          }
+          
         } catch (approvalError) {
           console.error('❌ Approval transaction failed:', approvalError);
           
@@ -442,8 +458,6 @@ export const usePaymentButton = ({
           throw approvalError;
         }
       }
-      
-      setButtonState('confirm');
     } catch (error) {
       console.error('Error in handleAuthorize:', error);
       setButtonState('ready');
