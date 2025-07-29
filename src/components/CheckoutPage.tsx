@@ -367,21 +367,16 @@ export const CheckoutPage: React.FC = () => {
             {effectiveStatus === 'Paid' && invoice.paid_tx_hash && invoice.paid_network && (
               <div>
                 <p className="text-gray-400 text-sm">{t.order.blockchainTransaction}</p>
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-semibold text-white font-mono text-sm">
-                    {invoice.paid_tx_hash.slice(0, 10)}...{invoice.paid_tx_hash.slice(-8)}
-                  </p>
-                  {getBlockExplorerUrl(invoice.paid_network, invoice.paid_tx_hash) && (
-                    <a
-                      href={getBlockExplorerUrl(invoice.paid_network, invoice.paid_tx_hash)!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
-                    >
-                      {t.order.viewOnExplorer}
-                    </a>
-                  )}
-                </div>
+                {getBlockExplorerUrl(invoice.paid_network, invoice.paid_tx_hash) && (
+                  <a
+                    href={getBlockExplorerUrl(invoice.paid_network, invoice.paid_tx_hash)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                  >
+                    {t.order.viewOnExplorer}
+                  </a>
+                )}
               </div>
             )}
             
