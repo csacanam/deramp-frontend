@@ -407,7 +407,7 @@ export const CheckoutPage: React.FC = () => {
         </div>
 
         {/* Powered by Voulti */}
-        <div className="text-center mt-8 pb-4">
+        <div className="text-center mt-4 pb-4">
           <Link to="/" className="inline-block">
             <p className="text-gray-400 text-sm hover:text-gray-300 transition-colors">
               {t.poweredBy} <span className="font-bold text-white hover:text-blue-400 transition-colors">Voulti</span>

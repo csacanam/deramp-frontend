@@ -1,19 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext, useEffect } from 'react';
 import { Copy, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation } from 'react-router-dom';
+
+// Context to share banner visibility state
+export const BannerContext = createContext<{ isBannerVisible: boolean; setIsBannerVisible: (visible: boolean) => void }>({ 
+  isBannerVisible: false, 
+  setIsBannerVisible: () => {} 
+});
+
+export const useBannerContext = () => useContext(BannerContext);
 
 export const MobileWalletBanner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const { t } = useLanguage();
   const location = useLocation();
+  const { setIsBannerVisible } = useBannerContext();
 
   // Only show on mobile devices and specific routes
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const isRelevantRoute = location.pathname.startsWith('/pay') || location.pathname.startsWith('/checkout');
+  const isBannerVisible = isMobile && isVisible && isRelevantRoute;
   
-  if (!isMobile || !isVisible || !isRelevantRoute) {
+  // Update context when banner visibility changes
+  useEffect(() => {
+    setIsBannerVisible(isBannerVisible);
+  }, [isBannerVisible, setIsBannerVisible]);
+  
+  if (!isBannerVisible) {
     return null;
   }
 
@@ -36,7 +51,7 @@ export const MobileWalletBanner: React.FC = () => {
       <div className="max-w-md mx-auto">
         <div className="flex items-start justify-between">
           <div className="flex-1 pr-8">
-            <p className="text-xs leading-tight font-medium">
+            <p className="text-sm leading-tight font-medium">
               {t.mobileWalletBanner?.message || 'For a better experience, open it in a wallet browser (e.g. MetaMask).'}{' '}
               <button
                 onClick={handleCopyLink}
