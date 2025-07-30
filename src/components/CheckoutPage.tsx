@@ -301,10 +301,8 @@ export const CheckoutPage: React.FC = () => {
     <div className="min-h-screen bg-gray-900">
       <div className="max-w-md mx-auto p-4 pt-16 sm:pt-20">
         {/* Language Selector - Top Right */}
-        <div className="relative mb-4">
-          <div className="absolute top-0 right-0 z-10">
-            <LanguageSelector />
-          </div>
+        <div className="flex justify-end mb-4">
+          <LanguageSelector />
         </div>
 
         {/* Header */}
