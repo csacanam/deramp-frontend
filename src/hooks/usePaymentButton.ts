@@ -402,7 +402,7 @@ export const usePaymentButton = ({
         sufficient: allowance >= requiredAmount
       });
 
-      alert(`📊 DEBUG: Allowance check\nAllowance: ${ethers.formatUnits(allowance, tokenConfig.decimals)}\nRequired: ${ethers.formatUnits(requiredAmount, tokenConfig.decimals)}\nSufficient: ${allowance >= requiredAmount}\n\nToken: ${tokenConfig.address}\nSpender: ${networkContracts.DERAMP_PROXY}\nNetwork: ${networkName}`);
+      alert(`📊 DEBUG: Allowance check\nAllowance: ${ethers.formatUnits(allowance, tokenConfig.decimals)}\nRequired: ${ethers.formatUnits(requiredAmount, tokenConfig.decimals)}\nSufficient: ${allowance >= requiredAmount}\n\nToken: ${tokenConfig.address}\nSpender: ${networkContracts.DERAMP_PROXY}\nOwner: ${address}\nNetwork: ${networkName}`);
 
       if (allowance < requiredAmount) {
         // Approve token
