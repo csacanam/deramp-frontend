@@ -26,7 +26,7 @@ import { PaymentOption } from '../blockchain/types';
 
 export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
-  const { invoice, error, loading } = useInvoice(invoiceId || '');
+  const { invoice, error, loading, refetch } = useInvoice(invoiceId || '');
   const { commerce, loading: commerceLoading } = useCommerce(invoice?.commerce_id || '');
   const { isConnected } = useAccount();
   const { t, language } = useLanguage();

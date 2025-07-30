@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAccount, useChainId, useWalletClient, usePublicClient } from 'wagmi';
 import { ethers } from 'ethers';
 import { BlockchainService } from '../services/blockchainService';
@@ -30,6 +30,51 @@ export const usePaymentButton = ({
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const { language, t } = useLanguage();
+
+  // Check allowance when returning from authorization
+  useEffect(() => {
+    const checkAllowanceOnReturn = async () => {
+      if (buttonState === 'approving' && isConnected && address && chainId && selectedToken) {
+        try {
+          const networkName = getNetworkName(chainId);
+          const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
+          if (!networkTokens) return;
+
+          const tokenConfig = Object.values(networkTokens).find(
+            token => token.symbol.toLowerCase() === selectedToken.toLowerCase()
+          );
+          if (!tokenConfig) return;
+
+          const paymentOption = paymentOptions.find(option => option.token === selectedToken);
+          if (!paymentOption) return;
+
+          const networkContracts = CONTRACTS[networkName as keyof typeof CONTRACTS];
+          if (!networkContracts || !walletClient) return;
+
+          const provider = new ethers.BrowserProvider(walletClient);
+          const tokenContract = new ethers.Contract(
+            tokenConfig.address,
+            ['function allowance(address owner, address spender) external view returns (uint256)'],
+            provider
+          );
+
+          const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
+          const requiredAmount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
+
+          if (allowance >= requiredAmount) {
+            console.log('✅ Allowance verified on return, switching to confirm');
+            setButtonState('confirm');
+          }
+        } catch (error) {
+          console.log('⚠️ Error checking allowance on return:', error);
+        }
+      }
+    };
+
+    // Check after a short delay to allow wallet to update
+    const timeoutId = setTimeout(checkAllowanceOnReturn, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [buttonState, isConnected, address, chainId, selectedToken, paymentOptions, walletClient]);
 
   // Get network name from chainId
   const getNetworkName = (chainId: number): string => {
