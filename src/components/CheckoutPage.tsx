@@ -349,7 +349,7 @@ export const CheckoutPage: React.FC = () => {
             {effectiveStatus === 'Paid' && (
               <div>
                 <p className="text-gray-400 text-sm">{t.order.orderId}</p>
-                <p className="text-lg font-semibold text-white">
+                <p className="text-sm font-semibold text-white">
                   {invoice.id}
                 </p>
               </div>
