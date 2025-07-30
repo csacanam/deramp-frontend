@@ -36,24 +36,44 @@ export const usePaymentButton = ({
   // Check allowance when returning from authorization - IMPROVED
   useEffect(() => {
     const checkAllowanceOnReturn = async () => {
+      console.log('🔍 ===== ALLOWANCE CHECK EFFECT =====');
+      console.log('🔍 Button state:', buttonState);
+      console.log('🔍 Is connected:', isConnected);
+      console.log('🔍 Address:', address);
+      console.log('🔍 Chain ID:', chainId);
+      console.log('🔍 Selected token:', selectedToken);
+      console.log('🔍 Pending tx hash:', pendingTxHash);
+      
       if (buttonState === 'approving' && isConnected && address && chainId && selectedToken && pendingTxHash) {
         try {
           console.log('🔍 Checking allowance after approval transaction...');
           
           const networkName = getNetworkName(chainId);
           const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
-          if (!networkTokens) return;
+          if (!networkTokens) {
+            console.log('❌ Network tokens not found for:', networkName);
+            return;
+          }
 
           const tokenConfig = Object.values(networkTokens).find(
             token => token.symbol.toLowerCase() === selectedToken.toLowerCase()
           );
-          if (!tokenConfig) return;
+          if (!tokenConfig) {
+            console.log('❌ Token config not found for:', selectedToken);
+            return;
+          }
 
           const paymentOption = paymentOptions.find(option => option.token === selectedToken);
-          if (!paymentOption) return;
+          if (!paymentOption) {
+            console.log('❌ Payment option not found for:', selectedToken);
+            return;
+          }
 
           const networkContracts = CONTRACTS[networkName as keyof typeof CONTRACTS];
-          if (!networkContracts || !walletClient) return;
+          if (!networkContracts || !walletClient) {
+            console.log('❌ Network contracts or wallet client not available');
+            return;
+          }
 
           const provider = new ethers.BrowserProvider(walletClient);
           
@@ -95,14 +115,26 @@ export const usePaymentButton = ({
           console.log('⚠️ Error checking allowance on return:', error);
           // Don't change state on error, let user retry
         }
+      } else {
+        console.log('🔍 Conditions not met for allowance check:');
+        console.log('  - buttonState === approving:', buttonState === 'approving');
+        console.log('  - isConnected:', isConnected);
+        console.log('  - address:', !!address);
+        console.log('  - chainId:', !!chainId);
+        console.log('  - selectedToken:', !!selectedToken);
+        console.log('  - pendingTxHash:', !!pendingTxHash);
       }
     };
 
     // Check immediately and then every 2 seconds until we get a result
     if (buttonState === 'approving' && pendingTxHash) {
+      console.log('🔄 Starting allowance check interval...');
       checkAllowanceOnReturn();
       const intervalId = setInterval(checkAllowanceOnReturn, 2000);
-      return () => clearInterval(intervalId);
+      return () => {
+        console.log('🔄 Clearing allowance check interval...');
+        clearInterval(intervalId);
+      };
     }
   }, [buttonState, isConnected, address, chainId, selectedToken, paymentOptions, walletClient, pendingTxHash]);
 
