@@ -25,17 +25,20 @@ export const usePaymentButton = ({
 }: UsePaymentButtonProps) => {
   const [buttonState, setButtonState] = useState<ButtonState>('initial');
   const [selectedToken, setSelectedToken] = useState<string>('');
+  const [pendingTxHash, setPendingTxHash] = useState<string>('');
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const { language, t } = useLanguage();
 
-  // Check allowance when returning from authorization
+  // Check allowance when returning from authorization - IMPROVED
   useEffect(() => {
     const checkAllowanceOnReturn = async () => {
-      if (buttonState === 'approving' && isConnected && address && chainId && selectedToken) {
+      if (buttonState === 'approving' && isConnected && address && chainId && selectedToken && pendingTxHash) {
         try {
+          console.log('🔍 Checking allowance after approval transaction...');
+          
           const networkName = getNetworkName(chainId);
           const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
           if (!networkTokens) return;
@@ -52,6 +55,18 @@ export const usePaymentButton = ({
           if (!networkContracts || !walletClient) return;
 
           const provider = new ethers.BrowserProvider(walletClient);
+          
+          // Wait for transaction confirmation first
+          console.log('⏳ Waiting for transaction confirmation...');
+          const tx = await provider.getTransaction(pendingTxHash);
+          if (!tx) {
+            console.log('❌ Transaction not found, retrying...');
+            return; // Will retry on next effect run
+          }
+          
+          const receipt = await tx.wait();
+          console.log('✅ Transaction confirmed, checking allowance...');
+          
           const tokenContract = new ethers.Contract(
             tokenConfig.address,
             ['function allowance(address owner, address spender) external view returns (uint256)'],
@@ -61,20 +76,34 @@ export const usePaymentButton = ({
           const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
           const requiredAmount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
 
+          console.log('📊 Allowance check:', {
+            allowance: ethers.formatUnits(allowance, tokenConfig.decimals),
+            required: ethers.formatUnits(requiredAmount, tokenConfig.decimals),
+            sufficient: allowance >= requiredAmount
+          });
+
           if (allowance >= requiredAmount) {
-            console.log('✅ Allowance verified on return, switching to confirm');
+            console.log('✅ Allowance verified, switching to confirm');
             setButtonState('confirm');
+            setPendingTxHash(''); // Clear pending hash
+          } else {
+            console.log('❌ Allowance insufficient, staying in approving state');
+            // Don't change state, let user retry
           }
         } catch (error) {
           console.log('⚠️ Error checking allowance on return:', error);
+          // Don't change state on error, let user retry
         }
       }
     };
 
-    // Check after a short delay to allow wallet to update
-    const timeoutId = setTimeout(checkAllowanceOnReturn, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [buttonState, isConnected, address, chainId, selectedToken, paymentOptions, walletClient]);
+    // Check immediately and then every 2 seconds until we get a result
+    if (buttonState === 'approving' && pendingTxHash) {
+      checkAllowanceOnReturn();
+      const intervalId = setInterval(checkAllowanceOnReturn, 2000);
+      return () => clearInterval(intervalId);
+    }
+  }, [buttonState, isConnected, address, chainId, selectedToken, paymentOptions, walletClient, pendingTxHash]);
 
   // Get network name from chainId
   const getNetworkName = (chainId: number): string => {
@@ -209,7 +238,7 @@ export const usePaymentButton = ({
       
       onError?.(userMessage);
     }
-  }, [invoiceId, paymentOptions, isConnected, address, chainId, onError, getNetworkName]);
+  }, [invoiceId, paymentOptions, isConnected, address, chainId, onError, getNetworkName, hasSufficientBalance, t]);
 
   const handleAuthorize = useCallback(async () => {
     console.log('🔐 ===== AUTHORIZE START =====');
@@ -394,31 +423,16 @@ export const usePaymentButton = ({
           console.log('📊 Transaction hash:', approveTx.hash);
           console.log('⏳ Waiting for confirmation...');
           
-          // Wait for transaction confirmation
-          const receipt = await approveTx.wait();
-          console.log('✅ Transaction confirmed');
-          console.log('📊 Receipt status:', receipt.status);
-          console.log('📊 Gas used:', receipt.gasUsed?.toString());
-          console.log('📊 Block number:', receipt.blockNumber);
+          // Store the transaction hash for the useEffect to monitor
+          setPendingTxHash(approveTx.hash);
           
-          // Verify allowance was actually updated
-          console.log('🔍 Verifying allowance was updated...');
-          const updatedAllowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
-          console.log('📊 Updated Allowance:', ethers.formatUnits(updatedAllowance, tokenConfig.decimals));
-          console.log('📊 Required Amount:', ethers.formatUnits(requiredAmount, tokenConfig.decimals));
-          console.log('📊 Comparison:', updatedAllowance >= requiredAmount ? '✅ SUFFICIENT' : '❌ INSUFFICIENT');
-          
-          if (updatedAllowance >= requiredAmount) {
-            console.log('✅ Allowance verification successful!');
-            setButtonState('confirm');
-            return;
-          } else {
-            console.log('❌ Allowance was not updated properly');
-            throw new Error('Allowance was not updated after approval transaction');
-          }
+          // Don't wait here, let the useEffect handle the confirmation
+          console.log('✅ Approval transaction sent, monitoring for confirmation...');
           
         } catch (approvalError) {
           console.error('❌ Approval transaction failed:', approvalError);
+          setPendingTxHash(''); // Clear pending hash
+          setButtonState('ready'); // Reset to ready state
           
           // Log detailed error information in one line for easy copying
           console.log('🔍 ===== COMPLETE ERROR FOR COPYING =====');
@@ -436,6 +450,7 @@ export const usePaymentButton = ({
     } catch (error) {
       console.error('Error in handleAuthorize:', error);
       setButtonState('ready');
+      setPendingTxHash(''); // Clear pending hash
       
       // Provide user-friendly error messages
       let userMessage = t.payment.tokenAuthFailed;
@@ -456,7 +471,7 @@ export const usePaymentButton = ({
       
       onError?.(userMessage);
     }
-  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, getNetworkName]);
+  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t]);
 
   const handleConfirm = useCallback(async () => {
     if (!isConnected || !address || !chainId || !selectedToken) {
@@ -630,7 +645,7 @@ export const usePaymentButton = ({
         onError?.(userMessage);
       }
     }
-  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, language]);
+  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, language, t]);
 
   const handleButtonClick = useCallback(() => {
     switch (buttonState) {
