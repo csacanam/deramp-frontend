@@ -267,6 +267,7 @@ export const usePaymentButton = ({
     }
 
     setButtonState('approving');
+    alert('🔄 DEBUG: Button state set to approving');
 
     let tokenConfig: any = null;
     
@@ -281,6 +282,8 @@ export const usePaymentButton = ({
         console.error('❌ Wrong network detected');
         console.error('❌ Current Chain ID:', chainId);
         console.error('❌ Expected Chain ID: 44787');
+        
+        alert('❌ DEBUG: Wrong network detected');
         
         // Get more detailed network info
         try {
@@ -303,6 +306,8 @@ export const usePaymentButton = ({
         return;
       }
       
+      alert('✅ DEBUG: Network check passed');
+      
       // Hide network switch if we're on the correct network
       setShowNetworkSwitch(false);
       
@@ -319,6 +324,8 @@ export const usePaymentButton = ({
       if (!tokenConfig) {
         throw new Error('Unsupported token');
       }
+
+      alert('✅ DEBUG: Token config found');
 
       // Create provider and signer using Wagmi
       if (!walletClient) {
@@ -338,6 +345,8 @@ export const usePaymentButton = ({
       if (!networkContracts) {
         throw new Error('Network contracts not found');
       }
+
+      alert('✅ DEBUG: All configs found, checking allowance...');
 
       // Create token contract instance
       const tokenContract = new ethers.Contract(
@@ -386,11 +395,15 @@ export const usePaymentButton = ({
         sufficient: allowance >= requiredAmount
       });
 
+      alert(`📊 DEBUG: Allowance check\nAllowance: ${ethers.formatUnits(allowance, tokenConfig.decimals)}\nRequired: ${ethers.formatUnits(requiredAmount, tokenConfig.decimals)}\nSufficient: ${allowance >= requiredAmount}`);
+
       if (allowance < requiredAmount) {
         // Approve token
         console.log('🔄 Sending approval transaction...');
         console.log('🔄 Approving spender (DERAMP_PROXY):', networkContracts.DERAMP_PROXY);
         console.log('🔄 To spend amount:', ethers.formatUnits(requiredAmount, tokenConfig.decimals));
+        
+        alert('🔄 DEBUG: Sending approval transaction...');
         
         try {
           const approveTx = await tokenContract.approve(
@@ -400,6 +413,8 @@ export const usePaymentButton = ({
           
           console.log('📊 Transaction hash:', approveTx.hash);
           console.log('⏳ Waiting for confirmation...');
+          
+          alert(`📊 DEBUG: Transaction sent\nHash: ${approveTx.hash}`);
           
           // Store the transaction hash for the useEffect to monitor
           setPendingTxHash(approveTx.hash);
@@ -412,6 +427,8 @@ export const usePaymentButton = ({
           setPendingTxHash(''); // Clear pending hash
           setButtonState('ready'); // Reset to ready state
           
+          alert(`❌ DEBUG: Approval failed\n${approvalError instanceof Error ? approvalError.message : 'Unknown error'}`);
+          
           // Log detailed error information in one line for easy copying
           console.log('🔍 ===== COMPLETE ERROR FOR COPYING =====');
           console.log('🔍 Error:', JSON.stringify(approvalError, null, 2));
@@ -423,6 +440,7 @@ export const usePaymentButton = ({
       } else {
         // Allowance is already sufficient, skip approval
         console.log('✅ Allowance already sufficient, skipping approval');
+        alert('✅ DEBUG: Allowance sufficient, skipping to confirm');
         setButtonState('confirm');
         return;
       }
