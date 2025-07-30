@@ -138,6 +138,68 @@ export const usePaymentButton = ({
     }
   }, [buttonState, isConnected, address, chainId, selectedToken, paymentOptions, walletClient, pendingTxHash]);
 
+  // Additional effect to check allowance when user returns to page (focus event)
+  useEffect(() => {
+    const handleFocus = async () => {
+      // Only check if we're in approving state and have a pending transaction
+      if (buttonState === 'approving' && pendingTxHash && isConnected && address && chainId && selectedToken) {
+        console.log('🔄 Page focused, checking allowance...');
+        
+        try {
+          const networkName = getNetworkName(chainId);
+          const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
+          if (!networkTokens) return;
+
+          const tokenConfig = Object.values(networkTokens).find(
+            token => token.symbol.toLowerCase() === selectedToken.toLowerCase()
+          );
+          if (!tokenConfig) return;
+
+          const paymentOption = paymentOptions.find(option => option.token === selectedToken);
+          if (!paymentOption) return;
+
+          const networkContracts = CONTRACTS[networkName as keyof typeof CONTRACTS];
+          if (!networkContracts || !walletClient) return;
+
+          const provider = new ethers.BrowserProvider(walletClient);
+          
+          const tokenContract = new ethers.Contract(
+            tokenConfig.address,
+            ['function allowance(address owner, address spender) external view returns (uint256)'],
+            provider
+          );
+
+          const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
+          const requiredAmount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
+
+          console.log('📊 Focus allowance check:', {
+            allowance: ethers.formatUnits(allowance, tokenConfig.decimals),
+            required: ethers.formatUnits(requiredAmount, tokenConfig.decimals),
+            sufficient: allowance >= requiredAmount
+          });
+
+          if (allowance >= requiredAmount) {
+            console.log('✅ Focus: Allowance verified, switching to confirm');
+            setButtonState('confirm');
+            setPendingTxHash(''); // Clear pending hash
+          }
+        } catch (error) {
+          console.log('⚠️ Error in focus allowance check:', error);
+        }
+      }
+    };
+
+    // Listen for focus events (when user returns from MetaMask)
+    window.addEventListener('focus', handleFocus);
+    
+    // Also check on mount if we're in approving state
+    handleFocus();
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [buttonState, pendingTxHash, isConnected, address, chainId, selectedToken, paymentOptions, walletClient]);
+
   // Get network name from chainId
   const getNetworkName = (chainId: number): string => {
     switch (chainId) {
