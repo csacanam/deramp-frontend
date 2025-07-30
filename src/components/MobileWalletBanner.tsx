@@ -34,19 +34,17 @@ export const MobileWalletBanner: React.FC = () => {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white px-4 py-3 shadow-lg">
       <div className="max-w-md mx-auto">
-        {/* Main content with close button */}
         <div className="flex items-start justify-between">
           <div className="flex-1 pr-8">
             <p className="text-sm font-medium">
-              {t.mobileWalletBanner?.message || 'For a better experience, open it in a wallet browser (e.g. MetaMask).'}
+              {t.mobileWalletBanner?.message || 'For a better experience, open it in a wallet browser (e.g. MetaMask).'}{' '}
+              <button
+                onClick={handleCopyLink}
+                className="inline underline hover:no-underline transition-all"
+              >
+                {copyFeedback ? (t.mobileWalletBanner?.copied || 'Copied!') : (t.mobileWalletBanner?.copyLink || 'Copy link')}
+              </button>
             </p>
-            {/* Copy link positioned inline after the text */}
-            <button
-              onClick={handleCopyLink}
-              className="inline-block mt-1 text-xs underline hover:no-underline transition-all"
-            >
-              {copyFeedback ? (t.mobileWalletBanner?.copied || 'Copied!') : (t.mobileWalletBanner?.copyLink || 'Copy link')}
-            </button>
           </div>
           <button
             onClick={handleClose}
