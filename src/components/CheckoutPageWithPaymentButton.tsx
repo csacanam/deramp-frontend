@@ -289,7 +289,7 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="max-w-md mx-auto p-4 pt-16 sm:pt-20">
+      <div className="max-w-md mx-auto p-4 pt-8 sm:pt-12">
         {/* Language Selector - Top Right */}
         <div className="flex justify-end mb-2">
           <LanguageSelector />
