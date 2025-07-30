@@ -163,6 +163,18 @@ export const usePaymentButton = ({
 
           const provider = new ethers.BrowserProvider(walletClient);
           
+          // First check if the transaction is confirmed
+          console.log('⏳ Checking if transaction is confirmed...');
+          const tx = await provider.getTransaction(pendingTxHash);
+          if (!tx) {
+            console.log('❌ Transaction not found yet, skipping focus check');
+            return;
+          }
+          
+          // Wait for transaction confirmation
+          const receipt = await tx.wait();
+          console.log('✅ Transaction confirmed in focus check');
+          
           const tokenContract = new ethers.Contract(
             tokenConfig.address,
             ['function allowance(address owner, address spender) external view returns (uint256)'],
@@ -182,6 +194,8 @@ export const usePaymentButton = ({
             console.log('✅ Focus: Allowance verified, switching to confirm');
             setButtonState('confirm');
             setPendingTxHash(''); // Clear pending hash
+          } else {
+            console.log('❌ Focus: Allowance insufficient, staying in approving state');
           }
         } catch (error) {
           console.log('⚠️ Error in focus allowance check:', error);
@@ -192,8 +206,8 @@ export const usePaymentButton = ({
     // Listen for focus events (when user returns from MetaMask)
     window.addEventListener('focus', handleFocus);
     
-    // Also check on mount if we're in approving state
-    handleFocus();
+    // Don't check on mount to avoid false positives
+    // handleFocus();
 
     return () => {
       window.removeEventListener('focus', handleFocus);
