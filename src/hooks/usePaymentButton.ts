@@ -253,6 +253,9 @@ export const usePaymentButton = ({
     console.log('🔐 User Agent:', navigator.userAgent);
     console.log('🔐 ==========================');
     
+    // TEMPORARY: Alert for debugging
+    alert('🔐 DEBUG: handleAuthorize called');
+    
     if (!isConnected || !address || !chainId || !selectedToken) {
       console.error('❌ Missing required data for authorization');
       console.error('❌ Is Connected:', isConnected);
@@ -375,7 +378,13 @@ export const usePaymentButton = ({
       const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
       const requiredAmount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
 
-      console.log('📊 Allowance:', ethers.formatUnits(allowance, tokenConfig.decimals), 'Required:', ethers.formatUnits(requiredAmount, tokenConfig.decimals));
+      console.log('📊 Allowance check details:', {
+        allowance: ethers.formatUnits(allowance, tokenConfig.decimals),
+        required: ethers.formatUnits(requiredAmount, tokenConfig.decimals),
+        allowanceRaw: allowance.toString(),
+        requiredRaw: requiredAmount.toString(),
+        sufficient: allowance >= requiredAmount
+      });
 
       if (allowance < requiredAmount) {
         // Approve token
@@ -413,6 +422,7 @@ export const usePaymentButton = ({
         }
       } else {
         // Allowance is already sufficient, skip approval
+        console.log('✅ Allowance already sufficient, skipping approval');
         setButtonState('confirm');
         return;
       }
