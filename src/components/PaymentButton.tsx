@@ -2,6 +2,7 @@ import React from 'react';
 import { Wallet } from 'lucide-react';
 import { usePaymentButton } from '../hooks/usePaymentButton';
 import { PaymentOption } from '../blockchain/types';
+import { NetworkSwitchButton } from './NetworkSwitchButton';
 
 interface PaymentButtonProps {
   invoiceId: string;
@@ -27,6 +28,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
     buttonText,
     isButtonDisabled,
     handleButtonClick,
+    showNetworkSwitch,
   } = usePaymentButton({
     invoiceId,
     paymentOptions,
@@ -54,7 +56,23 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
   };
 
   return (
-    <div data-payment-button>
+    <div data-payment-button className="space-y-3">
+      {/* Network Switch Button - shown when on wrong network */}
+      {showNetworkSwitch && (
+        <NetworkSwitchButton
+          targetChainId={44787}
+          onSwitch={() => {
+            console.log('✅ Network switch initiated');
+          }}
+          onError={(error) => {
+            console.error('❌ Network switch error:', error);
+            onError?.(error);
+          }}
+          className="mb-3"
+        />
+      )}
+      
+      {/* Main Payment Button */}
       <button
         onClick={handleButtonClick}
         disabled={isButtonDisabled || disabled}

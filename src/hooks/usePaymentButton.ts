@@ -26,6 +26,7 @@ export const usePaymentButton = ({
   const [buttonState, setButtonState] = useState<ButtonState>('initial');
   const [selectedToken, setSelectedToken] = useState<string>('');
   const [pendingTxHash, setPendingTxHash] = useState<string>('');
+  const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { data: walletClient } = useWalletClient();
@@ -291,48 +292,16 @@ export const usePaymentButton = ({
           console.error('❌ Error getting network details:', error);
         }
         
-        // Show manual network switch option
+        // Show network switch option instead of creating button dynamically
         setButtonState('ready');
-        onError?.('Red incorrecta detectada. Por favor, cambia a Celo Alfajores en tu wallet o haz click aquí para cambiar automáticamente.');
-        
-        // Add a button to switch network manually
-        const switchButton = document.createElement('button');
-        switchButton.textContent = 'Cambiar a Celo Alfajores';
-        switchButton.style.cssText = `
-          background: #35d07f;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 8px;
-          margin-top: 10px;
-          cursor: pointer;
-          font-size: 14px;
-        `;
-        
-        switchButton.onclick = async () => {
-          try {
-            console.log('🔄 User clicked to switch network...');
-            await walletClient?.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0xaeef' }], // 44787 in hex
-            });
-            console.log('✅ Network switch successful');
-            // Reload the page to refresh the connection
-            window.location.reload();
-          } catch (error) {
-            console.error('❌ Failed to switch network:', error);
-            onError?.('Error al cambiar de red. Por favor, cambia manualmente a Celo Alfajores en MetaMask.');
-          }
-        };
-        
-        // Find the payment button container and add the switch button
-        const buttonContainer = document.querySelector('[data-payment-button]');
-        if (buttonContainer) {
-          buttonContainer.appendChild(switchButton);
-        }
+        setShowNetworkSwitch(true);
+        onError?.('Red incorrecta detectada. Por favor, cambia a Celo Alfajores en tu wallet.');
         
         return;
       }
+      
+      // Hide network switch if we're on the correct network
+      setShowNetworkSwitch(false);
       
       // Get token configuration
       const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
@@ -672,5 +641,6 @@ export const usePaymentButton = ({
     isButtonDisabled,
     handleButtonClick,
     selectedToken,
+    showNetworkSwitch,
   };
 }; 
