@@ -384,6 +384,13 @@ export const usePaymentButton = ({
 
       // Check if approval is needed
       console.log('🔍 Checking allowance...');
+      console.log('🔍 Allowance check details:');
+      console.log('   - Token Address:', tokenConfig.address);
+      console.log('   - Spender Address (DERAMP_PROXY):', networkContracts.DERAMP_PROXY);
+      console.log('   - Owner Address (user):', address);
+      console.log('   - Network:', networkName);
+      console.log('   - Chain ID:', chainId);
+      
       const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
       const requiredAmount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
 
@@ -395,7 +402,7 @@ export const usePaymentButton = ({
         sufficient: allowance >= requiredAmount
       });
 
-      alert(`📊 DEBUG: Allowance check\nAllowance: ${ethers.formatUnits(allowance, tokenConfig.decimals)}\nRequired: ${ethers.formatUnits(requiredAmount, tokenConfig.decimals)}\nSufficient: ${allowance >= requiredAmount}`);
+      alert(`📊 DEBUG: Allowance check\nAllowance: ${ethers.formatUnits(allowance, tokenConfig.decimals)}\nRequired: ${ethers.formatUnits(requiredAmount, tokenConfig.decimals)}\nSufficient: ${allowance >= requiredAmount}\n\nToken: ${tokenConfig.address}\nSpender: ${networkContracts.DERAMP_PROXY}\nNetwork: ${networkName}`);
 
       if (allowance < requiredAmount) {
         // Approve token
