@@ -241,5 +241,12 @@ export const en = {
   },
 
   // Powered by
-  poweredBy: '⚡ Powered by'
+  poweredBy: '⚡ Powered by',
+
+  // Mobile Wallet Banner
+  mobileWalletBanner: {
+    message: 'For a better experience, open it in a wallet browser (e.g. MetaMask).',
+    copyLink: 'Copy link',
+    copied: 'Copied!'
+  }
 }; 

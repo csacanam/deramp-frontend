@@ -241,5 +241,12 @@ export const es = {
   },
 
   // Powered by
-  poweredBy: '⚡ Desarrollado por'
+  poweredBy: '⚡ Desarrollado por',
+
+  // Mobile Wallet Banner
+  mobileWalletBanner: {
+    message: 'Para una mejor experiencia, ábrelo en el navegador de una wallet (por ejemplo, MetaMask).',
+    copyLink: 'Copiar enlace',
+    copied: '¡Copiado!'
+  }
 }; 

@@ -4,12 +4,14 @@ import { CheckoutPage } from './components/CheckoutPage';
 import { CommercePage } from './components/CommercePage';
 import { HomePage } from './components/HomePage';
 import { DemoPage } from './components/DemoPage';
+import { MobileWalletBanner } from './components/MobileWalletBanner';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
   return (
     <LanguageProvider>
       <Router>
+        <MobileWalletBanner />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/demo" element={<DemoPage />} />
