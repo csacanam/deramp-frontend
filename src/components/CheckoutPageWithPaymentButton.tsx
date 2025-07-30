@@ -100,6 +100,7 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
     // Handle successful payment
     console.log('Payment completed successfully!');
     // You could redirect to a success page or show a success message
+    window.location.reload(); // Refresh to show updated status
   };
 
   const handlePaymentError = (error: string) => {

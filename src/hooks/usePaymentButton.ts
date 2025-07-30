@@ -444,15 +444,24 @@ export const usePaymentButton = ({
   }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t]);
 
   const handleConfirm = useCallback(async () => {
+    console.log('🚀 ===== CONFIRM PAYMENT START =====');
+    console.log('🚀 Current button state:', buttonState);
+    console.log('🚀 Is connected:', isConnected);
+    console.log('🚀 Address:', address);
+    console.log('🚀 Chain ID:', chainId);
+    console.log('🚀 Selected token:', selectedToken);
+    
     if (!isConnected || !address || !chainId || !selectedToken) {
       onError?.('Please connect your wallet and select a token');
       return;
     }
 
+    console.log('🚀 Setting button state to processing...');
     setButtonState('processing');
 
     try {
       const networkName = getNetworkName(chainId);
+      console.log('🚀 Network name:', networkName);
       
       // Get token configuration
       const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
@@ -550,6 +559,10 @@ export const usePaymentButton = ({
       const receipt = await payTx.wait();
 
       if (receipt && receipt.status === 1) {
+        console.log('✅ Payment transaction successful!');
+        console.log('✅ Transaction hash:', payTx.hash);
+        console.log('✅ Calling onSuccess callback...');
+        
         // Payment successful - try to update backend with payment data and status
         try {
           const paymentData = {
@@ -560,18 +573,25 @@ export const usePaymentButton = ({
             paid_amount: parseFloat(paymentOption.amount) // Convert to number as backend expects
           };
           
+          console.log('✅ Updating backend with payment data...');
+          
           // Update payment data
           await BlockchainService.updatePaymentData(invoiceId, paymentData);
           
           // Update invoice status to "paid"
           await BlockchainService.updateInvoiceStatus(invoiceId, 'paid');
           
+          console.log('✅ Backend updated successfully');
+          
         } catch (backendError: any) {
+          console.log('⚠️ Backend update failed, but payment was successful:', backendError);
           // Don't fail the entire process if backend update fails
         }
         
+        console.log('✅ Calling onSuccess callback...');
         // Call success callback
         onSuccess?.();
+        console.log('✅ onSuccess callback completed');
       } else {
         throw new Error('Transaction failed');
       }
@@ -615,7 +635,7 @@ export const usePaymentButton = ({
         onError?.(userMessage);
       }
     }
-  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, language, t]);
+  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, language, t, buttonState]);
 
   const handleButtonClick = useCallback(() => {
     switch (buttonState) {
