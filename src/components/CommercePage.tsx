@@ -161,12 +161,13 @@ export const CommercePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Language Selector - Top Right */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
-        <LanguageSelector />
-      </div>
-      
       <div className="max-w-md mx-auto p-4 pt-16 sm:pt-20">
+        {/* Language Selector - Top Right */}
+        <div className="relative mb-4">
+          <div className="absolute top-0 right-0 z-10">
+            <LanguageSelector />
+          </div>
+        </div>
         {/* Header */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
           <div className="flex items-center space-x-3 mb-4">
