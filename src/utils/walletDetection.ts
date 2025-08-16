@@ -133,21 +133,11 @@ export function getWalletDeepLink(walletId: string, url: string): string | null 
   
   switch (walletId) {
     case 'metaMask':
-      // MetaMask mobile: try multiple deep link formats for better compatibility
-      // Format 1: Newer format (recommended)
-      const metamaskUrl1 = `metamask://dapp?url=${encodedUrl}`;
-      // Format 2: Alternative format
-      const metamaskUrl2 = `metamask://dapp/${encodedUrl}`;
-      // Format 3: Legacy format
-      const metamaskUrl3 = `metamask://browser?url=${encodedUrl}`;
-      
-      console.log(`🦊 MetaMask deep link options:`);
-      console.log(`  1. New format:`, metamaskUrl1);
-      console.log(`  2. Alternative:`, metamaskUrl2);
-      console.log(`  3. Legacy:`, metamaskUrl3);
-      
-      // Return the primary format, but log alternatives for debugging
-      return metamaskUrl1;
+      // MetaMask mobile: use Daimo's proven format for better compatibility
+      // This format works reliably across all devices and MetaMask versions
+      const metamaskUrl = `https://metamask.app.link/dapp/${cleanUrl.replace(/^https?:\/\//, '')}`;
+      console.log(`🦊 MetaMask deep link (Daimo format):`, metamaskUrl);
+      return metamaskUrl;
       
     case 'coinbaseWallet':
       // Base/Coinbase mobile: use same format as Daimo Pay
@@ -212,12 +202,6 @@ export function getAvailableWallets(): WalletConfig[] {
 
 // Open wallet with deep link
 export async function openWallet(walletId: string, url: string): Promise<boolean> {
-  if (walletId === 'metaMask') {
-    // For MetaMask, try multiple deep link formats
-    return await openMetaMaskWithFallback(url);
-  }
-  
-  // For other wallets, use the standard approach
   const deepLink = getWalletDeepLink(walletId, url);
   if (!deepLink) return false;
   
@@ -236,43 +220,4 @@ export async function openWallet(walletId: string, url: string): Promise<boolean
     console.error(`❌ Failed to open ${walletId}:`, error);
     return false;
   }
-}
-
-// Special handling for MetaMask with multiple fallback formats
-async function openMetaMaskWithFallback(url: string): Promise<boolean> {
-  const cleanUrl = url;
-  const encodedUrl = encodeURIComponent(cleanUrl);
-  
-  // Define multiple MetaMask deep link formats to try
-  const metamaskFormats = [
-    `metamask://dapp?url=${encodedUrl}`,      // Newer format (recommended)
-    `metamask://dapp/${encodedUrl}`,          // Alternative format
-    `metamask://browser?url=${encodedUrl}`,   // Legacy format
-    `metamask://${encodedUrl}`,               // Direct format
-  ];
-  
-  console.log(`🦊 Trying MetaMask deep link formats for URL:`, url);
-  
-  for (let i = 0; i < metamaskFormats.length; i++) {
-    const format = metamaskFormats[i];
-    console.log(`🔄 Attempt ${i + 1}/${metamaskFormats.length}:`, format);
-    
-    try {
-      // Try to open with this format
-      window.location.href = format;
-      
-      // Wait a bit to see if it opens
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log(`✅ MetaMask deep link format ${i + 1} executed:`, format);
-      return true;
-      
-    } catch (error) {
-      console.warn(`⚠️ MetaMask format ${i + 1} failed:`, error);
-      // Continue to next format
-    }
-  }
-  
-  console.error(`❌ All MetaMask deep link formats failed for URL:`, url);
-  return false;
 }
