@@ -7,6 +7,7 @@ import { TOKENS } from '../blockchain/config/tokens';
 import { CONTRACTS } from '../blockchain/config/contracts';
 import { useLanguage } from '../contexts/LanguageContext';
 import DerampProxyABI from '../blockchain/abi/DerampProxy.json';
+import { useNetworkDetection } from './useNetworkDetection';
 
 interface UsePaymentButtonProps {
   invoiceId: string;
@@ -32,6 +33,9 @@ export const usePaymentButton = ({
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const { language, t } = useLanguage();
+  
+  // Use enhanced network detection
+  const { isCorrectNetwork, networkInfo } = useNetworkDetection('alfajores');
 
   // Check allowance when returning from authorization - IMPROVED
   useEffect(() => {
@@ -381,24 +385,12 @@ export const usePaymentButton = ({
       console.log('🌐 Chain ID:', chainId);
       console.log('🌐 Expected Chain ID for Alfajores: 44787');
       
-      // Verify we're on the correct network
-      if (chainId !== 44787) {
+      // Verify we're on the correct network using enhanced detection
+      if (!isCorrectNetwork) {
         console.error('❌ Wrong network detected');
         console.error('❌ Current Chain ID:', chainId);
         console.error('❌ Expected Chain ID: 44787');
-        
-        // Get more detailed network info
-        try {
-          const currentChainId = await walletClient?.request({ method: 'eth_chainId' });
-          const accounts = await walletClient?.request({ method: 'eth_accounts' });
-          console.log('🔍 Detailed Network Info:');
-          console.log('   - Chain ID from wallet:', currentChainId);
-          console.log('   - Connected accounts:', accounts);
-          console.log('   - Chain ID from app:', chainId);
-          console.log('   - Is connected:', isConnected);
-        } catch (error) {
-          console.error('❌ Error getting network details:', error);
-        }
+        console.error('❌ Network Info:', networkInfo);
         
         // Show network switch option instead of creating button dynamically
         setButtonState('ready');

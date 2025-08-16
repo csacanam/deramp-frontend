@@ -17,6 +17,7 @@ import { TokenBalance } from './TokenBalance';
 import { PaymentAmount } from './PaymentAmount';
 import { CountdownTimer } from './CountdownTimer';
 import { PaymentButton } from './PaymentButton';
+import { WalletConnectionFlow } from './WalletConnectionFlow';
 import { useLanguage } from '../contexts/LanguageContext';
 import { interpolate } from '../utils/i18n';
 import { LanguageSelector } from './LanguageSelector';
@@ -177,123 +178,106 @@ export const CheckoutPage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-6">
-        {/* Token Selection */}
-        <div>
-          <label className="block text-white font-medium mb-2">{t.payment.selectToken}</label>
-          <TokenDropdown
-            tokens={groupedTokens}
-            selectedToken={selectedToken}
-            onTokenSelect={handleTokenSelect}
-          />
-        </div>
-
-        {/* Network Selection */}
-        <div>
-          <label className="block text-white font-medium mb-2">{t.payment.network}</label>
-          <NetworkDropdown
-            networks={selectedToken?.networks.map(n => n.network) || []}
-            selectedNetwork={selectedNetwork}
-            onNetworkSelect={handleNetworkSelect}
-            disabled={!selectedToken}
-          />
-        </div>
-
-        {/* Payment Information */}
-        {selectedTokenNetwork && (
-          <div className="space-y-4">
-            {/* Payment Amount */}
-            <PaymentAmount
-              amountToPay={selectedTokenNetwork.amount_to_pay}
-              tokenSymbol={selectedToken?.symbol}
-              tokenDecimals={selectedTokenNetwork.decimals}
-              rateToUsd={selectedTokenNetwork.rate_to_usd}
-              updatedAt={selectedTokenNetwork.updated_at}
-              amountFiat={invoice.amount_fiat}
-              fiatCurrency={invoice.fiat_currency}
+      <WalletConnectionFlow expectedNetwork="alfajores">
+        <div className="space-y-6">
+          {/* Token Selection */}
+          <div>
+            <label className="block text-white font-medium mb-2">{t.payment.selectToken}</label>
+            <TokenDropdown
+              tokens={groupedTokens}
+              selectedToken={selectedToken}
+              onTokenSelect={handleTokenSelect}
             />
+          </div>
 
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-              {!isConnected ? (
-                <>
-                  <p className="text-gray-300 text-sm mb-3">
-                    {t.payment.connectWalletDescription}
-                  </p>
-                  <div className="w-full">
-                    <ConnectWalletButton 
-                      selectedNetwork={selectedNetwork}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="mb-4 p-3 bg-gray-700 rounded-lg">
-                    <TokenBalance
-                      tokenAddress={selectedTokenNetwork.contract_address}
-                      tokenSymbol={selectedToken?.symbol}
-                      tokenDecimals={selectedTokenNetwork.decimals}
-                      requiredChainId={requiredChainId}
-                    />
-                  </div>
-                  {/* Payment button with balance validation */}
-                  {!hasSufficientBalance && amountToPay > 0 ? (
-                    <div className="space-y-3">
-                      <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 flex items-center space-x-3">
-                        <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-red-300 font-medium">{t.balance.insufficient}</p>
-                          <p className="text-red-400 text-sm">
-                            {interpolate(t.balance.insufficientDescription, {
-                              required: amountToPay.toFixed(6),
-                              current: userBalance.toFixed(6),
-                              symbol: selectedToken?.symbol || ''
-                            })}
-                          </p>
-                          <div className="mt-2">
-                            <a
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                // TODO: Integrate with exchange or buying service
-                                alert(interpolate(t.tokens.buyingSoon, { symbol: selectedToken?.symbol || '' }));
-                              }}
-                              className="inline-flex items-center space-x-1 text-blue-400 hover:text-blue-300 text-sm transition-colors"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              <span>{interpolate(t.tokens.buy, { symbol: selectedToken?.symbol || '' })}</span>
-                            </a>
-                          </div>
+          {/* Network Selection */}
+          <div>
+            <label className="block text-white font-medium mb-2">{t.payment.network}</label>
+            <NetworkDropdown
+              networks={selectedToken?.networks.map(n => n.network) || []}
+              selectedNetwork={selectedNetwork}
+              onNetworkSelect={handleNetworkSelect}
+              disabled={!selectedToken}
+            />
+          </div>
+
+          {/* Payment Information */}
+          {selectedTokenNetwork && (
+            <div className="space-y-4">
+              {/* Payment Amount */}
+              <PaymentAmount
+                amountToPay={selectedTokenNetwork.amount_to_pay}
+                tokenSymbol={selectedToken?.symbol}
+                tokenDecimals={selectedTokenNetwork.decimals}
+                rateToUsd={selectedTokenNetwork.rate_to_usd}
+                updatedAt={selectedTokenNetwork.updated_at}
+                amountFiat={invoice.amount_fiat}
+                fiatCurrency={invoice.fiat_currency}
+              />
+
+              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                <div className="mb-4 p-3 bg-gray-700 rounded-lg">
+                  <TokenBalance
+                    tokenAddress={selectedTokenNetwork.contract_address}
+                    tokenSymbol={selectedToken?.symbol}
+                    tokenDecimals={selectedTokenNetwork.decimals}
+                    requiredChainId={requiredChainId}
+                  />
+                </div>
+                
+                {/* Payment button with balance validation */}
+                {!hasSufficientBalance && amountToPay > 0 ? (
+                  <div className="space-y-3">
+                    <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 flex items-center space-x-3">
+                      <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-red-300 font-medium">{t.balance.insufficient}</p>
+                        <p className="text-red-400 text-sm">
+                          {interpolate(t.balance.insufficientDescription, {
+                            required: amountToPay.toFixed(6),
+                            current: userBalance.toFixed(6),
+                            symbol: selectedToken?.symbol || ''
+                          })}
+                        </p>
+                        <div className="mt-2">
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // TODO: Integrate with exchange or buying service
+                              alert(interpolate(t.tokens.buyingSoon, { symbol: selectedToken?.symbol || '' }));
+                            }}
+                            className="inline-flex items-center space-x-1 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span>{interpolate(t.tokens.buy, { symbol: selectedToken?.symbol || '' })}</span>
+                          </a>
                         </div>
                       </div>
-                      <button 
-                        disabled
-                        className="w-full bg-gray-600 text-gray-400 font-medium py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
-                      >
-                        <Wallet className="h-5 w-5" />
-                        <span>{t.balance.insufficient}</span>
-                      </button>
                     </div>
-                  ) : (
-                    <PaymentButton
-                      invoiceId={invoiceId || ''}
-                      paymentOptions={paymentOptions}
-                      onSuccess={handlePaymentSuccess}
-                      onError={handlePaymentError}
-                      disabled={!hasSufficientBalance || amountToPay <= 0}
-                      hasSufficientBalance={hasSufficientBalance}
-                    />
-                  )}
-                  <div className="mt-3 text-center">
-                    <ConnectWalletButton 
-                      selectedNetwork={selectedNetwork}
-                    />
+                    <button 
+                      disabled
+                      className="w-full bg-gray-600 text-gray-400 font-medium py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                      <Wallet className="h-5 w-5" />
+                      <span>{t.balance.insufficient}</span>
+                    </button>
                   </div>
-                </>
-              )}
+                ) : (
+                  <PaymentButton
+                    invoiceId={invoiceId || ''}
+                    paymentOptions={paymentOptions}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    disabled={!hasSufficientBalance || amountToPay <= 0}
+                    hasSufficientBalance={hasSufficientBalance}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </WalletConnectionFlow>
     );
   };
 

@@ -243,10 +243,36 @@ export const en = {
   // Powered by
   poweredBy: '⚡ Powered by',
 
-  // Mobile Wallet Banner
-  mobileWalletBanner: {
-    message: 'For a better experience, open it in a wallet browser (e.g. MetaMask).',
-    copyLink: 'Copy link',
-    copied: 'Copied!'
+  // Network
+  network: {
+    status: 'Network Status',
+    refresh: 'Refresh',
+    refreshing: 'Refreshing...',
+    refreshNetwork: 'Refresh Network',
+    lastRefresh: 'Last refresh',
+    switching: 'Switching...',
+    switchTo: 'Switch to',
+    connected: 'Connected to correct network',
+    wrongNetwork: 'Wrong network detected',
+    networkSwitchError: 'Error switching network',
+    networkSwitchSuccess: 'Network switched successfully',
+    detecting: 'Detecting network...'
+  },
+
+  // Wallet
+  wallet: {
+    connectFirst: 'Connect your wallet first',
+    connectDescription: 'You need to connect your wallet to continue with the payment',
+    wrongNetwork: 'Wrong network detected',
+    switchNetworkDescription: 'You need to switch to the correct network to continue',
+    readyToPay: 'Ready to pay',
+    connectedToCorrectNetwork: 'Wallet connected and on correct network',
+    disconnect: 'Disconnect',
+    connectedAddress: 'Address',
+    connect: 'Connect Wallet',
+    connecting: 'Connecting...',
+    browserExtensions: 'Browser Extensions',
+    mobileWallets: 'Mobile Wallets',
+    installWallet: 'Install Wallet'
   }
 }; 
