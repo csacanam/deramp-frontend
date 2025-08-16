@@ -8,9 +8,14 @@ export interface WalletConnectionState {
   isDetecting: boolean;
   walletType: 'metamask' | 'coinbase' | 'rainbow' | 'trust' | 'phantom' | 'unknown';
   isConnecting: boolean;
+  shouldAttemptConnection: boolean;
 }
 
-export const useWalletConnection = (): WalletConnectionState => {
+export interface WalletConnectionReturn extends WalletConnectionState {
+  triggerConnection: () => void;
+}
+
+export const useWalletConnection = (): WalletConnectionReturn => {
   const { isConnected: wagmiConnected, address: wagmiAddress, chainId: wagmiChainId } = useAccount();
   const [state, setState] = useState<WalletConnectionState>({
     isConnected: false,
@@ -18,7 +23,8 @@ export const useWalletConnection = (): WalletConnectionState => {
     chainId: null,
     isDetecting: true,
     walletType: 'unknown',
-    isConnecting: false
+    isConnecting: false,
+    shouldAttemptConnection: false
   });
 
   // Detect wallet type and connection status
@@ -59,7 +65,8 @@ export const useWalletConnection = (): WalletConnectionState => {
           address,
           chainId: chainIdDecimal,
           isDetecting: false,
-          isConnecting: false
+          isConnecting: false,
+          shouldAttemptConnection: !isConnected && prev.shouldAttemptConnection
         }));
 
         console.log('🔍 Direct wallet detection:', {
@@ -97,6 +104,28 @@ export const useWalletConnection = (): WalletConnectionState => {
       }));
     }
   }, [wagmiConnected, wagmiAddress, wagmiChainId]);
+
+  // Attempt to connect to wallet
+  const attemptConnection = useCallback(async () => {
+    if (!window.ethereum || state.isConnected) return;
+
+    try {
+      setState(prev => ({ ...prev, isConnecting: true }));
+      console.log('🔗 Attempting to connect to wallet...');
+
+      // Request accounts - this should trigger the connection flow
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      
+      if (accounts && accounts.length > 0) {
+        console.log('✅ Connection successful:', accounts[0]);
+        // The connection will be detected by the event listeners
+      }
+    } catch (error) {
+      console.error('❌ Connection attempt failed:', error);
+    } finally {
+      setState(prev => ({ ...prev, isConnecting: false }));
+    }
+  }, [state.isConnected]);
 
   // Listen to wallet events
   useEffect(() => {
@@ -140,6 +169,14 @@ export const useWalletConnection = (): WalletConnectionState => {
     };
   }, [detectWalletConnection]);
 
+  // Auto-attempt connection when shouldAttemptConnection is true
+  useEffect(() => {
+    if (state.shouldAttemptConnection && !state.isConnected && !state.isConnecting) {
+      console.log('🚀 Auto-attempting connection...');
+      attemptConnection();
+    }
+  }, [state.shouldAttemptConnection, state.isConnected, state.isConnecting, attemptConnection]);
+
   // Update state when wagmi changes
   useEffect(() => {
     if (!state.isDetecting) {
@@ -152,5 +189,10 @@ export const useWalletConnection = (): WalletConnectionState => {
     }
   }, [wagmiConnected, wagmiAddress, wagmiChainId, state.isDetecting]);
 
-  return state;
+  // Function to trigger connection attempt (called from outside)
+  const triggerConnection = useCallback(() => {
+    setState(prev => ({ ...prev, shouldAttemptConnection: true }));
+  }, []);
+
+  return { ...state, triggerConnection };
 };

@@ -133,12 +133,23 @@ export function getWalletDeepLink(walletId: string, url: string): string | null 
   
   switch (walletId) {
     case 'metaMask':
-      // MetaMask mobile: use Daimo's proven format for better compatibility
-      // This format works reliably across all devices and MetaMask versions
-      // Add parameters to trigger automatic connection flow
-      const metamaskUrl = `https://metamask.app.link/dapp/${cleanUrl.replace(/^https?:\/\//, '')}?action=connect&source=deramp`;
-      console.log(`🦊 MetaMask deep link (Daimo format with connection params):`, metamaskUrl);
-      return metamaskUrl;
+      // MetaMask mobile: try different formats to trigger automatic connection
+      // Format 1: Daimo's format with connection parameters
+      const metamaskUrl1 = `https://metamask.app.link/dapp/${cleanUrl.replace(/^https?:\/\//, '')}?action=connect&source=deramp`;
+      
+      // Format 2: Alternative format that might trigger connection
+      const metamaskUrl2 = `https://metamask.app.link/dapp/${cleanUrl.replace(/^https?:\/\//, '')}?connect=true`;
+      
+      // Format 3: Direct deep link format
+      const metamaskUrl3 = `metamask://dapp?url=${encodedUrl}&action=connect`;
+      
+      console.log(`🦊 MetaMask deep link options:`);
+      console.log(`  1. App link with params:`, metamaskUrl1);
+      console.log(`  2. App link connect:`, metamaskUrl2);
+      console.log(`  3. Direct deep link:`, metamaskUrl3);
+      
+      // Try the first format (most likely to work like Daimo)
+      return metamaskUrl1;
       
     case 'coinbaseWallet':
       // Base/Coinbase mobile: use same format as Daimo Pay

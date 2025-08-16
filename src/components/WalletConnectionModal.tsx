@@ -31,7 +31,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   onConnected
 }) => {
   const { connect, connectors, isPending } = useConnect();
-  const { isConnected, address } = useWalletConnection();
+  const { isConnected, address, triggerConnection } = useWalletConnection();
   const { disconnect } = useDisconnect();
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<'mobile' | 'desktop'>('mobile');
@@ -63,6 +63,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     }
   };
 
+  // Trigger connection attempt when deep link is opened
   const handleConnectWallet = async (wallet: WalletConfig) => {
     try {
       console.log('🆔 Wallet ID:', wallet.id);
@@ -80,6 +81,12 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       if (success) {
         console.log('✅ Mobile wallet opened successfully');
         console.log('⏳ Waiting for automatic connection...');
+        
+        // Trigger connection attempt after a short delay
+        setTimeout(() => {
+          console.log('🚀 Triggering connection attempt...');
+          triggerConnection();
+        }, 1000);
         
         // Don't close modal immediately - wait for connection
         // The modal will close automatically when connection is detected
