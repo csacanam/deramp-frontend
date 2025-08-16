@@ -385,8 +385,9 @@ export const usePaymentButton = ({
       console.log('🌐 Chain ID:', chainId);
       console.log('🌐 Expected Chain ID for Alfajores: 44787');
       
-      // Verify we're on the correct network using enhanced detection
-      if (!isCorrectNetwork) {
+      // Only validate network if we have a specific network requirement
+      // This prevents showing "wrong network" before user selects a network
+      if (networkName && networkName !== 'Unknown' && !isCorrectNetwork) {
         console.error('❌ Wrong network detected');
         console.error('❌ Current Chain ID:', chainId);
         console.error('❌ Expected Chain ID: 44787');

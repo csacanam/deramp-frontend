@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import { useWalletClient } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
-import { NetworkRefreshButton } from './NetworkRefreshButton';
 
 interface NetworkSwitchButtonProps {
   targetChainId: number;
   onSwitch?: () => void;
   onError?: (error: string) => void;
   className?: string;
-  showRefreshButton?: boolean;
 }
 
 export const NetworkSwitchButton: React.FC<NetworkSwitchButtonProps> = ({
@@ -17,14 +15,13 @@ export const NetworkSwitchButton: React.FC<NetworkSwitchButtonProps> = ({
   onSwitch,
   onError,
   className = '',
-  showRefreshButton = true
 }) => {
   const { data: walletClient } = useWalletClient();
   const { t } = useLanguage();
   const [isSwitching, setIsSwitching] = useState(false);
   
   // Use our enhanced network detection
-  const { networkInfo, isCorrectNetwork, refreshNetwork, isRefreshing } = useNetworkDetection('alfajores');
+  const { networkInfo, isCorrectNetwork } = useNetworkDetection('alfajores');
 
   const handleSwitchNetwork = async () => {
     try {
@@ -54,7 +51,7 @@ export const NetworkSwitchButton: React.FC<NetworkSwitchButtonProps> = ({
       
       // Refresh network detection instead of reloading page
       setTimeout(() => {
-        refreshNetwork();
+        // refreshNetwork(); // This line is removed
       }, 500);
       
     } catch (error: any) {
@@ -82,7 +79,7 @@ export const NetworkSwitchButton: React.FC<NetworkSwitchButtonProps> = ({
           
           // Refresh network detection
           setTimeout(() => {
-            refreshNetwork();
+            // refreshNetwork(); // This line is removed
           }, 500);
           
         } catch (addError) {
@@ -123,13 +120,6 @@ export const NetworkSwitchButton: React.FC<NetworkSwitchButtonProps> = ({
           <h3 className="text-white font-medium">
             {t.network?.status || 'Estado de la Red'}
           </h3>
-          {showRefreshButton && (
-            <NetworkRefreshButton
-              onRefresh={refreshNetwork}
-              isRefreshing={isRefreshing}
-              className="text-sm"
-            />
-          )}
         </div>
         
         <div className="text-sm text-gray-300 mb-3">
