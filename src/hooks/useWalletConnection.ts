@@ -8,6 +8,7 @@ export interface WalletConnectionState {
   isDetecting: boolean;
   walletType: 'metamask' | 'coinbase' | 'rainbow' | 'trust' | 'phantom' | 'unknown';
   isConnecting: boolean;
+  hasReturnedFromWallet: boolean;
 }
 
 export const useWalletConnection = (): WalletConnectionState => {
@@ -18,8 +19,25 @@ export const useWalletConnection = (): WalletConnectionState => {
     chainId: null,
     isDetecting: true,
     walletType: 'unknown',
-    isConnecting: false
+    isConnecting: false,
+    hasReturnedFromWallet: false
   });
+
+  // Detect if user has returned from wallet app
+  const detectReturnFromWallet = useCallback(() => {
+    // Check if we're back from a deep link
+    if (document.visibilityState === 'visible' && !state.isConnected) {
+      console.log('🔄 User returned from wallet app, attempting connection...');
+      setState(prev => ({ ...prev, hasReturnedFromWallet: true }));
+      
+      // Try to connect immediately
+      detectWalletConnection();
+      
+      // Also try with delays
+      setTimeout(() => detectWalletConnection(), 1000);
+      setTimeout(() => detectWalletConnection(), 3000);
+    }
+  }, [state.isConnected]);
 
   // Detect wallet type and connection status
   const detectWalletConnection = useCallback(async () => {
@@ -28,14 +46,11 @@ export const useWalletConnection = (): WalletConnectionState => {
     try {
       // Check if ethereum is available
       if (!window.ethereum) {
-        setState({
-          isConnected: false,
-          address: null,
-          chainId: null,
+        setState(prev => ({
+          ...prev,
           isDetecting: false,
-          walletType: 'unknown',
           isConnecting: false
-        });
+        }));
         return;
       }
 
@@ -56,14 +71,14 @@ export const useWalletConnection = (): WalletConnectionState => {
         const address = isConnected ? accounts[0] : null;
         const chainIdDecimal = chainId ? parseInt(chainId, 16) : null;
 
-        setState({
+        setState(prev => ({
+          ...prev,
           isConnected,
           address,
           chainId: chainIdDecimal,
           isDetecting: false,
-          walletType,
           isConnecting: false
-        });
+        }));
 
         console.log('🔍 Direct wallet detection:', {
           walletType,
@@ -76,28 +91,28 @@ export const useWalletConnection = (): WalletConnectionState => {
         console.warn('⚠️ Direct wallet detection failed, falling back to wagmi:', error);
         
         // Fallback to wagmi state
-        setState({
+        setState(prev => ({
+          ...prev,
           isConnected: wagmiConnected,
           address: wagmiAddress || null,
           chainId: wagmiChainId || null,
           isDetecting: false,
-          walletType,
           isConnecting: false
-        });
+        }));
       }
 
     } catch (error) {
       console.error('❌ Wallet detection failed:', error);
       
       // Fallback to wagmi state
-      setState({
+      setState(prev => ({
+        ...prev,
         isConnected: wagmiConnected,
         address: wagmiAddress || null,
         chainId: wagmiChainId || null,
         isDetecting: false,
-        walletType: 'unknown',
         isConnecting: false
-      });
+      }));
     }
   }, [wagmiConnected, wagmiAddress, wagmiChainId]);
 
@@ -167,6 +182,27 @@ export const useWalletConnection = (): WalletConnectionState => {
       window.ethereum.removeListener('disconnect', handleDisconnect);
     };
   }, [detectConnectionWithRetry]);
+
+  // Listen for visibility changes (return from wallet app)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      detectReturnFromWallet();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also listen for focus events (when user returns to tab)
+    const handleFocus = () => {
+      detectReturnFromWallet();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [detectReturnFromWallet]);
 
   // Update state when wagmi changes
   useEffect(() => {
