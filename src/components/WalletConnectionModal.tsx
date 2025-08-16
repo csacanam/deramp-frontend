@@ -68,6 +68,19 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     try {
       console.log('🆔 Wallet ID:', wallet.id);
       
+      // For MetaMask, try WalletConnect first for better deep linking compatibility
+      if (wallet.id === 'metaMask') {
+        console.log('🦊 MetaMask selected, using WalletConnect for better compatibility...');
+        
+        // Try to connect using WalletConnect connector
+        const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
+        if (walletConnectConnector) {
+          console.log('🔗 Using WalletConnect connector for MetaMask...');
+          await connect({ connector: walletConnectConnector });
+          return;
+        }
+      }
+      
       // Get current URL for deep linking - use origin + pathname to avoid query params
       const currentUrl = window.location.origin + window.location.pathname;
       console.log('🌐 Current URL (cleaned):', currentUrl);
