@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useAccount, useDisconnect, useConnect, useWalletClient, usePublicClient } from 'wagmi';
+import { useConnect } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Wallet } from 'lucide-react';
 import { WalletConnectionModal } from './WalletConnectionModal';
+import { useWalletState } from '../hooks/useWalletState';
 
 interface ConnectWalletButtonProps {
   selectedNetwork?: string;
@@ -14,24 +15,20 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   onConnected,
   className = ''
 }) => {
-  const { isConnected, address, chainId } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
+  const { isConnected, address, chainId, walletType, lastUpdate } = useWalletState();
   const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Debug logging
   useEffect(() => {
-    console.log('🔍 ConnectWalletButton Debug:');
+    console.log('🔍 ConnectWalletButton Debug (Centralized State):');
     console.log('  - Is Connected:', isConnected);
     console.log('  - Address:', address);
     console.log('  - Chain ID:', chainId);
-    console.log('  - Wallet Client:', !!walletClient);
-    console.log('  - Public Client:', !!publicClient);
-    console.log('  - Window Ethereum:', !!window.ethereum);
-    console.log('  - User Agent:', navigator.userAgent);
-  }, [isConnected, address, chainId, walletClient, publicClient]);
+    console.log('  - Wallet Type:', walletType);
+    console.log('  - Last Update:', lastUpdate);
+    console.log('  - Timestamp:', new Date().toISOString());
+  }, [isConnected, address, chainId, walletType, lastUpdate]);
 
   // Call onConnected callback when wallet connects
   useEffect(() => {
@@ -41,15 +38,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     }
   }, [isConnected, onConnected]);
 
-  const handleDisconnect = () => {
-    try {
-      disconnect();
-    } catch (error) {
-      console.error('❌ Failed to disconnect:', error);
-    }
-  };
-
-  // If connected, show disconnect button
+  // If connected, show wallet info button
   if (isConnected) {
     return (
       <div className="relative">
