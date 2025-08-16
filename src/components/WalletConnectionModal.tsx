@@ -68,19 +68,6 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     try {
       console.log('🆔 Wallet ID:', wallet.id);
       
-      // For MetaMask, try WalletConnect first for better deep linking compatibility
-      if (wallet.id === 'metaMask') {
-        console.log('🦊 MetaMask selected, using WalletConnect for better compatibility...');
-        
-        // Try to connect using WalletConnect connector
-        const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
-        if (walletConnectConnector) {
-          console.log('🔗 Using WalletConnect connector for MetaMask...');
-          await connect({ connector: walletConnectConnector });
-          return;
-        }
-      }
-      
       // Get current URL for deep linking - use origin + pathname to avoid query params
       const currentUrl = window.location.origin + window.location.pathname;
       console.log('🌐 Current URL (cleaned):', currentUrl);
@@ -88,7 +75,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       console.log('🏠 Origin:', window.location.origin);
       console.log('🛣️ Pathname:', window.location.pathname);
       
-      // Try to open in wallet app
+      // Try to open in wallet app first (original behavior)
       const success = await openWallet(wallet.id, currentUrl);
       
       if (success) {
@@ -104,9 +91,20 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         // Don't close modal immediately - wait for connection
         // The modal will close automatically when connection is detected
       } else {
-        console.log('❌ Failed to open mobile wallet');
-        // Don't fallback to wagmi - this can cause issues on mobile
-        // Just show error or let user try again
+        console.log('❌ Failed to open mobile wallet, trying WalletConnect as fallback...');
+        
+        // Fallback to WalletConnect for better compatibility
+        if (wallet.id === 'metaMask') {
+          const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
+          if (walletConnectConnector) {
+            console.log('🔗 Using WalletConnect connector as fallback...');
+            await connect({ connector: walletConnectConnector });
+            return;
+          }
+        }
+        
+        console.log('❌ Both deep link and WalletConnect failed');
+        // Show error or let user try again
       }
     } catch (error) {
       console.error('❌ Failed to open mobile wallet:', error);
