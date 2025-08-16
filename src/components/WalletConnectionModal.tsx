@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useConnect, useAccount, useDisconnect } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
@@ -17,6 +17,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { getWalletLogo } from '../assets/walletLogos';
+import { useWalletConnection } from '../hooks/useWalletConnection';
 
 interface WalletConnectionModalProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   onConnected
 }) => {
   const { connect, connectors, isPending } = useConnect();
-  const { isConnected, address } = useAccount();
+  const { isConnected, address } = useWalletConnection();
   const { disconnect } = useDisconnect();
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<'mobile' | 'desktop'>('mobile');
@@ -44,6 +45,14 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     setSelectedCategory(isMobile ? 'mobile' : 'desktop');
   }, [isMobile]);
 
+  // Auto-close modal when wallet connects
+  useEffect(() => {
+    if (isConnected && address) {
+      console.log('✅ Wallet connected automatically, closing modal...');
+      onClose();
+    }
+  }, [isConnected, address, onClose]);
+
   const handleConnect = async (connector: any) => {
     try {
       connect({ connector });
@@ -54,9 +63,8 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     }
   };
 
-  const handleMobileWalletConnect = async (wallet: WalletConfig) => {
+  const handleConnectWallet = async (wallet: WalletConfig) => {
     try {
-      console.log('📱 Opening mobile wallet:', wallet.name);
       console.log('🆔 Wallet ID:', wallet.id);
       
       // Get current URL for deep linking - use origin + pathname to avoid query params
@@ -71,8 +79,10 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       
       if (success) {
         console.log('✅ Mobile wallet opened successfully');
-        // Close modal and let wallet app handle the connection
-        onClose();
+        console.log('⏳ Waiting for automatic connection...');
+        
+        // Don't close modal immediately - wait for connection
+        // The modal will close automatically when connection is detected
       } else {
         console.log('❌ Failed to open mobile wallet');
         // Don't fallback to wagmi - this can cause issues on mobile
@@ -199,7 +209,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                       .map((wallet) => (
                                                  <button
                            key={wallet.id}
-                           onClick={() => handleMobileWalletConnect(wallet)}
+                           onClick={() => handleConnectWallet(wallet)}
                            className="flex flex-col items-center space-y-2 p-4 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors duration-200 border border-gray-700 hover:border-gray-600"
                          >
                            <div className="w-12 h-12 flex items-center justify-center">

@@ -7,6 +7,7 @@ export interface WalletConnectionState {
   chainId: number | null;
   isDetecting: boolean;
   walletType: 'metamask' | 'coinbase' | 'rainbow' | 'trust' | 'phantom' | 'unknown';
+  isConnecting: boolean;
 }
 
 export const useWalletConnection = (): WalletConnectionState => {
@@ -16,7 +17,8 @@ export const useWalletConnection = (): WalletConnectionState => {
     address: null,
     chainId: null,
     isDetecting: true,
-    walletType: 'unknown'
+    walletType: 'unknown',
+    isConnecting: false
   });
 
   // Detect wallet type and connection status
@@ -31,7 +33,8 @@ export const useWalletConnection = (): WalletConnectionState => {
           address: null,
           chainId: null,
           isDetecting: false,
-          walletType: 'unknown'
+          walletType: 'unknown',
+          isConnecting: false
         });
         return;
       }
@@ -58,7 +61,8 @@ export const useWalletConnection = (): WalletConnectionState => {
           address,
           chainId: chainIdDecimal,
           isDetecting: false,
-          walletType
+          walletType,
+          isConnecting: false
         });
 
         console.log('🔍 Direct wallet detection:', {
@@ -77,7 +81,8 @@ export const useWalletConnection = (): WalletConnectionState => {
           address: wagmiAddress || null,
           chainId: wagmiChainId || null,
           isDetecting: false,
-          walletType
+          walletType,
+          isConnecting: false
         });
       }
 
@@ -90,10 +95,36 @@ export const useWalletConnection = (): WalletConnectionState => {
         address: wagmiAddress || null,
         chainId: wagmiChainId || null,
         isDetecting: false,
-        walletType: 'unknown'
+        walletType: 'unknown',
+        isConnecting: false
       });
     }
   }, [wagmiConnected, wagmiAddress, wagmiChainId]);
+
+  // Enhanced connection detection with automatic retry
+  const detectConnectionWithRetry = useCallback(async () => {
+    console.log('🔄 Starting enhanced connection detection...');
+    
+    // First immediate detection
+    await detectWalletConnection();
+    
+    // If not connected, wait a bit and try again (for deep link connections)
+    if (!state.isConnected) {
+      console.log('⏳ Wallet not connected, waiting for deep link connection...');
+      
+      // Wait 2 seconds and try again
+      setTimeout(async () => {
+        console.log('🔄 Retrying connection detection after delay...');
+        await detectWalletConnection();
+      }, 2000);
+      
+      // Wait 5 seconds and try one more time
+      setTimeout(async () => {
+        console.log('🔄 Final connection detection attempt...');
+        await detectWalletConnection();
+      }, 5000);
+    }
+  }, [detectWalletConnection, state.isConnected]);
 
   // Listen to wallet events
   useEffect(() => {
@@ -125,8 +156,8 @@ export const useWalletConnection = (): WalletConnectionState => {
     window.ethereum.on('connect', handleConnect);
     window.ethereum.on('disconnect', handleDisconnect);
 
-    // Initial detection
-    detectWalletConnection();
+    // Initial detection with retry for deep links
+    detectConnectionWithRetry();
 
     return () => {
       // Remove event listeners
@@ -135,7 +166,7 @@ export const useWalletConnection = (): WalletConnectionState => {
       window.ethereum.removeListener('connect', handleConnect);
       window.ethereum.removeListener('disconnect', handleDisconnect);
     };
-  }, [detectWalletConnection]);
+  }, [detectConnectionWithRetry]);
 
   // Update state when wagmi changes
   useEffect(() => {
