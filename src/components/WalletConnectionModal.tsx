@@ -256,6 +256,39 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
           )}
         </div>
 
+        {/* Live Debug Logs Panel - Always visible for production debugging */}
+        <div className="p-4 bg-gray-800 border-b border-gray-600 max-h-40 overflow-y-auto">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-yellow-300">🔍 Live Debug Logs</h4>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-2 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs rounded"
+            >
+              Refresh
+            </button>
+          </div>
+          <div className="text-xs font-mono space-y-1 text-gray-300">
+            <div>🕐 {new Date().toLocaleString()}</div>
+            <div>📱 User Agent: {navigator.userAgent.substring(0, 50)}...</div>
+            <div>🌐 URL: {window.location.href}</div>
+            <div>🔗 Wagmi Connected: {String(isConnected)}</div>
+            <div>👛 Wagmi Address: {address ? `${address.slice(0, 10)}...${address.slice(-8)}` : 'None'}</div>
+            <div>⚡ Ethereum Available: {window.ethereum ? 'YES' : 'NO'}</div>
+            {window.ethereum && (
+              <>
+                <div>🦊 isMetaMask: {String((window.ethereum as any).isMetaMask)}</div>
+                <div>💰 isCoinbaseWallet: {String((window.ethereum as any).isCoinbaseWallet)}</div>
+                <div>🔗 Ethereum Connected: {String((window.ethereum as any).isConnected)}</div>
+                <div>📍 Ethereum Address: {(window.ethereum as any).selectedAddress ? `${(window.ethereum as any).selectedAddress.slice(0, 10)}...${(window.ethereum as any).selectedAddress.slice(-8)}` : 'None'}</div>
+                <div>🌐 Chain ID: {(window.ethereum as any).chainId || 'N/A'}</div>
+              </>
+            )}
+            <div>💾 localStorage.wagmi: {localStorage.getItem('wagmi') ? 'EXISTS' : 'EMPTY'}</div>
+            <div>🔌 localStorage.walletconnect: {localStorage.getItem('walletconnect') ? 'EXISTS' : 'EMPTY'}</div>
+            <div>📦 sessionStorage: {Object.keys(sessionStorage).length > 0 ? `${Object.keys(sessionStorage).length} items` : 'EMPTY'}</div>
+          </div>
+        </div>
+
         {/* Content */}
         <div className="p-6">
           {isConnected ? (

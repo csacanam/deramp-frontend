@@ -46,6 +46,34 @@ export const usePaymentButton = ({
     url: window.location.href
   });
 
+  // Debug state for UI display
+  const [debugInfo, setDebugInfo] = useState({
+    lastCheck: new Date().toISOString(),
+    wagmiState: { isConnected, address, chainId },
+    ethereumState: null as any,
+    localStorage: null as any
+  });
+
+  // Update debug info when state changes
+  useEffect(() => {
+    setDebugInfo({
+      lastCheck: new Date().toISOString(),
+      wagmiState: { isConnected, address, chainId },
+      ethereumState: window.ethereum ? {
+        isMetaMask: (window.ethereum as any).isMetaMask,
+        isCoinbaseWallet: (window.ethereum as any).isCoinbaseWallet,
+        selectedAddress: (window.ethereum as any).selectedAddress,
+        chainId: (window.ethereum as any).chainId,
+        isConnected: (window.ethereum as any).isConnected
+      } : null,
+      localStorage: {
+        wagmi: localStorage.getItem('wagmi') ? 'EXISTS' : 'EMPTY',
+        walletconnect: localStorage.getItem('walletconnect') ? 'EXISTS' : 'EMPTY',
+        sessionStorage: Object.keys(sessionStorage).length > 0 ? `${Object.keys(sessionStorage).length} items` : 'EMPTY'
+      }
+    });
+  }, [isConnected, address, chainId]);
+
   // Use enhanced network detection
   const { isCorrectNetwork, networkInfo } = useNetworkDetection('alfajores');
 
@@ -776,5 +804,6 @@ export const usePaymentButton = ({
     handleButtonClick,
     selectedToken,
     showNetworkSwitch,
+    debugInfo, // Add debugInfo to the return object
   };
 }; 
