@@ -8,7 +8,6 @@ export interface WalletConnectionState {
   isDetecting: boolean;
   walletType: 'metamask' | 'coinbase' | 'rainbow' | 'trust' | 'phantom' | 'unknown';
   isConnecting: boolean;
-  hasReturnedFromWallet: boolean;
 }
 
 export const useWalletConnection = (): WalletConnectionState => {
@@ -19,25 +18,8 @@ export const useWalletConnection = (): WalletConnectionState => {
     chainId: null,
     isDetecting: true,
     walletType: 'unknown',
-    isConnecting: false,
-    hasReturnedFromWallet: false
+    isConnecting: false
   });
-
-  // Detect if user has returned from wallet app
-  const detectReturnFromWallet = useCallback(() => {
-    // Check if we're back from a deep link
-    if (document.visibilityState === 'visible' && !state.isConnected) {
-      console.log('🔄 User returned from wallet app, attempting connection...');
-      setState(prev => ({ ...prev, hasReturnedFromWallet: true }));
-      
-      // Try to connect immediately
-      detectWalletConnection();
-      
-      // Also try with delays
-      setTimeout(() => detectWalletConnection(), 1000);
-      setTimeout(() => detectWalletConnection(), 3000);
-    }
-  }, [state.isConnected]);
 
   // Detect wallet type and connection status
   const detectWalletConnection = useCallback(async () => {
@@ -116,31 +98,6 @@ export const useWalletConnection = (): WalletConnectionState => {
     }
   }, [wagmiConnected, wagmiAddress, wagmiChainId]);
 
-  // Enhanced connection detection with automatic retry
-  const detectConnectionWithRetry = useCallback(async () => {
-    console.log('🔄 Starting enhanced connection detection...');
-    
-    // First immediate detection
-    await detectWalletConnection();
-    
-    // If not connected, wait a bit and try again (for deep link connections)
-    if (!state.isConnected) {
-      console.log('⏳ Wallet not connected, waiting for deep link connection...');
-      
-      // Wait 2 seconds and try again
-      setTimeout(async () => {
-        console.log('🔄 Retrying connection detection after delay...');
-        await detectWalletConnection();
-      }, 2000);
-      
-      // Wait 5 seconds and try one more time
-      setTimeout(async () => {
-        console.log('🔄 Final connection detection attempt...');
-        await detectWalletConnection();
-      }, 5000);
-    }
-  }, [detectWalletConnection, state.isConnected]);
-
   // Listen to wallet events
   useEffect(() => {
     if (!window.ethereum) return;
@@ -171,8 +128,8 @@ export const useWalletConnection = (): WalletConnectionState => {
     window.ethereum.on('connect', handleConnect);
     window.ethereum.on('disconnect', handleDisconnect);
 
-    // Initial detection with retry for deep links
-    detectConnectionWithRetry();
+    // Initial detection
+    detectWalletConnection();
 
     return () => {
       // Remove event listeners
@@ -181,28 +138,7 @@ export const useWalletConnection = (): WalletConnectionState => {
       window.ethereum.removeListener('connect', handleConnect);
       window.ethereum.removeListener('disconnect', handleDisconnect);
     };
-  }, [detectConnectionWithRetry]);
-
-  // Listen for visibility changes (return from wallet app)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      detectReturnFromWallet();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Also listen for focus events (when user returns to tab)
-    const handleFocus = () => {
-      detectReturnFromWallet();
-    };
-
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [detectReturnFromWallet]);
+  }, [detectWalletConnection]);
 
   // Update state when wagmi changes
   useEffect(() => {
