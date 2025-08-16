@@ -154,32 +154,43 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         </div>
 
         {/* Connected Wallet Info */}
-        {isConnected && address && (
-          <div className="p-6 border-b border-gray-700 bg-gray-800/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                  <Wallet className="w-4 h-4 text-white" />
+        {(() => {
+          console.log('🔍 Rendering connected wallet section:', { isConnected, address });
+          return isConnected && address ? (
+            <div className="p-6 border-b border-gray-700 bg-gray-800/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+                    <Wallet className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-300">Wallet Conectada</p>
+                    <p className="text-xs text-gray-400 font-mono">
+                      {address.slice(0, 6)}...{address.slice(-4)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-300">Wallet Conectada</p>
-                  <p className="text-xs text-gray-400 font-mono">
-                    {address.slice(0, 6)}...{address.slice(-4)}
-                  </p>
-                </div>
+                <button
+                  onClick={() => {
+                    console.log('🔌 Disconnect button clicked');
+                    disconnect();
+                    onClose();
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors duration-200"
+                >
+                  Desconectar
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  disconnect();
-                  onClose();
-                }}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors duration-200"
-              >
-                Desconectar
-              </button>
             </div>
-          </div>
-        )}
+          ) : null;
+        })()}
+        
+        {/* Debug: Show connection status */}
+        <div className="p-4 bg-blue-900/20 border-b border-blue-700">
+          <p className="text-xs text-blue-300">
+            Debug: isConnected={String(isConnected)}, address={address ? 'YES' : 'NO'}
+          </p>
+        </div>
 
         {/* Content */}
         <div className="p-6">
