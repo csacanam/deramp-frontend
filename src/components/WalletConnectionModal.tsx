@@ -31,7 +31,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   onConnected
 }) => {
   const { connect, connectors, isPending } = useConnect();
-  const { isConnected, address, triggerConnection } = useWalletConnection();
+  const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<'mobile' | 'desktop'>('mobile');
@@ -39,6 +39,15 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   // Get available wallets for current device
   const availableWallets = getAvailableWallets();
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  // Debug logging
+  console.log('🔍 WalletConnectionModal Debug:', {
+    isOpen,
+    isConnected,
+    address,
+    connectors: connectors.map(c => ({ id: c.id, name: c.name, ready: c.ready })),
+    isPending
+  });
 
   // Auto-select category based on device
   React.useEffect(() => {
@@ -85,7 +94,9 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         // Trigger connection attempt after a short delay
         setTimeout(() => {
           console.log('🚀 Triggering connection attempt...');
-          triggerConnection();
+          // The original code had triggerConnection() here, but triggerConnection is removed from useWalletConnection.
+          // Assuming the intent was to re-evaluate connection status or handle it differently if needed.
+          // For now, removing the line as triggerConnection is no longer available.
         }, 1000);
         
         // Don't close modal immediately - wait for connection
@@ -129,7 +140,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 rounded-xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-start justify-between p-6 border-b border-gray-700">
           <div className="flex items-start space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <Wallet className="w-6 h-6 text-white" />
@@ -150,6 +161,34 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Connected Wallet Info */}
+        {isConnected && address && (
+          <div className="p-6 border-b border-gray-700 bg-gray-800/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-300">Wallet Conectada</p>
+                  <p className="text-xs text-gray-400 font-mono">
+                    {address.slice(0, 6)}...{address.slice(-4)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  disconnect();
+                  onClose();
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors duration-200"
+              >
+                Desconectar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6">

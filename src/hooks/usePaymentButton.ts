@@ -34,6 +34,16 @@ export const usePaymentButton = ({
   const publicClient = usePublicClient();
   const { language, t } = useLanguage();
   
+  // Debug logging
+  console.log('🔍 usePaymentButton Debug:', {
+    invoiceId,
+    paymentOptions,
+    isConnected,
+    address,
+    chainId,
+    language
+  });
+
   // Use enhanced network detection
   const { isCorrectNetwork, networkInfo } = useNetworkDetection('alfajores');
 
