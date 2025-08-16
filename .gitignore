@@ -54,3 +54,6 @@ ehthumbs.db
 *.temp
 .temp/
 .tmp/
+
+# Daimo Pay reference (not needed in repo)
+pay/
