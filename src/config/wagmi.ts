@@ -7,6 +7,7 @@ console.log('🔍 Wagmi Config Debug:');
 console.log('  - VITE_WALLETCONNECT_PROJECT_ID:', import.meta.env.VITE_WALLETCONNECT_PROJECT_ID);
 console.log('  - NODE_ENV:', import.meta.env.NODE_ENV);
 console.log('  - DEV:', import.meta.env.DEV);
+console.log('  - Timestamp:', new Date().toISOString());
 
 // Define Celo Alfajores manually (same as in chains.ts)
 const celoAlfajoresChain = {
@@ -35,4 +36,11 @@ export const config = createConfig({
     [celo.id]: http(),
     [celoAlfajoresChain.id]: http(),
   },
+});
+
+// Debug: Log config after creation
+console.log('🔍 Wagmi Config Created:', {
+  chains: allChains.map(c => ({ id: c.id, name: c.name })),
+  connectors: config.connectors.map(c => ({ id: c.id, name: c.name })),
+  timestamp: new Date().toISOString()
 }); 

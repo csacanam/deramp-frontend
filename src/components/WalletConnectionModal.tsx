@@ -68,6 +68,18 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     }
   }, []);
 
+  // Debug: Check for state inconsistencies
+  useEffect(() => {
+    console.log('🔍 State Consistency Check:', {
+      wagmiConnected: isConnected,
+      wagmiAddress: address,
+      ethereumAvailable: !!window.ethereum,
+      ethereumConnected: window.ethereum ? (window.ethereum as any).isConnected : false,
+      ethereumAddress: window.ethereum ? (window.ethereum as any).selectedAddress : null,
+      timestamp: new Date().toISOString()
+    });
+  }, [isConnected, address]);
+
   // Auto-select category based on device
   React.useEffect(() => {
     setSelectedCategory(isMobile ? 'mobile' : 'desktop');
@@ -197,8 +209,43 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                 Debug: isConnected={String(isConnected)}, address={address ? 'YES' : 'NO'}
               </p>
             </div>
-            <div className="text-xs text-blue-300">
-              {new Date().toLocaleTimeString()}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  console.log('🔍 Full State Debug:', {
+                    wagmi: { isConnected, address },
+                    ethereum: window.ethereum ? {
+                      isMetaMask: (window.ethereum as any).isMetaMask,
+                      isCoinbaseWallet: (window.ethereum as any).isCoinbaseWallet,
+                      selectedAddress: (window.ethereum as any).selectedAddress,
+                      chainId: (window.ethereum as any).chainId,
+                      isConnected: (window.ethereum as any).isConnected
+                    } : 'Not available',
+                    localStorage: {
+                      wagmi: localStorage.getItem('wagmi'),
+                      walletConnect: localStorage.getItem('walletconnect'),
+                      timestamp: new Date().toISOString()
+                    }
+                  });
+                }}
+                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+              >
+                Debug State
+              </button>
+              <button
+                onClick={() => {
+                  console.log('🧹 Clearing session...');
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.reload();
+                }}
+                className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded"
+              >
+                Clear Session
+              </button>
+              <div className="text-xs text-blue-300">
+                {new Date().toLocaleTimeString()}
+              </div>
             </div>
           </div>
           {isConnected && address && (
