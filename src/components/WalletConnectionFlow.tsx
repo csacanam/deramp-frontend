@@ -1,9 +1,10 @@
 import React from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useDisconnect } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { NetworkSwitchButton } from './NetworkSwitchButton';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
+import { useWalletConnection } from '../hooks/useWalletConnection';
 import { LogOut } from 'lucide-react';
 
 interface WalletConnectionFlowProps {
@@ -17,7 +18,7 @@ export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
   expectedNetwork = 'alfajores',
   className = ''
 }) => {
-  const { isConnected, address } = useAccount();
+  const { isConnected, address } = useWalletConnection();
   const { disconnect } = useDisconnect();
   const { t } = useLanguage();
   const { isCorrectNetwork, networkInfo } = useNetworkDetection(expectedNetwork);
