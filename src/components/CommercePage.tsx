@@ -161,7 +161,7 @@ export const CommercePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="max-w-md mx-auto p-4 pt-6 sm:pt-8">
+      <div className="max-w-md mx-auto p-4">
         {/* Language Selector - Top Right */}
         <div className="flex justify-end mb-2">
           <LanguageSelector />
