@@ -40,16 +40,18 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   const availableWallets = getAvailableWallets();
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  // Debug logging
+  // Debug logging - Always active for production debugging
   console.log('🔍 WalletConnectionModal Debug:', {
     isOpen,
     isConnected,
     address,
     connectors: connectors.map(c => ({ id: c.id, name: c.name, ready: c.ready })),
-    isPending
+    isPending,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent
   });
 
-  // Additional debug: Check window.ethereum
+  // Additional debug: Check window.ethereum - Always active
   useEffect(() => {
     if (window.ethereum) {
       const ethereum = window.ethereum as any;
@@ -58,7 +60,8 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         isCoinbaseWallet: ethereum.isCoinbaseWallet,
         selectedAddress: ethereum.selectedAddress,
         chainId: ethereum.chainId,
-        isConnected: ethereum.isConnected
+        isConnected: ethereum.isConnected,
+        timestamp: new Date().toISOString()
       });
     } else {
       console.log('❌ Window.ethereum not available');
@@ -185,11 +188,25 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
           ) : null;
         })()}
         
-        {/* Debug: Show connection status */}
-        <div className="p-4 bg-blue-900/20 border-b border-blue-700">
-          <p className="text-xs text-blue-300">
-            Debug: isConnected={String(isConnected)}, address={address ? 'YES' : 'NO'}
-          </p>
+        {/* Debug: Show connection status - Always visible for production debugging */}
+        <div className="p-4 bg-blue-900/30 border-b border-blue-600">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+              <p className="text-sm text-blue-200 font-mono">
+                Debug: isConnected={String(isConnected)}, address={address ? 'YES' : 'NO'}
+              </p>
+            </div>
+            <div className="text-xs text-blue-300">
+              {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+          {isConnected && address && (
+            <div className="mt-2 text-xs text-blue-300">
+              <p>Wallet: {address.slice(0, 10)}...{address.slice(-8)}</p>
+              <p>Chain ID: {window.ethereum ? (window.ethereum as any).chainId : 'N/A'}</p>
+            </div>
+          )}
         </div>
 
         {/* Content */}

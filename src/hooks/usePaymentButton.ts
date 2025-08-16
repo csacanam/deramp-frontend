@@ -34,14 +34,16 @@ export const usePaymentButton = ({
   const publicClient = usePublicClient();
   const { language, t } = useLanguage();
   
-  // Debug logging
+  // Debug logging - Always active for production debugging
   console.log('🔍 usePaymentButton Debug:', {
     invoiceId,
     paymentOptions,
     isConnected,
     address,
     chainId,
-    language
+    language,
+    timestamp: new Date().toISOString(),
+    url: window.location.href
   });
 
   // Use enhanced network detection
