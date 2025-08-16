@@ -49,6 +49,22 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     isPending
   });
 
+  // Additional debug: Check window.ethereum
+  useEffect(() => {
+    if (window.ethereum) {
+      const ethereum = window.ethereum as any;
+      console.log('🔍 Window.ethereum Debug:', {
+        isMetaMask: ethereum.isMetaMask,
+        isCoinbaseWallet: ethereum.isCoinbaseWallet,
+        selectedAddress: ethereum.selectedAddress,
+        chainId: ethereum.chainId,
+        isConnected: ethereum.isConnected
+      });
+    } else {
+      console.log('❌ Window.ethereum not available');
+    }
+  }, []);
+
   // Auto-select category based on device
   React.useEffect(() => {
     setSelectedCategory(isMobile ? 'mobile' : 'desktop');
@@ -64,7 +80,8 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
 
   const handleConnect = async (connector: any) => {
     try {
-      connect({ connector });
+      console.log('🔗 Connecting with connector:', connector.name);
+      await connect({ connector });
       onConnected?.();
       onClose();
     } catch (error) {
@@ -72,53 +89,27 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     }
   };
 
-  // Trigger connection attempt when deep link is opened
+  // Simple deep link opening - no complex logic
   const handleConnectWallet = async (wallet: WalletConfig) => {
     try {
-      console.log('🆔 Wallet ID:', wallet.id);
+      console.log('🆔 Opening wallet:', wallet.name);
       
-      // Get current URL for deep linking - use origin + pathname to avoid query params
+      // Get current URL for deep linking
       const currentUrl = window.location.origin + window.location.pathname;
-      console.log('🌐 Current URL (cleaned):', currentUrl);
-      console.log('🔍 Protocol:', window.location.protocol);
-      console.log('🏠 Origin:', window.location.origin);
-      console.log('🛣️ Pathname:', window.location.pathname);
+      console.log('🌐 Current URL:', currentUrl);
       
-      // Try to open in wallet app first (original behavior)
+      // Open wallet with deep link
       const success = await openWallet(wallet.id, currentUrl);
       
       if (success) {
-        console.log('✅ Mobile wallet opened successfully');
-        console.log('⏳ Waiting for automatic connection...');
-        
-        // Trigger connection attempt after a short delay
-        setTimeout(() => {
-          console.log('🚀 Triggering connection attempt...');
-          // The original code had triggerConnection() here, but triggerConnection is removed from useWalletConnection.
-          // Assuming the intent was to re-evaluate connection status or handle it differently if needed.
-          // For now, removing the line as triggerConnection is no longer available.
-        }, 1000);
-        
-        // Don't close modal immediately - wait for connection
-        // The modal will close automatically when connection is detected
+        console.log('✅ Wallet opened successfully');
+        console.log('⏳ Waiting for connection...');
+        // Don't close modal - let user connect manually if needed
       } else {
-        console.log('❌ Failed to open mobile wallet, trying WalletConnect as fallback...');
-        
-        // Fallback to WalletConnect for better compatibility
-        if (wallet.id === 'metaMask') {
-          const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
-          if (walletConnectConnector) {
-            console.log('🔗 Using WalletConnect connector as fallback...');
-            await connect({ connector: walletConnectConnector });
-            return;
-          }
-        }
-        
-        console.log('❌ Both deep link and WalletConnect failed');
-        // Show error or let user try again
+        console.log('❌ Failed to open wallet');
       }
     } catch (error) {
-      console.error('❌ Failed to open mobile wallet:', error);
+      console.error('❌ Error opening wallet:', error);
     }
   };
 
