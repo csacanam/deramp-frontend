@@ -85,13 +85,14 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     setSelectedCategory(isMobile ? 'mobile' : 'desktop');
   }, [isMobile]);
 
-  // Auto-close modal when wallet connects
-  useEffect(() => {
-    if (isConnected && address) {
-      console.log('✅ Wallet connected automatically, closing modal...');
-      onClose();
-    }
-  }, [isConnected, address, onClose]);
+  // REMOVED: Auto-close modal when wallet connects
+  // This was causing the modal to close immediately when connected
+  // useEffect(() => {
+  //   if (isConnected && address) {
+  //     console.log('✅ Wallet connected automatically, closing modal...');
+  //     onClose();
+  //   }
+  // }, [isConnected, address, onClose]);
 
   const handleConnect = async (connector: any) => {
     try {
