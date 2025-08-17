@@ -76,6 +76,7 @@ export const CheckoutPage: React.FC = () => {
   // Detect if we're in a wallet app or regular browser
   useEffect(() => {
     const userAgent = navigator.userAgent;
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     const isWallet = userAgent.includes('MetaMask') || 
                      userAgent.includes('Coinbase') || 
                      userAgent.includes('Base') ||
@@ -83,7 +84,10 @@ export const CheckoutPage: React.FC = () => {
                      userAgent.includes('Phantom') ||
                      userAgent.includes('Rainbow');
     
-    setIsInWalletApp(isWallet);
+    // Desktop: siempre conectar directamente (como antes)
+    // Mobile: mantener la lógica actual
+    const shouldShowModal = isMobile && !isWallet;
+    setIsInWalletApp(!shouldShowModal);
   }, []);
 
   // Update document title when invoice data is available
@@ -229,7 +233,11 @@ export const CheckoutPage: React.FC = () => {
     }
 
     return (
-      <WalletConnectionFlow expectedNetwork="alfajores">
+      <WalletConnectionFlow 
+        expectedNetwork="alfajores"
+        isInWalletApp={isInWalletApp}
+        onOpenWalletSelection={() => setIsWalletSelectionModalOpen(true)}
+      >
         <div className="space-y-6">
           {/* Token Selection */}
           <div>

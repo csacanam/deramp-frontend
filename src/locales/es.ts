@@ -272,7 +272,7 @@ export const es = {
     needToChange: 'Necesitas cambiar a una red compatible para continuar',
     connectedAddress: 'Dirección',
     disconnect: 'Desconectar',
-    selectWallet: 'Seleccionar Wallet',
+    selectWallet: 'Elige la wallet en la que vas a continuar la transacción',
     selectWalletDescription: 'Elige tu wallet para continuar',
   }
 }; 

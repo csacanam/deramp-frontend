@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { MetaMaskLogo, BaseLogo } from '../assets/walletLogos';
 
 interface WalletSelectionModalProps {
   isOpen: boolean;
@@ -19,12 +20,13 @@ export const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
     const currentUrl = window.location.href;
     
     if (walletType === 'metamask') {
-      // MetaMask deep link
-      const metamaskUrl = `https://metamask.app.link/dapp/${encodeURIComponent(currentUrl)}`;
+      // MetaMask deep link - solo codificar la URL sin el protocolo
+      const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
+      const metamaskUrl = `https://metamask.app.link/dapp/${cleanUrl}`;
       window.open(metamaskUrl, '_blank');
     } else if (walletType === 'base') {
-      // Base Wallet deep link
-      const baseUrl = `cbwallet://dapp/${encodeURIComponent(currentUrl)}`;
+      // Base Wallet deep link - usar el formato correcto cbwallet://
+      const baseUrl = `cbwallet://dapp?url=${encodeURIComponent(currentUrl)}`;
       window.location.href = baseUrl;
     }
     
@@ -43,7 +45,7 @@ export const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
         </button>
 
         {/* Title */}
-        <h2 className="text-xl font-semibold text-gray-900 mb-6 text-center">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 text-left">
           {t.wallet?.selectWallet || 'Select Wallet'}
         </h2>
 
@@ -54,10 +56,10 @@ export const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
             onClick={() => handleWalletSelect('metamask')}
             className="w-full p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors flex items-center space-x-3"
           >
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🦊</span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <MetaMaskLogo size={32} />
             </div>
-            <span className="text-gray-900 font-medium">MetaMask</span>
+            <span className="text-gray-900 font-medium">Metamask</span>
           </button>
 
           {/* Base Wallet */}
@@ -65,17 +67,12 @@ export const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
             onClick={() => handleWalletSelect('base')}
             className="w-full p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors flex items-center space-x-3"
           >
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🪙</span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <BaseLogo size={40} />
             </div>
-            <span className="text-gray-900 font-medium">Base Wallet</span>
+            <span className="text-gray-900 font-medium">Base</span>
           </button>
         </div>
-
-        {/* Info text */}
-        <p className="text-sm text-gray-500 mt-6 text-center">
-          {t.wallet?.selectWalletDescription || 'Choose your wallet to continue'}
-        </p>
       </div>
     </div>
   );
