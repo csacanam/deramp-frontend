@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Wallet } from 'lucide-react';
 import { useWalletState } from '../hooks/useWalletState';
@@ -17,6 +17,10 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const { t } = useLanguage();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectionInProgress, setConnectionInProgress] = useState(false);
+  
+  // Prevent multiple simultaneous connection attempts
+  const connectionRef = useRef<boolean>(false);
   
   // Detect wallet type and context (desktop vs mobile)
   const detectWalletContext = (): 'metamask-desktop' | 'metamask-mobile' | 'coinbase-desktop' | 'coinbase-mobile' | 'rainbow' | 'none' => {
@@ -135,8 +139,17 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const handleConnectWallet = async () => {
     console.log('🔗 Connect wallet button clicked');
     
+    // Prevent multiple simultaneous connection attempts
+    if (connectionRef.current || connectionInProgress) {
+      console.log('⏳ Connection already in progress, ignoring click');
+      setError('Connection already in progress. Please wait...');
+      return;
+    }
+    
     setIsConnecting(true);
     setError(null);
+    setConnectionInProgress(true);
+    connectionRef.current = true;
     
     try {
       // Try direct connection
@@ -151,6 +164,13 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       setError('Unexpected error. Please try again.');
     } finally {
       setIsConnecting(false);
+      setConnectionInProgress(false);
+      connectionRef.current = false;
+      
+      // Clear error after a delay to allow user to try again
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
     }
   };
   
@@ -191,7 +211,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     <div className="w-full space-y-3">
       <button
         onClick={handleConnectWallet}
-        disabled={isConnecting}
+        disabled={isConnecting || connectionInProgress}
         className={`
           w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl
           ${className}
@@ -199,7 +219,10 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       >
         <Wallet className="w-5 h-5" />
         <span className="text-base">
-          {isConnecting ? 'Conectando...' : (t.wallet?.connect || 'Conectar Wallet')}
+          {isConnecting || connectionInProgress 
+            ? 'Conectando...' 
+            : (t.wallet?.connect || 'Conectar Wallet')
+          }
         </span>
       </button>
       
