@@ -4,22 +4,51 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { NetworkChangeModal } from './NetworkChangeModal';
 import { SUPPORTED_CHAINS } from '../config/chains';
+import { useWalletState } from '../hooks/useWalletState';
 
 interface WalletConnectionFlowProps {
-  children: React.ReactNode;
-  expectedNetwork?: string; // Keep for backward compatibility
-  className?: string;
+  isInWalletApp: boolean;
+  onOpenWalletSelection: () => void;
 }
 
 export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
-  children,
-  expectedNetwork,
-  className = ''
+  isInWalletApp,
+  onOpenWalletSelection,
 }) => {
+  const { t } = useLanguage();
   const { isConnected, address, chainId } = useAccount();
   const { disconnect } = useDisconnect();
-  const { t } = useLanguage();
+  const { walletType } = useWalletState();
   const [isNetworkChangeModalOpen, setIsNetworkChangeModalOpen] = useState(false);
+
+  // If not connected, show connection options
+  if (!isConnected) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {t.wallet?.connectFirst || 'Connect your wallet first'}
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {t.wallet?.connectDescription || 'Choose how to connect your wallet'}
+          </p>
+          
+          {isInWalletApp ? (
+            // In wallet app - use normal connect button
+            <ConnectWalletButton />
+          ) : (
+            // In regular browser - show wallet selection modal
+            <button
+              onClick={onOpenWalletSelection}
+              className="w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {t.payment?.connectWallet || 'Connect Wallet'}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Check if wallet is on any compatible network
   const isOnCompatibleNetwork = (): boolean => {
@@ -92,38 +121,12 @@ export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
     }
   };
 
-  // Step 1: Check if wallet is connected
-  if (!isConnected) {
-    return (
-      <div className={`space-y-6 ${className}`}>
-        <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 text-center">
-          <div className="mb-4">
-            <div className="text-4xl mb-4">🔐</div>
-            <h2 className="text-xl font-semibold text-white mb-2">
-              {t.wallet?.connectFirst || 'Connect your wallet first'}
-            </h2>
-            <p className="text-gray-400 mb-6">
-              {t.wallet?.connectDescription || 'You need to connect your wallet to continue with the payment'}
-            </p>
-          </div>
-          
-          <ConnectWalletButton 
-            className="w-full max-w-md mx-auto"
-            onConnected={() => {
-              console.log('✅ Wallet connected, proceeding to network check...');
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
   // Step 2: Check if we're on a compatible network
   if (!isOnCompatibleNetwork()) {
     const currentNetworkInfo = getCurrentNetworkInfo();
     
     return (
-      <div className={`space-y-6 ${className}`}>
+      <div className="space-y-6">
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white mb-2">
@@ -180,7 +183,7 @@ export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
   const currentNetworkInfo = getCurrentNetworkInfo();
   
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className="space-y-6">
       {/* Success indicator with wallet info and actions */}
       <div className="bg-green-900/20 border border-green-700 rounded-lg p-6">
         <div className="mb-4">
@@ -234,7 +237,16 @@ export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
       />
 
       {/* Payment content */}
-      {children}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Ready to proceed with payment
+          </h3>
+          <p className="text-gray-600">
+            Your wallet is connected and on a compatible network.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

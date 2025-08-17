@@ -23,6 +23,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { groupTokensBySymbol } from '../utils/tokenUtils';
 import { findChainIdByBackendName } from '../config/chains';
 import { PaymentOption } from '../blockchain/types';
+import { WalletSelectionModal } from './WalletSelectionModal';
 
 export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
@@ -72,33 +73,46 @@ export const CheckoutPage: React.FC = () => {
 
   // Wallet/Browser Detection Debug Component
   const [debugInfo, setDebugInfo] = useState<string>('');
+  const [isWalletSelectionModalOpen, setIsWalletSelectionModalOpen] = useState(false);
+  const [isInWalletApp, setIsInWalletApp] = useState(false);
 
   useEffect(() => {
     const detectBrowserType = () => {
       const userAgent = navigator.userAgent;
       let browserInfo = '';
+      let isWallet = false;
       
       // Detect browser type regardless of wallet connection
       if (userAgent.includes('MetaMask')) {
         browserInfo += '🦊 MetaMask In-App Browser\n';
+        isWallet = true;
       } else if (userAgent.includes('Coinbase') || userAgent.includes('Base')) {
         browserInfo += '🪙 Base Wallet In-App Browser\n';
+        isWallet = true;
       } else if (userAgent.includes('Trust')) {
         browserInfo += '🛡️ Trust Wallet In-App Browser\n';
+        isWallet = true;
       } else if (userAgent.includes('Phantom')) {
         browserInfo += '👻 Phantom Wallet In-App Browser\n';
+        isWallet = true;
       } else if (userAgent.includes('Rainbow')) {
         browserInfo += '🌈 Rainbow Wallet In-App Browser\n';
+        isWallet = true;
       } else if (userAgent.includes('Chrome')) {
         browserInfo += '🌐 Chrome Browser\n';
+        isWallet = false;
       } else if (userAgent.includes('Safari')) {
         browserInfo += '🌐 Safari Browser\n';
+        isWallet = false;
       } else if (userAgent.includes('Firefox')) {
         browserInfo += '🌐 Firefox Browser\n';
+        isWallet = false;
       } else if (userAgent.includes('Edge')) {
         browserInfo += '🌐 Edge Browser\n';
+        isWallet = false;
       } else {
         browserInfo += '🌐 Unknown Browser\n';
+        isWallet = false;
       }
       
       // Device type
@@ -123,8 +137,10 @@ export const CheckoutPage: React.FC = () => {
         browserInfo += '🐧 Linux\n';
       }
       
+      setIsInWalletApp(isWallet);
       setDebugInfo(browserInfo);
       console.log('🔍 Browser Detection Info:', browserInfo);
+      console.log('🔍 Is in wallet app:', isWallet);
     };
 
     // Try to detect browser multiple times with increasing delays
@@ -520,8 +536,19 @@ export const CheckoutPage: React.FC = () => {
             </p>
           </Link>
         </div>
+
+          {/* Wallet Connection Flow */}
+          <WalletConnectionFlow 
+            isInWalletApp={isInWalletApp}
+            onOpenWalletSelection={() => setIsWalletSelectionModalOpen(true)}
+          />
+
+          {/* Wallet Selection Modal */}
+          <WalletSelectionModal
+            isOpen={isWalletSelectionModalOpen}
+            onClose={() => setIsWalletSelectionModalOpen(false)}
+          />
+        </div>
       </div>
-      
-    </div>
-  );
-};
+    );
+  };

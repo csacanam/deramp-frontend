@@ -268,9 +268,11 @@ export const es = {
     selectNetwork: 'Seleccionar Red',
     currentNetwork: 'Red Actual',
     compatibleNetworks: 'Redes Compatibles',
-    youAreOn: 'Estás en {network} ({type}), pero necesitas estar en una red compatible para continuar',
+    youAreOn: 'Estás en',
     needToChange: 'Necesitas cambiar a una red compatible para continuar',
     connectedAddress: 'Dirección',
-    disconnect: 'Desconectar'
+    disconnect: 'Desconectar',
+    selectWallet: 'Seleccionar Wallet',
+    selectWalletDescription: 'Elige tu wallet para continuar',
   }
 }; 

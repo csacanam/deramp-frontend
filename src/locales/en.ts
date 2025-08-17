@@ -268,9 +268,11 @@ export const en = {
     selectNetwork: 'Select Network',
     currentNetwork: 'Current Network',
     compatibleNetworks: 'Compatible Networks',
-    youAreOn: 'You are on {network} ({type}), but you need to be on a compatible network to continue',
+    youAreOn: 'You are on',
     needToChange: 'You need to switch to a compatible network to continue',
     connectedAddress: 'Address',
-    disconnect: 'Disconnect'
+    disconnect: 'Disconnect',
+    selectWallet: 'Select Wallet',
+    selectWalletDescription: 'Choose your wallet to continue',
   }
 }; 
