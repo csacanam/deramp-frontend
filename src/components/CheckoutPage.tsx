@@ -76,17 +76,18 @@ export const CheckoutPage: React.FC = () => {
 
   // Detect if we're in a wallet app or regular browser
   useEffect(() => {
-    const userAgent = navigator.userAgent;
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-    const isWallet = userAgent.includes('MetaMask') || 
-                     userAgent.includes('Coinbase') || 
-                     userAgent.includes('Base') ||
-                     userAgent.includes('Trust') ||
-                     userAgent.includes('Phantom') ||
-                     userAgent.includes('Rainbow');
+    // Detección por window.ethereum (más confiable que UserAgent)
+    const ethereum = window.ethereum as any;
+    const isWallet = ethereum?.isMetaMask || 
+                     ethereum?.isCoinbaseWallet || 
+                     ethereum?.isBaseWallet ||
+                     ethereum?.isTrust ||
+                     ethereum?.isPhantom ||
+                     ethereum?.isRainbow;
     
     // Desktop: siempre conectar directamente (como antes)
     // Mobile: mantener la lógica actual
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const shouldShowModal = isMobile && !isWallet;
     const finalIsInWalletApp = !shouldShowModal;
     
