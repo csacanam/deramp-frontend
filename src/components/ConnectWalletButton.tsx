@@ -27,11 +27,29 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       return;
     }
     
+    // Check if already connected to prevent duplicate requests
+    if (isConnecting) {
+      console.log('⚠️ Connection already in progress, ignoring click');
+      return;
+    }
+    
     setIsConnecting(true);
     setError(null);
     
     try {
       console.log('🦊 Attempting universal wallet connection...');
+      
+      // Check if already connected via window.ethereum
+      const ethereum = window.ethereum as any;
+      if (ethereum.selectedAddress && ethereum.chainId) {
+        console.log('✅ Already connected via window.ethereum:', {
+          address: ethereum.selectedAddress,
+          chainId: ethereum.chainId
+        });
+        // Force a refresh of the wallet state
+        window.location.reload();
+        return;
+      }
       
       // Simple connection attempt - works with any wallet
       const accounts = await window.ethereum.request({
@@ -50,16 +68,22 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       
       if (error.code === 4001) {
         setError('Connection rejected. Please try again.');
+      } else if (error.message?.includes('ALREADY PROCESSING') || error.message?.includes('PLEASE WAIT')) {
+        setError('Connection in progress. Please wait a moment and try again.');
+        // Force a page refresh to reset the connection state
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         setError(`Connection failed: ${error.message || 'Unknown error'}`);
       }
     } finally {
       setIsConnecting(false);
       
-      // Clear error after 5 seconds
+      // Clear error after 8 seconds (longer for connection issues)
       setTimeout(() => {
         setError(null);
-      }, 5000);
+      }, 8000);
     }
   };
   
@@ -116,6 +140,24 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       {error && (
         <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-3">
           {error}
+          
+          {/* Reset button for connection issues */}
+          {(error.includes('ALREADY PROCESSING') || error.includes('PLEASE WAIT') || error.includes('Connection in progress')) && (
+            <div className="mt-3">
+              <button
+                onClick={() => {
+                  console.log('🔄 Force resetting connection state...');
+                  localStorage.removeItem('wagmi');
+                  localStorage.removeItem('walletconnect');
+                  sessionStorage.clear();
+                  window.location.reload();
+                }}
+                className="text-xs text-red-300 hover:text-red-200 underline decoration-dotted hover:decoration-solid transition-all duration-200"
+              >
+                Reset connection state
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -100,20 +100,43 @@ export const useWalletState = (): WalletState & WalletActions => {
   useEffect(() => {
     const walletType = detectWalletType();
     
+    // Enhanced validation: check both Wagmi and window.ethereum
+    const ethereum = window.ethereum as any;
+    const ethereumConnected = ethereum?.selectedAddress && ethereum?.chainId;
+    
     // Ensure we have valid data before updating
     const isValidState = wagmiAddress && wagmiChainId;
     
+    // Determine the real connection state
+    let finalConnected = false;
+    let finalAddress = null;
+    let finalChainId = null;
+    
+    if (wagmiConnected && isValidState) {
+      // Wagmi says connected and has valid data
+      finalConnected = true;
+      finalAddress = wagmiAddress;
+      finalChainId = wagmiChainId;
+    } else if (ethereumConnected) {
+      // Wagmi not connected but ethereum is - sync the state
+      finalConnected = true;
+      finalAddress = ethereum.selectedAddress;
+      finalChainId = parseInt(ethereum.chainId, 16);
+      console.log('🔄 Syncing state from window.ethereum:', { address: finalAddress, chainId: finalChainId });
+    }
+    
     updateState({
-      isConnected: wagmiConnected && isValidState,
-      address: wagmiAddress || null,
-      chainId: wagmiChainId || null,
+      isConnected: finalConnected,
+      address: finalAddress,
+      chainId: finalChainId,
       isDetecting: false,
       walletType
     });
     
     console.log('🔍 Wallet State Sync:', {
       wagmi: { isConnected: wagmiConnected, address: wagmiAddress, chainId: wagmiChainId },
-      final: { isConnected: wagmiConnected && isValidState, address: wagmiAddress || null, chainId: wagmiChainId || null },
+      ethereum: { connected: ethereumConnected, address: ethereum?.selectedAddress, chainId: ethereum?.chainId },
+      final: { isConnected: finalConnected, address: finalAddress, chainId: finalChainId },
       walletType,
       timestamp: new Date().toISOString()
     });
