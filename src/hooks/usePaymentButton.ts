@@ -259,10 +259,23 @@ export const usePaymentButton = ({
           userMessage = t.payment?.walletNotFound || 'Wallet not found';
         } else if (error.message.includes('Payment option not found')) {
           userMessage = t.payment?.paymentOptionNotFound || 'Payment option not found';
-        } else if (error.message.includes('could not coalesce') || error.message.includes('gas') || error.message.includes('nonce')) {
+        } else if (error.message.includes('Failed to get wallet signer')) {
+          userMessage = t.payment?.connectionIssue || 'Wallet connection issue. Please reconnect.';
+        } else if (error.message.includes('Signer has no address')) {
+          userMessage = t.payment?.connectionIssue || 'Wallet connection issue. Please reconnect.';
+        } else if (error.message.includes('Signer address mismatch')) {
+          userMessage = t.payment?.connectionIssue || 'Wallet connection issue. Please reconnect.';
+        } else if (error.message.includes('could not coalesce')) {
+          userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
+        } else if (error.message.includes('gas') && error.message.includes('limit')) {
+          userMessage = t.payment?.gasError || 'Gas configuration error. Please try again.';
+        } else if (error.message.includes('nonce')) {
+          userMessage = t.payment?.nonceError || 'Transaction nonce error. Please try again.';
+        } else if (error.message.includes('timeout') || error.message.includes('deadline')) {
           userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
         } else {
-          userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
+          // Use the original error message for unknown errors
+          userMessage = error.message || t.payment?.tokenAuthFailed || 'Token authorization failed';
         }
       }
       
@@ -466,16 +479,23 @@ export const usePaymentButton = ({
             userMessage = t.payment?.networkIssue || 'Network issue';
           } else if (error.message.includes('Failed to fetch')) {
             userMessage = t.payment?.connectionIssue || 'Connection issue';
+          } else if (error.message.includes('Failed to get wallet signer')) {
+            userMessage = t.payment?.connectionIssue || 'Wallet connection issue. Please reconnect.';
+          } else if (error.message.includes('Signer has no address')) {
+            userMessage = t.payment?.connectionIssue || 'Wallet connection issue. Please reconnect.';
+          } else if (error.message.includes('Signer address mismatch')) {
+            userMessage = t.payment?.connectionIssue || 'Wallet connection issue. Please reconnect.';
           } else if (error.message.includes('could not coalesce')) {
             userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
-          } else if (error.message.includes('gas')) {
-            userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
+          } else if (error.message.includes('gas') && error.message.includes('limit')) {
+            userMessage = t.payment?.gasError || 'Gas configuration error. Please try again.';
           } else if (error.message.includes('nonce')) {
             userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
           } else if (error.message.includes('timeout') || error.message.includes('deadline')) {
             userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
           } else {
-            userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
+            // Use the original error message for unknown errors
+            userMessage = error.message || t.payment?.paymentFailed || 'Payment failed';
           }
         }
         
