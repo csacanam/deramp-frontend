@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useConnect } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Wallet } from 'lucide-react';
-import { WalletConnectionModal } from './WalletConnectionModal';
 import { useWalletState } from '../hooks/useWalletState';
 
 interface ConnectWalletButtonProps {
@@ -17,7 +15,8 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
 }) => {
   const { isConnected, address, chainId, walletType, lastUpdate } = useWalletState();
   const { t } = useLanguage();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Detect wallet type and context (desktop vs mobile)
   const detectWalletContext = (): 'metamask-desktop' | 'metamask-mobile' | 'coinbase-desktop' | 'coinbase-mobile' | 'rainbow' | 'none' => {
@@ -61,7 +60,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     console.log('🔍 Detected wallet context:', walletContext);
     
     if (walletContext === 'none') {
-      console.log('🔍 No wallet detected, will show modal');
+      setError('No wallet detected. Please install MetaMask or Coinbase Wallet.');
       return false;
     }
 
@@ -88,10 +87,12 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
           // For mobile wallets, we might need to trigger a connection event
           // This is a fallback for when direct connection isn't possible
           console.log('📱 Mobile wallet detected but direct connection not available');
+          setError('Mobile wallet detected but connection not available. Please connect manually.');
           return false;
         }
       } catch (error: any) {
         console.log(`❌ Mobile connection failed for ${walletContext}:`, error);
+        setError(`Failed to connect to ${walletContext}. Please try again.`);
         return false;
       }
     }
@@ -102,6 +103,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     try {
       if (!window.ethereum) {
         console.log('❌ Window.ethereum not available');
+        setError('Wallet not available. Please install MetaMask or Coinbase Wallet.');
         return false;
       }
       
@@ -114,13 +116,16 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
         return true;
       } else {
         console.log(`❌ No accounts returned from ${walletContext}`);
+        setError('No accounts found. Please unlock your wallet.');
         return false;
       }
     } catch (error: any) {
       if (error.code === 4001) {
         console.log(`⏳ User rejected connection to ${walletContext}`);
+        setError('Connection rejected. Please try again.');
       } else {
         console.error(`❌ Error connecting to ${walletContext}:`, error);
+        setError(`Connection failed: ${error.message || 'Unknown error'}`);
       }
       return false;
     }
@@ -130,18 +135,23 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const handleConnectWallet = async () => {
     console.log('🔗 Connect wallet button clicked');
     
-    // 1. Try direct connection first
-    const connected = await attemptDirectConnection();
+    setIsConnecting(true);
+    setError(null);
     
-    if (connected) {
-      console.log('✅ Direct connection successful, no need for modal');
-      // The wallet state should update automatically via useWalletState
-      return;
+    try {
+      // Try direct connection
+      const connected = await attemptDirectConnection();
+      
+      if (connected) {
+        console.log('✅ Direct connection successful!');
+        // The wallet state should update automatically via useWalletState
+      }
+    } catch (error) {
+      console.error('❌ Unexpected error during connection:', error);
+      setError('Unexpected error. Please try again.');
+    } finally {
+      setIsConnecting(false);
     }
-    
-    // 2. If direct connection failed, open modal
-    console.log('⏳ Direct connection failed, opening wallet selection modal');
-    setIsModalOpen(true);
   };
   
   // Debug logging
@@ -164,49 +174,41 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     }
   }, [isConnected, onConnected]);
 
-  // If connected, show wallet info button
+  // If connected, show wallet info
   if (isConnected) {
     return (
-      <div className="relative">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className={`
-            w-full flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl
-            ${className}
-          `}
-        >
+      <div className="w-full">
+        <div className="flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-lg">
           <Wallet className="w-5 h-5" />
           <span className="text-base">{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Wallet'}</span>
-        </button>
-
-        <WalletConnectionModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onConnected={onConnected}
-        />
+        </div>
       </div>
     );
   }
 
   // If not connected, show connect button
   return (
-    <div className="relative">
+    <div className="w-full space-y-3">
       <button
         onClick={handleConnectWallet}
+        disabled={isConnecting}
         className={`
           w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl
           ${className}
         `}
       >
         <Wallet className="w-5 h-5" />
-        <span className="text-base">{t.wallet?.connect || 'Conectar Wallet'}</span>
+        <span className="text-base">
+          {isConnecting ? 'Conectando...' : (t.wallet?.connect || 'Conectar Wallet')}
+        </span>
       </button>
-
-      <WalletConnectionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onConnected={onConnected}
-      />
+      
+      {/* Error message */}
+      {error && (
+        <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-3">
+          {error}
+        </div>
+      )}
     </div>
   );
 }; 
