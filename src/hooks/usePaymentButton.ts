@@ -1,12 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
-import { BlockchainService } from '../services/blockchainService';
-import { ButtonState, PaymentOption } from '../blockchain/types';
-import { TOKENS } from '../blockchain/config/tokens';
-import { CONTRACTS } from '../blockchain/config/contracts';
 import { useLanguage } from '../contexts/LanguageContext';
-import DerampProxyABI from '../blockchain/abi/DerampProxy.json';
+import { BlockchainService } from '../services/blockchainService';
+import { CONTRACTS, TOKENS } from '../blockchain/config';
+import { ButtonState, PaymentOption } from '../blockchain/types';
 
 interface UsePaymentButtonProps {
   invoiceId: string;
@@ -254,12 +252,6 @@ export const usePaymentButton = ({
       }
       
       onError?.(userMessage);
-      
-      // Add a small delay before allowing retry
-      setTimeout(() => {
-        // Ensure button is in ready state and ready for retry
-        setButtonState('ready');
-      }, 1000);
     }
   }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t.payment]);
 
@@ -476,12 +468,6 @@ export const usePaymentButton = ({
         
         // Show user-friendly error and allow retry
         onError?.(userMessage);
-        
-        // Add a small delay before allowing retry to prevent rapid clicking
-        setTimeout(() => {
-          // Ensure button is in confirm state and ready for retry
-          setButtonState('confirm');
-        }, 1000);
       }
     }
   }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, language, t.payment]);
@@ -504,6 +490,12 @@ export const usePaymentButton = ({
   }, [buttonState, handlePayNow, handleAuthorize, handleConfirm]);
 
   const isButtonDisabled = buttonState === 'loading' || buttonState === 'approving' || buttonState === 'processing';
+
+  // Auto-recovery mechanism to prevent button state from getting stuck
+  // This useEffect is removed as per the edit hint to revert to simple reset.
+
+  // Additional safety: reset state if wallet disconnects
+  // This useEffect is removed as per the edit hint to revert to simple reset.
 
   return {
     buttonState,

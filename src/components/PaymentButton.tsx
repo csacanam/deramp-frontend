@@ -27,6 +27,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
     buttonText,
     isButtonDisabled,
     handleButtonClick,
+    selectedToken,
   } = usePaymentButton({
     invoiceId,
     paymentOptions,
