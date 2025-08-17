@@ -127,21 +127,53 @@ export const CheckoutPage: React.FC = () => {
             else walletInfo += `  ${index + 1}. Unknown Provider\n`;
           });
         }
+        
+        // Base Wallet specific debugging
+        if (ethereum.isCoinbaseWallet || ethereum.isBaseWallet) {
+          walletInfo += '\n🔍 Base Wallet Debug Info:\n';
+          walletInfo += `  - isCoinbaseWallet: ${ethereum.isCoinbaseWallet}\n`;
+          walletInfo += `  - isBaseWallet: ${ethereum.isBaseWallet}\n`;
+          walletInfo += `  - walletName: ${ethereum.walletName || 'undefined'}\n`;
+          walletInfo += `  - hasOwnProperty('isCoinbaseWallet'): ${ethereum.hasOwnProperty('isCoinbaseWallet')}\n`;
+          walletInfo += `  - hasOwnProperty('isBaseWallet'): ${ethereum.hasOwnProperty('isBaseWallet')}\n`;
+        }
       } else {
         walletInfo += '❌ Ethereum Provider: Not Available\n';
+        walletInfo += `  - window.ethereum: ${typeof window.ethereum}\n`;
+        walletInfo += `  - window.ethereum === undefined: ${window.ethereum === undefined}\n`;
+        walletInfo += `  - window.ethereum === null: ${window.ethereum === null}\n`;
       }
       
       // Show alert with wallet info
-      alert(walletInfo);
+      try {
+        alert(walletInfo);
+        console.log('✅ Alert shown successfully:', walletInfo);
+      } catch (alertError) {
+        console.error('❌ Alert failed:', alertError);
+        // Fallback: try to show info in console
+        console.log('🔍 Wallet Detection Info (console fallback):', walletInfo);
+      }
       
       // Also log to console for debugging
       console.log('🔍 Wallet Detection Alert:', walletInfo);
     };
     
-    // Small delay to ensure page is fully loaded
-    const timer = setTimeout(detectWalletAndBrowser, 1000);
+    // Try multiple times with increasing delays for Base Wallet
+    const delays = [1000, 2000, 3000, 5000];
     
-    return () => clearTimeout(timer);
+    delays.forEach((delay, index) => {
+      setTimeout(() => {
+        console.log(`🔄 Attempt ${index + 1} to detect wallet (${delay}ms delay)`);
+        detectWalletAndBrowser();
+      }, delay);
+    });
+    
+    // Cleanup function
+    return () => {
+      delays.forEach((delay) => {
+        clearTimeout(delay);
+      });
+    };
   }, []);
 
   // Update document title when invoice data is available

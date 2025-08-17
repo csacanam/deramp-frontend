@@ -191,6 +191,21 @@ export const usePaymentButton = ({
       
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
+      
+      // Validate signer is available and has correct address
+      if (!signer) {
+        throw new Error('Failed to get wallet signer');
+      }
+      
+      const signerAddress = await signer.getAddress();
+      if (!signerAddress) {
+        throw new Error('Signer has no address');
+      }
+      
+      // Verify signer address matches connected address
+      if (signerAddress.toLowerCase() !== address.toLowerCase()) {
+        throw new Error('Signer address mismatch with connected wallet');
+      }
 
       // Create token contract instance
       const tokenContract = new ethers.Contract(
@@ -298,6 +313,21 @@ export const usePaymentButton = ({
       
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
+      
+      // Validate signer is available and has correct address
+      if (!signer) {
+        throw new Error('Failed to get wallet signer');
+      }
+      
+      const signerAddress = await signer.getAddress();
+      if (!signerAddress) {
+        throw new Error('Signer has no address');
+      }
+      
+      // Verify signer address matches connected address
+      if (signerAddress.toLowerCase() !== address.toLowerCase()) {
+        throw new Error('Signer address mismatch with connected wallet');
+      }
 
       // Import the full ABI from the JSON file
       const derampProxyAbi = (await import('../blockchain/abi/DerampProxy.json')).abi;
@@ -347,26 +377,23 @@ export const usePaymentButton = ({
         throw error;
       }
 
-      // Call payInvoice directly on the contract
+      // Call payInvoice directly on the contract - let wallet handle gas automatically
       console.log('🚀 Executing payment transaction with params:', {
         invoiceId: invoiceIdBytes32,
         tokenAddress: tokenConfig.address,
         amount: amount.toString(),
-        gasLimit: 300000, // Reduced from 500000 for Celo
-        maxFeePerGas: ethers.parseUnits('0.1', 'gwei'), // Celo-specific gas pricing
-        maxPriorityFeePerGas: ethers.parseUnits('0.01', 'gwei'), // Celo-specific gas pricing
+        gasHandling: 'Automatic (wallet decides)',
         value: 0
       });
 
-      // Use more conservative gas settings for Celo
+      // Let wallet handle gas estimation and pricing automatically
       const payTx = await derampProxyContract.payInvoice(
         invoiceIdBytes32,
         tokenConfig.address,
         amount,
         {
-          gasLimit: 800000, // High gas limit to prevent failures
-          // Let wallet use default gas pricing instead of forcing low values
           value: 0
+          // No gas configuration - let wallet decide automatically
         }
       );
 
