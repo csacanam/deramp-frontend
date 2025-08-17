@@ -364,7 +364,7 @@ export const usePaymentButton = ({
         tokenConfig.address,
         amount,
         {
-          gasLimit: 300000, // Reduced from 500000 for Celo
+          gasLimit: 800000, // Increased from 300000 to prevent gas failures
           maxFeePerGas: ethers.parseUnits('0.1', 'gwei'), // Celo-specific gas pricing
           maxPriorityFeePerGas: ethers.parseUnits('0.01', 'gwei'), // Celo-specific gas pricing
           value: 0
