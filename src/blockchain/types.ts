@@ -23,7 +23,6 @@ export interface BlockchainCreateRequest {
   paymentOptions: PaymentOption[];
   network: string;
   expiresAt?: number;
-  // supportsENS?: boolean; // Temporarily removed to test if this was causing the issue
 }
 
 export interface BlockchainCreateResponse {
