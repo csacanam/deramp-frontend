@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Wallet } from 'lucide-react';
 import { useWalletState } from '../hooks/useWalletState';
@@ -17,157 +17,46 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const { t } = useLanguage();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [connectionInProgress, setConnectionInProgress] = useState(false);
   
-  // Prevent multiple simultaneous connection attempts
-  const connectionRef = useRef<boolean>(false);
-  
-  // Detect wallet type and context (desktop vs mobile)
-  const detectWalletContext = (): 'metamask-desktop' | 'metamask-mobile' | 'coinbase-desktop' | 'coinbase-mobile' | 'rainbow' | 'none' => {
-    if (!window.ethereum) {
-      // Check if we're in MetaMask mobile (no window.ethereum)
-      if (navigator.userAgent.includes('MetaMask')) {
-        return 'metamask-mobile';
-      }
-      
-      // Check if we're in Coinbase Wallet mobile
-      if (navigator.userAgent.includes('CoinbaseWallet')) {
-        return 'coinbase-mobile';
-      }
-      
-      // Check if we're in a WebView (mobile wallet context)
-      if (navigator.userAgent.includes('WebView')) {
-        return 'metamask-mobile'; // Likely MetaMask mobile
-      }
-      
-      return 'none';
-    }
-    
-    // Desktop wallet detection
-    if ((window.ethereum as any).isMetaMask) {
-      return 'metamask-desktop';
-    }
-    if ((window.ethereum as any).isCoinbaseWallet) {
-      return 'coinbase-desktop';
-    }
-    if ((window.ethereum as any).isRainbow) {
-      return 'rainbow';
-    }
-    
-    return 'none';
-  };
-
-  // Attempt direct connection to detected wallet
-  const attemptDirectConnection = async (): Promise<boolean> => {
-    const walletContext = detectWalletContext();
-    
-    console.log('🔍 Detected wallet context:', walletContext);
-    
-    if (walletContext === 'none') {
-      setError('No wallet detected. Please install MetaMask or Coinbase Wallet.');
-      return false;
-    }
-
-    // For mobile wallets, we need to handle differently
-    if (walletContext === 'metamask-mobile' || walletContext === 'coinbase-mobile') {
-      console.log(`📱 Attempting connection in ${walletContext} context...`);
-      
-      // In mobile context, try to use the mobile wallet's connection method
-      try {
-        // Some mobile wallets support this method
-        if (window.ethereum) {
-          const accounts = await window.ethereum.request({
-            method: 'eth_requestAccounts'
-          });
-          
-          if (accounts && accounts.length > 0) {
-            console.log(`✅ Successfully connected in ${walletContext}:`, accounts[0]);
-            return true;
-          }
-        } else {
-          // No window.ethereum in mobile context, try alternative approach
-          console.log('📱 No window.ethereum in mobile context, trying alternative...');
-          
-          // For mobile wallets, we might need to trigger a connection event
-          // This is a fallback for when direct connection isn't possible
-          console.log('📱 Mobile wallet detected but direct connection not available');
-          setError('Mobile wallet detected but connection not available. Please connect manually.');
-          return false;
-        }
-      } catch (error: any) {
-        console.log(`❌ Mobile connection failed for ${walletContext}:`, error);
-        setError(`Failed to connect to ${walletContext}. Please try again.`);
-        return false;
-      }
-    }
-
-    // Desktop wallet connection
-    console.log(`🦊 Attempting desktop connection to ${walletContext}...`);
-    
-    try {
-      if (!window.ethereum) {
-        console.log('❌ Window.ethereum not available');
-        setError('Wallet not available. Please install MetaMask or Coinbase Wallet.');
-        return false;
-      }
-      
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
-      });
-      
-      if (accounts && accounts.length > 0) {
-        console.log(`✅ Successfully connected to ${walletContext}:`, accounts[0]);
-        return true;
-      } else {
-        console.log(`❌ No accounts returned from ${walletContext}`);
-        setError('No accounts found. Please unlock your wallet.');
-        return false;
-      }
-    } catch (error: any) {
-      if (error.code === 4001) {
-        console.log(`⏳ User rejected connection to ${walletContext}`);
-        setError('Connection rejected. Please try again.');
-      } else {
-        console.error(`❌ Error connecting to ${walletContext}:`, error);
-        setError(`Connection failed: ${error.message || 'Unknown error'}`);
-      }
-      return false;
-    }
-  };
-
-  // Handle connect wallet button click
-  const handleConnectWallet = async () => {
+  // Universal wallet connection - simple and direct
+  const connectWallet = async () => {
     console.log('🔗 Connect wallet button clicked');
     
-    // Prevent multiple simultaneous connection attempts
-    if (connectionRef.current || connectionInProgress) {
-      console.log('⏳ Connection already in progress, ignoring click');
-      setError('Connection already in progress. Please wait...');
+    if (!window.ethereum) {
+      setError('No wallet detected. Please install MetaMask or Coinbase Wallet.');
       return;
     }
     
     setIsConnecting(true);
     setError(null);
-    setConnectionInProgress(true);
-    connectionRef.current = true;
     
     try {
-      // Try direct connection
-      const connected = await attemptDirectConnection();
+      console.log('🦊 Attempting universal wallet connection...');
       
-      if (connected) {
-        console.log('✅ Direct connection successful!');
-        // The wallet state should update automatically via useWalletState
+      // Simple connection attempt - works with any wallet
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+      });
+      
+      if (accounts && accounts.length > 0) {
+        console.log('✅ Successfully connected:', accounts[0]);
+        // Wallet state will update automatically via useWalletState
+      } else {
+        console.log('❌ No accounts returned');
+        setError('No accounts found. Please unlock your wallet.');
       }
-    } catch (error) {
-      console.error('❌ Unexpected error during connection:', error);
-      setError('Unexpected error. Please try again.');
+    } catch (error: any) {
+      console.error('❌ Connection failed:', error);
+      
+      if (error.code === 4001) {
+        setError('Connection rejected. Please try again.');
+      } else {
+        setError(`Connection failed: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsConnecting(false);
-      setConnectionInProgress(false);
-      connectionRef.current = false;
       
-      // Clear error after a delay to allow user to try again
+      // Clear error after 5 seconds
       setTimeout(() => {
         setError(null);
       }, 5000);
@@ -176,13 +65,13 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   
   // Debug logging
   useEffect(() => {
-    console.log('🔍 ConnectWalletButton Debug (Centralized State):');
+    console.log('🔍 ConnectWalletButton Debug:');
     console.log('  - Is Connected:', isConnected);
     console.log('  - Address:', address);
     console.log('  - Chain ID:', chainId);
     console.log('  - Wallet Type:', walletType);
     console.log('  - Last Update:', lastUpdate);
-    console.log('  - Detected Wallet:', detectWalletContext());
+    console.log('  - Window Ethereum:', !!window.ethereum);
     console.log('  - Timestamp:', new Date().toISOString());
   }, [isConnected, address, chainId, walletType, lastUpdate]);
 
@@ -210,8 +99,8 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   return (
     <div className="w-full space-y-3">
       <button
-        onClick={handleConnectWallet}
-        disabled={isConnecting || connectionInProgress}
+        onClick={connectWallet}
+        disabled={isConnecting}
         className={`
           w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl
           ${className}
@@ -219,10 +108,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       >
         <Wallet className="w-5 h-5" />
         <span className="text-base">
-          {isConnecting || connectionInProgress 
-            ? 'Conectando...' 
-            : (t.wallet?.connect || 'Conectar Wallet')
-          }
+          {isConnecting ? 'Conectando...' : (t.wallet?.connect || 'Conectar Wallet')}
         </span>
       </button>
       
