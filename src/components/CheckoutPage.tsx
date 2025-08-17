@@ -35,6 +35,39 @@ export const CheckoutPage: React.FC = () => {
   const [selectedNetwork, setSelectedNetwork] = useState<string>('');
   const [forceExpired, setForceExpired] = useState(false);
 
+  // Auto-connect MetaMask when checkout loads
+  useEffect(() => {
+    const autoConnectMetaMask = async () => {
+      // Only attempt if not already connected and MetaMask is available
+      if (!isConnected && window.ethereum && (window.ethereum as any)?.isMetaMask) {
+        console.log('🦊 Checkout: Attempting automatic MetaMask connection...');
+        
+        try {
+          const accounts = await window.ethereum.request({
+            method: 'eth_requestAccounts'
+          });
+          
+          if (accounts && accounts.length > 0) {
+            console.log('✅ Checkout: MetaMask connected automatically:', accounts[0]);
+          } else {
+            console.log('⏳ Checkout: User must connect manually');
+          }
+        } catch (error: any) {
+          if (error.code === 4001) {
+            console.log('⏳ Checkout: User rejected MetaMask connection');
+          } else {
+            console.error('❌ Checkout: MetaMask connection error:', error);
+          }
+        }
+      }
+    };
+
+    // Small delay to ensure page is fully loaded
+    const timer = setTimeout(autoConnectMetaMask, 500);
+    
+    return () => clearTimeout(timer);
+  }, [isConnected]);
+
   // Update document title when invoice data is available
   useEffect(() => {
     if (invoice) {
