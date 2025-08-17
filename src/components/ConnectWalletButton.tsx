@@ -19,27 +19,85 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Detect wallet type
-  const detectWalletType = (): 'metamask' | 'coinbase' | 'rainbow' | 'none' => {
-    if (!window.ethereum) return 'none';
+  // Detect wallet type and context (desktop vs mobile)
+  const detectWalletContext = (): 'metamask-desktop' | 'metamask-mobile' | 'coinbase-desktop' | 'coinbase-mobile' | 'rainbow' | 'none' => {
+    if (!window.ethereum) {
+      // Check if we're in MetaMask mobile (no window.ethereum)
+      if (navigator.userAgent.includes('MetaMask')) {
+        return 'metamask-mobile';
+      }
+      
+      // Check if we're in Coinbase Wallet mobile
+      if (navigator.userAgent.includes('CoinbaseWallet')) {
+        return 'coinbase-mobile';
+      }
+      
+      // Check if we're in a WebView (mobile wallet context)
+      if (navigator.userAgent.includes('WebView')) {
+        return 'metamask-mobile'; // Likely MetaMask mobile
+      }
+      
+      return 'none';
+    }
     
-    if ((window.ethereum as any).isMetaMask) return 'metamask';
-    if ((window.ethereum as any).isCoinbaseWallet) return 'coinbase';
-    if ((window.ethereum as any).isRainbow) return 'rainbow';
+    // Desktop wallet detection
+    if ((window.ethereum as any).isMetaMask) {
+      return 'metamask-desktop';
+    }
+    if ((window.ethereum as any).isCoinbaseWallet) {
+      return 'coinbase-desktop';
+    }
+    if ((window.ethereum as any).isRainbow) {
+      return 'rainbow';
+    }
     
     return 'none';
   };
 
   // Attempt direct connection to detected wallet
   const attemptDirectConnection = async (): Promise<boolean> => {
-    const detectedWallet = detectWalletType();
+    const walletContext = detectWalletContext();
     
-    if (detectedWallet === 'none') {
+    console.log('🔍 Detected wallet context:', walletContext);
+    
+    if (walletContext === 'none') {
       console.log('🔍 No wallet detected, will show modal');
       return false;
     }
 
-    console.log(`🦊 Attempting direct connection to ${detectedWallet}...`);
+    // For mobile wallets, we need to handle differently
+    if (walletContext === 'metamask-mobile' || walletContext === 'coinbase-mobile') {
+      console.log(`📱 Attempting connection in ${walletContext} context...`);
+      
+      // In mobile context, try to use the mobile wallet's connection method
+      try {
+        // Some mobile wallets support this method
+        if (window.ethereum) {
+          const accounts = await window.ethereum.request({
+            method: 'eth_requestAccounts'
+          });
+          
+          if (accounts && accounts.length > 0) {
+            console.log(`✅ Successfully connected in ${walletContext}:`, accounts[0]);
+            return true;
+          }
+        } else {
+          // No window.ethereum in mobile context, try alternative approach
+          console.log('📱 No window.ethereum in mobile context, trying alternative...');
+          
+          // For mobile wallets, we might need to trigger a connection event
+          // This is a fallback for when direct connection isn't possible
+          console.log('📱 Mobile wallet detected but direct connection not available');
+          return false;
+        }
+      } catch (error: any) {
+        console.log(`❌ Mobile connection failed for ${walletContext}:`, error);
+        return false;
+      }
+    }
+
+    // Desktop wallet connection
+    console.log(`🦊 Attempting desktop connection to ${walletContext}...`);
     
     try {
       if (!window.ethereum) {
@@ -52,17 +110,17 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       });
       
       if (accounts && accounts.length > 0) {
-        console.log(`✅ Successfully connected to ${detectedWallet}:`, accounts[0]);
-        return true; // Connected successfully
+        console.log(`✅ Successfully connected to ${walletContext}:`, accounts[0]);
+        return true;
       } else {
-        console.log(`❌ No accounts returned from ${detectedWallet}`);
+        console.log(`❌ No accounts returned from ${walletContext}`);
         return false;
       }
     } catch (error: any) {
       if (error.code === 4001) {
-        console.log(`⏳ User rejected connection to ${detectedWallet}`);
+        console.log(`⏳ User rejected connection to ${walletContext}`);
       } else {
-        console.error(`❌ Error connecting to ${detectedWallet}:`, error);
+        console.error(`❌ Error connecting to ${walletContext}:`, error);
       }
       return false;
     }
@@ -94,7 +152,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     console.log('  - Chain ID:', chainId);
     console.log('  - Wallet Type:', walletType);
     console.log('  - Last Update:', lastUpdate);
-    console.log('  - Detected Wallet:', detectWalletType());
+    console.log('  - Detected Wallet:', detectWalletContext());
     console.log('  - Timestamp:', new Date().toISOString());
   }, [isConnected, address, chainId, walletType, lastUpdate]);
 
