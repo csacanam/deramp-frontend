@@ -76,68 +76,57 @@ export const CheckoutPage: React.FC = () => {
   useEffect(() => {
     const detectWalletAndBrowser = () => {
       const ethereum = window.ethereum as any;
-      let walletInfo = '🔍 Wallet/Browser Detection:\n\n';
+      let walletInfo = '';
       
-      // Browser detection
-      const userAgent = navigator.userAgent;
-      if (userAgent.includes('Chrome')) {
-        walletInfo += '🌐 Browser: Chrome\n';
-      } else if (userAgent.includes('Firefox')) {
-        walletInfo += '🌐 Browser: Firefox\n';
-      } else if (userAgent.includes('Safari')) {
-        walletInfo += '🌐 Browser: Safari\n';
-      } else if (userAgent.includes('Edge')) {
-        walletInfo += '🌐 Browser: Edge\n';
+      // Essential detection: Wallet vs Browser
+      if (ethereum) {
+        // Wallet detection - only show the main wallet type
+        if (ethereum.isMetaMask) {
+          walletInfo += '🦊 MetaMask Wallet\n';
+        } else if (ethereum.isCoinbaseWallet || ethereum.isBaseWallet) {
+          walletInfo += '🪙 Base Wallet\n';
+        } else if (ethereum.isTrust) {
+          walletInfo += '🛡️ Trust Wallet\n';
+        } else if (ethereum.isPhantom) {
+          walletInfo += '👻 Phantom Wallet\n';
+        } else if (ethereum.isRainbow) {
+          walletInfo += '🌈 Rainbow Wallet\n';
+        } else {
+          walletInfo += '❓ Unknown Wallet\n';
+        }
+        
+        // Essential wallet info
+        if (ethereum.selectedAddress) {
+          walletInfo += `📍 Address: ${ethereum.selectedAddress.slice(0, 6)}...${ethereum.selectedAddress.slice(-4)}\n`;
+        }
+        if (ethereum.chainId) {
+          walletInfo += `⛓️ Chain: ${ethereum.chainId}\n`;
+        }
       } else {
-        walletInfo += '🌐 Browser: Unknown\n';
+        walletInfo += '🌐 Chrome/Browser (No Wallet)\n';
       }
       
-      walletInfo += `📱 User Agent: ${userAgent.substring(0, 100)}...\n\n`;
-      
-      if (ethereum) {
-        // Wallet detection
-        if (ethereum.isMetaMask) {
-          walletInfo += '🦊 Wallet: MetaMask\n';
-        } else if (ethereum.isCoinbaseWallet || ethereum.isBaseWallet) {
-          walletInfo += '🪙 Wallet: Base Wallet\n';
-        } else if (ethereum.isTrust) {
-          walletInfo += '🛡️ Wallet: Trust Wallet\n';
-        } else if (ethereum.isPhantom) {
-          walletInfo += '👻 Wallet: Phantom\n';
-        } else if (ethereum.isRainbow) {
-          walletInfo += '🌈 Wallet: Rainbow\n';
-        } else {
-          walletInfo += '❓ Wallet: Unknown\n';
-        }
-        
-        // Additional wallet properties
-        walletInfo += `📝 Wallet Name: ${ethereum.walletName || 'undefined'}\n`;
-        walletInfo += `🔗 Selected Address: ${ethereum.selectedAddress || 'undefined'}\n`;
-        walletInfo += `⛓️ Chain ID: ${ethereum.chainId || 'undefined'}\n`;
-        walletInfo += `🔌 Is Connected: ${ethereum.isConnected?.() || 'undefined'}\n`;
-        
-        // Check for multiple providers
-        if (ethereum.providers && ethereum.providers.length > 0) {
-          walletInfo += `\n🔌 Multiple Providers (${ethereum.providers.length}):\n`;
-          ethereum.providers.forEach((provider: any, index: number) => {
-            walletInfo += `  ${index + 1}. ${provider.isMetaMask ? 'MetaMask' : provider.isCoinbaseWallet ? 'Base Wallet' : provider.isTrust ? 'Trust' : provider.isPhantom ? 'Phantom' : provider.isRainbow ? 'Rainbow' : 'Unknown'}\n`;
-          });
-        }
-        
-        // Base Wallet specific debug info
-        if (ethereum.isCoinbaseWallet || ethereum.isBaseWallet) {
-          walletInfo += '\n🔍 Base Wallet Debug Info:\n';
-          walletInfo += `  - isCoinbaseWallet: ${ethereum.isCoinbaseWallet}\n`;
-          walletInfo += `  - isBaseWallet: ${ethereum.isBaseWallet}\n`;
-          walletInfo += `  - walletName: ${ethereum.walletName || 'undefined'}\n`;
-          walletInfo += `  - hasOwnProperty('isCoinbaseWallet'): ${ethereum.hasOwnProperty('isCoinbaseWallet')}\n`;
-          walletInfo += `  - hasOwnProperty('isBaseWallet'): ${ethereum.hasOwnProperty('isBaseWallet')}\n`;
-        }
+      // Device type detection
+      const userAgent = navigator.userAgent;
+      if (userAgent.includes('Mobile')) {
+        walletInfo += '📱 Mobile Device\n';
+      } else if (userAgent.includes('Tablet')) {
+        walletInfo += '📱 Tablet Device\n';
       } else {
-        walletInfo += '❌ Ethereum Provider: Not Available\n';
-        walletInfo += `  - window.ethereum: ${typeof window.ethereum}\n`;
-        walletInfo += `  - window.ethereum === undefined: ${window.ethereum === undefined}\n`;
-        walletInfo += `  - window.ethereum === null: ${window.ethereum === null}\n`;
+        walletInfo += '💻 Desktop Device\n';
+      }
+      
+      // Platform detection
+      if (userAgent.includes('Android')) {
+        walletInfo += '🤖 Android\n';
+      } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+        walletInfo += '🍎 iOS\n';
+      } else if (userAgent.includes('Windows')) {
+        walletInfo += '🪟 Windows\n';
+      } else if (userAgent.includes('Mac')) {
+        walletInfo += '🍎 macOS\n';
+      } else if (userAgent.includes('Linux')) {
+        walletInfo += '🐧 Linux\n';
       }
       
       setDebugInfo(walletInfo);
@@ -409,20 +398,20 @@ export const CheckoutPage: React.FC = () => {
             </p>
           </div>
 
-        {/* Debug Info Panel */}
-        {debugInfo && (
-          <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">
-              🔍 Wallet/Browser Debug Info
-            </h3>
-            <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-white p-3 rounded border">
-              {debugInfo}
-            </pre>
-            <div className="mt-3 text-xs text-gray-500">
-              This debug info helps identify wallet and browser compatibility issues.
+                  {/* Debug Info Panel */}
+          {debugInfo && (
+            <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                🔍 Environment Detection
+              </h3>
+              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-white p-3 rounded border">
+                {debugInfo}
+              </pre>
+              <div className="mt-3 text-xs text-gray-500">
+                Shows if you're in a wallet app or regular browser, plus device details.
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Language Selector - Top Right */}
         <div className="flex justify-end mb-2">
