@@ -103,7 +103,28 @@ export const CheckoutPage: React.FC = () => {
           walletInfo += `⛓️ Chain: ${ethereum.chainId}\n`;
         }
       } else {
-        walletInfo += '🌐 Chrome/Browser (No Wallet)\n';
+        // No wallet detected - check if we're in a wallet's in-app browser
+        const userAgent = navigator.userAgent;
+        
+        if (userAgent.includes('MetaMask')) {
+          walletInfo += '🦊 MetaMask In-App Browser\n';
+        } else if (userAgent.includes('Coinbase') || userAgent.includes('Base')) {
+          walletInfo += '🪙 Base Wallet In-App Browser\n';
+        } else if (userAgent.includes('Trust')) {
+          walletInfo += '🛡️ Trust Wallet In-App Browser\n';
+        } else if (userAgent.includes('Phantom')) {
+          walletInfo += '👻 Phantom Wallet In-App Browser\n';
+        } else if (userAgent.includes('Rainbow')) {
+          walletInfo += '🌈 Rainbow Wallet In-App Browser\n';
+        } else if (userAgent.includes('Chrome')) {
+          walletInfo += '🌐 Chrome Mobile\n';
+        } else if (userAgent.includes('Safari')) {
+          walletInfo += '🌐 Safari Mobile\n';
+        } else if (userAgent.includes('Firefox')) {
+          walletInfo += '🌐 Firefox Mobile\n';
+        } else {
+          walletInfo += '🌐 Mobile Browser (Unknown)\n';
+        }
       }
       
       // Device type detection
@@ -127,6 +148,29 @@ export const CheckoutPage: React.FC = () => {
         walletInfo += '🍎 macOS\n';
       } else if (userAgent.includes('Linux')) {
         walletInfo += '🐧 Linux\n';
+      }
+      
+      // Additional mobile-specific detection
+      if (userAgent.includes('Mobile')) {
+        // Check for in-app browser indicators
+        if (userAgent.includes('wv')) {
+          walletInfo += '🔍 Android WebView\n';
+        }
+        if (userAgent.includes('FBAN') || userAgent.includes('FBAV')) {
+          walletInfo += '📱 Facebook In-App\n';
+        }
+        if (userAgent.includes('Instagram')) {
+          walletInfo += '📸 Instagram In-App\n';
+        }
+        if (userAgent.includes('Twitter') || userAgent.includes('Tweetbot')) {
+          walletInfo += '🐦 Twitter In-App\n';
+        }
+        if (userAgent.includes('WhatsApp')) {
+          walletInfo += '💬 WhatsApp In-App\n';
+        }
+        if (userAgent.includes('Telegram')) {
+          walletInfo += '📬 Telegram In-App\n';
+        }
       }
       
       setDebugInfo(walletInfo);
