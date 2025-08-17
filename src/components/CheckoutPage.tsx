@@ -35,6 +35,7 @@ export const CheckoutPage: React.FC = () => {
   const [forceExpired, setForceExpired] = useState(false);
   const [isWalletSelectionModalOpen, setIsWalletSelectionModalOpen] = useState(false);
   const [isInWalletApp, setIsInWalletApp] = useState(false);
+  const [debugWalletInfo, setDebugWalletInfo] = useState<any>(null);
 
   // Auto-connect MetaMask when checkout loads
   useEffect(() => {
@@ -87,7 +88,27 @@ export const CheckoutPage: React.FC = () => {
     // Desktop: siempre conectar directamente (como antes)
     // Mobile: mantener la lógica actual
     const shouldShowModal = isMobile && !isWallet;
-    setIsInWalletApp(!shouldShowModal);
+    const finalIsInWalletApp = !shouldShowModal;
+    
+    setIsInWalletApp(finalIsInWalletApp);
+    
+    // Debug logs para UI
+    const debugInfo = {
+      userAgent: userAgent,
+      isMobile: isMobile,
+      includesMetaMask: userAgent.includes('MetaMask'),
+      includesCoinbase: userAgent.includes('Coinbase'),
+      includesBase: userAgent.includes('Base'),
+      includesTrust: userAgent.includes('Trust'),
+      includesPhantom: userAgent.includes('Phantom'),
+      includesRainbow: userAgent.includes('Rainbow'),
+      isWallet: isWallet,
+      shouldShowModal: shouldShowModal,
+      finalIsInWalletApp: finalIsInWalletApp
+    };
+    
+    setDebugWalletInfo(debugInfo);
+    console.log('🔍 WALLET DETECTION DEBUG:', debugInfo);
   }, []);
 
   // Update document title when invoice data is available
@@ -453,6 +474,28 @@ export const CheckoutPage: React.FC = () => {
           isOpen={isWalletSelectionModalOpen}
           onClose={() => setIsWalletSelectionModalOpen(false)}
         />
+
+        {/* Debug Panel - TEMPORAL para diagnosticar Base Wallet */}
+        {debugWalletInfo && (
+          <div className="fixed bottom-4 left-4 bg-black bg-opacity-90 text-white p-4 rounded-lg max-w-md text-xs z-50">
+            <h3 className="font-bold mb-2 text-yellow-400">🔍 WALLET DETECTION DEBUG</h3>
+            <div className="space-y-1">
+              <div><span className="text-gray-300">Mobile:</span> <span className={debugWalletInfo.isMobile ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.isMobile ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">MetaMask:</span> <span className={debugWalletInfo.includesMetaMask ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.includesMetaMask ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">Coinbase:</span> <span className={debugWalletInfo.includesCoinbase ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.includesCoinbase ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">Base:</span> <span className={debugWalletInfo.includesBase ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.includesBase ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">Trust:</span> <span className={debugWalletInfo.includesTrust ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.includesTrust ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">Phantom:</span> <span className={debugWalletInfo.includesPhantom ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.includesPhantom ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">Rainbow:</span> <span className={debugWalletInfo.includesRainbow ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.includesRainbow ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">Is Wallet:</span> <span className={debugWalletInfo.isWallet ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.isWallet ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">Show Modal:</span> <span className={debugWalletInfo.shouldShowModal ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.shouldShowModal ? 'YES' : 'NO'}</span></div>
+              <div><span className="text-gray-300">In Wallet App:</span> <span className={debugWalletInfo.finalIsInWalletApp ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.finalIsInWalletApp ? 'YES' : 'NO'}</span></div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-600">
+              <div className="text-gray-300 text-xs break-all">{debugWalletInfo.userAgent}</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
