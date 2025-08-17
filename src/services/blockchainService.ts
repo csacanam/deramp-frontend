@@ -1,11 +1,19 @@
 import { BlockchainStatusResponse, BlockchainCreateRequest, BlockchainCreateResponse } from '../blockchain/types';
 
 // Use proxy in development, full URL in production
-const baseUrl = import.meta.env.DEV ? '' : import.meta.env.VITE_BACKEND_URL;
+const baseUrl = import.meta.env.DEV ? 'http://localhost:3000' : import.meta.env.VITE_BACKEND_URL;
 
 if (!import.meta.env.DEV && !import.meta.env.VITE_BACKEND_URL) {
   console.error('VITE_BACKEND_URL environment variable is not configured');
 }
+
+// Debug logging
+console.log('🔍 BlockchainService Config:', {
+  isDev: import.meta.env.DEV,
+  baseUrl,
+  backendUrl: import.meta.env.VITE_BACKEND_URL,
+  timestamp: new Date().toISOString()
+});
 
 export class BlockchainService {
   static async getStatus(invoiceId: string, network: string): Promise<BlockchainStatusResponse> {
