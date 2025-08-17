@@ -13,6 +13,7 @@ export interface WalletState {
 export interface WalletActions {
   disconnect: () => void;
   refreshState: () => void;
+  setWalletType: (type: WalletState['walletType']) => void;
 }
 
 export const useWalletState = (): WalletState & WalletActions => {
@@ -159,9 +160,16 @@ export const useWalletState = (): WalletState & WalletActions => {
     }
   }, [wagmiConnected, refreshState]);
 
+  // Set wallet type manually
+  const setWalletType = useCallback((type: WalletState['walletType']) => {
+    console.log('🔧 Manually setting wallet type:', type);
+    updateState({ walletType: type });
+  }, [updateState]);
+
   return {
     ...state,
     disconnect,
-    refreshState
+    refreshState,
+    setWalletType
   };
 };

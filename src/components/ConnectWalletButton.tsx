@@ -13,23 +13,22 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   onConnected,
   className = ''
 }) => {
-  const { isConnected, address, chainId, walletType, lastUpdate } = useWalletState();
+  const { isConnected, address, chainId, walletType, lastUpdate, setWalletType } = useWalletState();
   const { t } = useLanguage();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Universal wallet connection - simple and direct
   const connectWallet = async () => {
-    console.log('🔗 Connect wallet button clicked');
+    console.log('🦊 Attempting universal wallet connection...');
     
     if (!window.ethereum) {
       setError('No wallet detected. Please install MetaMask or Base Wallet.');
       return;
     }
     
-    // Check if already connected to prevent duplicate requests
     if (isConnecting) {
-      console.log('⚠️ Connection already in progress, ignoring click');
+      console.log('⏳ Connection already in progress, skipping...');
       return;
     }
     
@@ -58,52 +57,89 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       console.log('🔍 Wallet detection:', {
         isMetaMask: ethereum.isMetaMask,
         isBaseWallet,
-        walletName: ethereum.walletName || 'Unknown'
+        walletName: ethereum.walletName || 'Unknown',
+        providers: ethereum.providers?.length || 0
       });
       
       let accounts;
       
       if (isBaseWallet) {
-        // Base Wallet specific connection method
-        console.log('🪙 Using Base Wallet connection method');
+        console.log('🪙 Using Base Wallet specific connection method');
+        
+        // Base Wallet specific connection - try multiple methods
         try {
-          // Try the standard method first
-          accounts = await ethereum.request({
-            method: 'eth_requestAccounts'
-          });
-        } catch (baseError: any) {
-          console.log('⚠️ Base Wallet standard method failed, trying alternative:', baseError);
+          // Method 1: Standard eth_requestAccounts
+          console.log('🔄 Method 1: Standard eth_requestAccounts');
+          accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+          console.log('✅ Method 1 successful:', accounts);
+        } catch (method1Error: any) {
+          console.log('⚠️ Method 1 failed:', method1Error.message);
           
-          // Try alternative method for Base Wallet
-          if (ethereum.providers) {
-            const baseProvider = ethereum.providers.find((p: any) => p.isCoinbaseWallet || p.isBaseWallet);
-            if (baseProvider) {
-              accounts = await baseProvider.request({
-                method: 'eth_requestAccounts'
-              });
+          // Method 2: Try specific provider if multiple exist
+          if (ethereum.providers && ethereum.providers.length > 0) {
+            try {
+              console.log('🔄 Method 2: Finding Base Wallet provider');
+              const baseProvider = ethereum.providers.find((p: any) => 
+                p.isCoinbaseWallet || p.isBaseWallet
+              );
+              
+              if (baseProvider) {
+                console.log('✅ Found Base Wallet provider, trying eth_requestAccounts');
+                accounts = await baseProvider.request({ method: 'eth_requestAccounts' });
+                console.log('✅ Method 2 successful:', accounts);
+              } else {
+                console.log('❌ No Base Wallet provider found in providers array');
+              }
+            } catch (method2Error: any) {
+              console.log('⚠️ Method 2 failed:', method2Error.message);
             }
           }
           
-          // If still no success, try to enable the provider
+          // Method 3: Try ethereum.enable() as last resort
           if (!accounts && ethereum.enable) {
-            accounts = await ethereum.enable();
+            try {
+              console.log('🔄 Method 3: Using ethereum.enable()');
+              accounts = await ethereum.enable();
+              console.log('✅ Method 3 successful:', accounts);
+            } catch (method3Error: any) {
+              console.log('⚠️ Method 3 failed:', method3Error.message);
+            }
           }
         }
+        
+        // If all methods failed, throw error
+        if (!accounts) {
+          throw new Error('All Base Wallet connection methods failed');
+        }
+        
       } else {
-        // Standard connection method for other wallets
+        // Standard connection for other wallets (MetaMask, etc.)
         console.log('🔗 Using standard connection method');
-        accounts = await ethereum.request({
-          method: 'eth_requestAccounts'
-        });
+        accounts = await ethereum.request({ method: 'eth_requestAccounts' });
       }
       
       if (accounts && accounts.length > 0) {
-        console.log('✅ Successfully connected:', accounts[0]);
-        // Wallet state will update automatically via useWalletState
+        console.log('✅ Wallet connected successfully:', accounts[0]);
+        setError(null);
+        
+        // Update wallet type for UI
+        if (isBaseWallet) {
+          setWalletType('coinbase');
+        } else if (ethereum.isMetaMask) {
+          setWalletType('metamask');
+        } else {
+          setWalletType('unknown');
+        }
+        
+        // Force a refresh to sync with Wagmi
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        
       } else {
-        console.log('❌ No accounts returned');
-        setError('No accounts found. Please unlock your wallet.');
+        throw new Error('No accounts returned from wallet');
       }
+      
     } catch (error: any) {
       console.error('❌ Connection failed:', error);
       
@@ -115,6 +151,8 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
         setTimeout(() => {
           window.location.reload();
         }, 2000);
+      } else if (error.message?.includes('All Base Wallet connection methods failed')) {
+        setError('Base Wallet connection failed. Please try again or restart the app.');
       } else {
         setError(`Connection failed: ${error.message || 'Unknown error'}`);
       }
