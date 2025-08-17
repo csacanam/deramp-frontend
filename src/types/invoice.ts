@@ -15,6 +15,7 @@ export interface GroupedToken {
   name: string;
   networks: {
     network: string;
+    chain_id?: number; // Add chain_id for filtering
     contract_address: string;
     decimals: number;
     id?: string;

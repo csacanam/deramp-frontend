@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -10,7 +10,6 @@ import { GroupedToken } from '../types/invoice';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { TokenDropdown } from './TokenDropdown';
-import { NetworkDropdown } from './NetworkDropdown';
 import { StatusBadge } from './StatusBadge';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { TokenBalance } from './TokenBalance';
@@ -29,14 +28,15 @@ export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { invoice, error, loading, refetch } = useInvoice(invoiceId || '');
   const { commerce, loading: commerceLoading } = useCommerce(invoice?.commerce_id || '');
-  const { isConnected } = useAccount();
+  const { isConnected, chainId: connectedChainId } = useAccount();
   const { t, language } = useLanguage();
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
-  const [selectedNetwork, setSelectedNetwork] = useState<string>('');
   const [forceExpired, setForceExpired] = useState(false);
 
   // Auto-connect MetaMask when checkout loads
   useEffect(() => {
+    // TEMPORARILY DISABLED TO DEBUG REFRESH ISSUE
+    /*
     const autoConnectMetaMask = async () => {
       // Only attempt if not already connected and MetaMask is available
       if (!isConnected && window.ethereum && (window.ethereum as any)?.isMetaMask) {
@@ -66,6 +66,8 @@ export const CheckoutPage: React.FC = () => {
     const timer = setTimeout(autoConnectMetaMask, 500);
     
     return () => clearTimeout(timer);
+    */
+    console.log('🔍 Auto-connect temporarily disabled for debugging');
   }, [isConnected]);
 
   // Update document title when invoice data is available
@@ -78,17 +80,22 @@ export const CheckoutPage: React.FC = () => {
     }
   }, [invoice, language]);
 
-  // Get selected token network info
-  const selectedTokenNetwork = (() => {
-    if (!selectedToken || !selectedNetwork) return null;
-    return selectedToken.networks.find(n => n.network === selectedNetwork);
-  })();
+  // Get selected token network info based on connected chain
+  const selectedTokenNetwork = useMemo(() => {
+    if (!selectedToken || !connectedChainId) {
+      return null;
+    }
+    
+    // Use the chain_id directly from the token networks instead of recalculating
+    const foundNetwork = selectedToken.networks.find(n => n.chain_id === connectedChainId);
+    
+    return foundNetwork;
+  }, [selectedToken, connectedChainId]);
 
-  // Get the required chain ID for the selected network using centralized config
+  // Get the required chain ID from connected wallet
   const requiredChainId = useMemo(() => {
-    if (!selectedNetwork) return undefined;
-    return findChainIdByBackendName(selectedNetwork);
-  }, [selectedNetwork]);
+    return connectedChainId;
+  }, [connectedChainId]);
 
   // Get token balance for the selected token
   const { balance } = useTokenBalance({
@@ -171,12 +178,7 @@ export const CheckoutPage: React.FC = () => {
 
   const handleTokenSelect = (token: GroupedToken) => {
     setSelectedToken(token);
-    // Reset network selection when token changes
-    setSelectedNetwork('');
-  };
-
-  const handleNetworkSelect = (network: string) => {
-    setSelectedNetwork(network);
+    // No need to set selectedNetwork anymore since we use the connected chain directly
   };
 
   const renderStatusContent = () => {
@@ -220,18 +222,9 @@ export const CheckoutPage: React.FC = () => {
               tokens={groupedTokens}
               selectedToken={selectedToken}
               onTokenSelect={handleTokenSelect}
+              currentChainId={requiredChainId}
             />
-          </div>
-
-          {/* Network Selection */}
-          <div>
-            <label className="block text-white font-medium mb-2">{t.payment.network}</label>
-            <NetworkDropdown
-              networks={selectedToken?.networks.map(n => n.network) || []}
-              selectedNetwork={selectedNetwork}
-              onNetworkSelect={handleNetworkSelect}
-              disabled={!selectedToken}
-            />
+            
           </div>
 
           {/* Payment Information */}

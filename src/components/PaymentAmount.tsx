@@ -92,7 +92,7 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
         </div>
 
         {/* Rate info */}
-        {rateToUsd && (
+        {rateToUsd && t.payment?.price && (
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-400">{interpolate(t.payment.price, { symbol: tokenSymbol })}:</span>
             <span className="text-gray-300">${formatRate(rateToUsd)} USD</span>
@@ -100,7 +100,7 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
         )}
 
         {/* Last updated */}
-        {updatedAt && (
+        {updatedAt && t.payment?.lastUpdated && (
           <div className="flex items-center space-x-1 text-xs text-gray-500">
             <Clock className="h-3 w-3" />
             <span>{interpolate(t.payment.lastUpdated, { time: formatUpdatedTime(updatedAt) })}</span>

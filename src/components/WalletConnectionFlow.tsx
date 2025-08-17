@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ConnectWalletButton } from './ConnectWalletButton';
-import { NetworkSwitchButton } from './NetworkSwitchButton';
 import { NetworkChangeModal } from './NetworkChangeModal';
-import { LogOut } from 'lucide-react';
 import { SUPPORTED_CHAINS } from '../config/chains';
 
 interface WalletConnectionFlowProps {
@@ -102,10 +100,10 @@ export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
           <div className="mb-4">
             <div className="text-4xl mb-4">🔐</div>
             <h2 className="text-xl font-semibold text-white mb-2">
-              {t.wallet?.connectFirst || 'Conecta tu wallet primero'}
+              {t.wallet?.connectFirst || 'Connect your wallet first'}
             </h2>
             <p className="text-gray-400 mb-6">
-              {t.wallet?.connectDescription || 'Necesitas conectar tu wallet para continuar con el pago'}
+              {t.wallet?.connectDescription || 'You need to connect your wallet to continue with the payment'}
             </p>
           </div>
           
@@ -128,45 +126,52 @@ export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
       <div className={`space-y-6 ${className}`}>
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           <div className="mb-4">
-            <div className="text-4xl mb-4">🌐</div>
             <h2 className="text-xl font-semibold text-white mb-2">
-              {t.wallet?.wrongNetwork || 'Red no compatible detectada'}
+              {t.wallet?.wrongNetwork || 'Incompatible network detected'}
             </h2>
             <p className="text-gray-400 mb-6">
               {currentNetworkInfo 
-                ? `Estás en ${currentNetworkInfo.name} (${currentNetworkInfo.isTestnet ? 'Testnet' : 'Mainnet'}), pero necesitas estar en una red compatible para continuar`
-                : 'Necesitas cambiar a una red compatible para continuar'
+                ? t.wallet?.youAreOn?.replace('{network}', currentNetworkInfo.name).replace('{type}', currentNetworkInfo.isTestnet ? 'Testnet' : 'Mainnet') || `You are on ${currentNetworkInfo.name} (${currentNetworkInfo.isTestnet ? 'Testnet' : 'Mainnet'}), but you need to be on a compatible network to continue`
+                : t.wallet?.needToChange || 'You need to switch to a compatible network to continue'
               }
             </p>
           </div>
           
+          {/* Wallet info and disconnect button */}
+          {address && (
+            <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg mb-4">
+              <div className="flex items-center space-x-3">
+                <span className="text-gray-300 text-sm">
+                  {address.slice(0, 6)}...{address.slice(-4)}
+                </span>
+              </div>
+              <button
+                onClick={() => disconnect()}
+                className="text-red-300 hover:text-red-200 text-xs underline decoration-dotted hover:decoration-solid transition-all duration-200"
+                title={t.wallet?.disconnect || 'Disconnect wallet'}
+              >
+                {t.wallet?.disconnect || 'Disconnect'}
+              </button>
+            </div>
+          )}
+          
+          {/* Change network button */}
           <div className="space-y-3">
-            <p className="text-sm text-gray-300">
-              <strong>Redes compatibles:</strong>
-            </p>
-            {SUPPORTED_CHAINS
-              .filter(config => config.enabled)
-              .map(config => (
-                <div key={config.chain.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-white font-medium">{config.chain.name}</span>
-                    <span className="text-xs text-gray-400">
-                      {config.chain.testnet ? 'Testnet' : 'Mainnet'}
-                    </span>
-                  </div>
-                  <NetworkSwitchButton
-                    targetChainId={config.chain.id}
-                    onSwitch={() => {
-                      console.log(`✅ Switched to ${config.chain.name}`);
-                    }}
-                    onError={(error) => {
-                      console.error(`❌ Error switching to ${config.chain.name}:`, error);
-                    }}
-                  />
-                </div>
-              ))}
+            <button
+              onClick={() => setIsNetworkChangeModalOpen(true)}
+              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>{t.wallet?.changeNetwork || 'Change network'}</span>
+            </button>
           </div>
         </div>
+        
+        {/* Network Change Modal for wrong network section */}
+        <NetworkChangeModal
+          isOpen={isNetworkChangeModalOpen}
+          onClose={() => setIsNetworkChangeModalOpen(false)}
+          onNetworkChange={handleNetworkChange}
+        />
       </div>
     );
   }
@@ -176,49 +181,49 @@ export const WalletConnectionFlow: React.FC<WalletConnectionFlowProps> = ({
   
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Success indicator with disconnect option */}
-      <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
-        <div className="flex flex-col space-y-3">
-          <div className="flex items-center space-x-3">
-            <div>
-              <div className="text-green-400 font-medium text-lg">
-                {t.wallet?.connectedTitle || 'Wallet conectada'}
-              </div>
-              <div className="text-green-300 text-sm">
-                {currentNetworkInfo 
-                  ? `Red: ${currentNetworkInfo.name} (${currentNetworkInfo.isTestnet ? 'Testnet' : 'Mainnet'})`
-                  : 'Red: Compatible'
-                }
-              </div>
-              {address && (
-                <div className="text-green-200 text-xs mt-1">
-                  {t.wallet?.connectedAddress || 'Dirección'}: {address.slice(0, 6)}...{address.slice(-4)}
-                </div>
-              )}
+      {/* Success indicator with wallet info and actions */}
+      <div className="bg-green-900/20 border border-green-700 rounded-lg p-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-white mb-2">
+            {t.wallet?.connectedTitle || 'Wallet connected'}
+          </h2>
+        </div>
+        
+        {/* Wallet info and disconnect button */}
+        {address && (
+          <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg mb-4">
+            <div className="flex items-center space-x-3">
+              <span className="text-gray-300 text-sm">
+                {address.slice(0, 6)}...{address.slice(-4)}
+              </span>
             </div>
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex space-x-3 ml-12">
-            <button
-              onClick={() => setIsNetworkChangeModalOpen(true)}
-              className="text-green-300 hover:text-green-200 text-xs underline decoration-dotted hover:decoration-solid transition-all duration-200"
-              title={t.wallet?.changeNetwork || 'Cambiar red'}
-            >
-              {t.wallet?.changeNetwork || 'Cambiar red'}
-            </button>
-            
-            <span className="text-green-300 text-xs">•</span>
-            
             <button
               onClick={() => disconnect()}
-              className="text-green-300 hover:text-green-200 text-xs underline decoration-dotted hover:decoration-solid transition-all duration-200"
-              title={t.wallet?.disconnect || 'Desconectar wallet'}
+              className="text-red-300 hover:text-red-200 text-xs underline decoration-dotted hover:decoration-solid transition-all duration-200"
+              title={t.wallet?.disconnect || 'Disconnect wallet'}
             >
-              {t.wallet?.disconnect || 'Desconectar'}
+              {t.wallet?.disconnect || 'Disconnect'}
             </button>
           </div>
-        </div>
+        )}
+        
+        {/* Network info and switch button */}
+        {currentNetworkInfo && (
+          <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg mb-4">
+            <div className="flex items-center space-x-3">
+              <span className="text-gray-300 text-sm">
+                {currentNetworkInfo.name} ({currentNetworkInfo.isTestnet ? 'Testnet' : 'Mainnet'})
+              </span>
+            </div>
+            <button
+              onClick={() => setIsNetworkChangeModalOpen(true)}
+              className="text-red-300 hover:text-red-200 text-xs underline decoration-dotted hover:decoration-solid transition-all duration-200"
+              title={t.wallet?.changeNetwork || 'Change network'}
+            >
+              {t.wallet?.changeNetwork || 'Change'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Network Change Modal */}

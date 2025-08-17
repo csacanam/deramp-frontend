@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -10,7 +10,6 @@ import { GroupedToken } from '../types/invoice';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { TokenDropdown } from './TokenDropdown';
-import { NetworkDropdown } from './NetworkDropdown';
 import { StatusBadge } from './StatusBadge';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { TokenBalance } from './TokenBalance';
@@ -28,10 +27,9 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { invoice, error, loading, refetch } = useInvoice(invoiceId || '');
   const { commerce, loading: commerceLoading } = useCommerce(invoice?.commerce_id || '');
-  const { isConnected } = useAccount();
+  const { isConnected, chainId: connectedChainId } = useAccount();
   const { t, language } = useLanguage();
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
-  const [selectedNetwork, setSelectedNetwork] = useState<string>('');
   const [forceExpired, setForceExpired] = useState(false);
 
   // Update document title when invoice data is available
@@ -44,17 +42,52 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
     }
   }, [invoice, language]);
 
-  // Get selected token network info
-  const selectedTokenNetwork = (() => {
-    if (!selectedToken || !selectedNetwork) return null;
-    return selectedToken.networks.find(n => n.network === selectedNetwork);
-  })();
-
   // Get the required chain ID for the selected network using centralized config
   const requiredChainId = useMemo(() => {
-    if (!selectedNetwork) return undefined;
-    return findChainIdByBackendName(selectedNetwork);
-  }, [selectedNetwork]);
+    // This now directly uses the connected wallet's chainId
+    return connectedChainId;
+  }, [connectedChainId]);
+
+  // Get selected token network info
+  const selectedTokenNetwork = useMemo(() => {
+    if (!selectedToken || !requiredChainId) {
+      console.log('🔍 selectedTokenNetwork debug:', {
+        selectedToken: selectedToken?.symbol,
+        requiredChainId,
+        hasSelectedToken: !!selectedToken,
+        hasRequiredChainId: !!requiredChainId
+      });
+      return null;
+    }
+    
+    console.log('🔍 Looking for network with chainId:', requiredChainId);
+    console.log('🔍 Available networks in token:', selectedToken.networks.map(n => ({
+      name: n.network,
+      chainId: findChainIdByBackendName(n.network),
+      amount: n.amount_to_pay
+    })));
+    
+    const foundNetwork = selectedToken.networks.find(n => {
+      const networkChainId = findChainIdByBackendName(n.network);
+      const matches = networkChainId === requiredChainId;
+      console.log('🔍 Network comparison:', {
+        networkName: n.network,
+        networkChainId,
+        requiredChainId,
+        matches
+      });
+      return matches;
+    });
+    
+    console.log('🔍 selectedTokenNetwork result:', {
+      selectedToken: selectedToken?.symbol,
+      requiredChainId,
+      foundNetwork: foundNetwork?.network,
+      foundNetworkAmount: foundNetwork?.amount_to_pay
+    });
+    
+    return foundNetwork;
+  }, [selectedToken, requiredChainId]);
 
   // Get token balance for the selected token
   const { balance } = useTokenBalance({
@@ -127,12 +160,21 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
   };
 
   const handleTokenSelect = (token: GroupedToken) => {
+    console.log('🔍 Token selected:', {
+      symbol: token.symbol,
+      name: token.name,
+      networks: token.networks.map(n => ({
+        name: n.network,
+        chainId: findChainIdByBackendName(n.network),
+        amount: n.amount_to_pay
+      }))
+    });
+    
+    console.log('🔍 Current connected chainId:', connectedChainId);
+    console.log('🔍 Current requiredChainId:', requiredChainId);
+    
     setSelectedToken(token);
-    setSelectedNetwork(''); // Reset network when token changes
-  };
-
-  const handleNetworkSelect = (network: string) => {
-    setSelectedNetwork(network);
+    // No need to set selectedNetwork anymore since we use the connected chain directly
   };
 
   const renderStatusContent = () => {
@@ -175,18 +217,21 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
             tokens={groupedTokens}
             selectedToken={selectedToken}
             onTokenSelect={handleTokenSelect}
+            currentChainId={requiredChainId}
           />
-        </div>
-
-        {/* Network Selection */}
-        <div>
-          <label className="block text-white font-medium mb-2">{t.payment.network}</label>
-          <NetworkDropdown
-            networks={selectedToken?.networks.map(n => n.network) || []}
-            selectedNetwork={selectedNetwork}
-            onNetworkSelect={handleNetworkSelect}
-            disabled={!selectedToken}
-          />
+          
+          {/* Debug info visible in UI */}
+          <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-600">
+            <div className="text-xs text-gray-400 space-y-1">
+              <div>🔍 Debug Info:</div>
+              <div>Connected ChainId: {connectedChainId || 'Not connected'}</div>
+              <div>Required ChainId: {requiredChainId || 'Not set'}</div>
+              <div>Selected Token: {selectedToken?.symbol || 'None'}</div>
+              <div>Selected Network: {selectedTokenNetwork?.network || 'None'}</div>
+              <div>Amount to Pay: {selectedTokenNetwork?.amount_to_pay || 'None'}</div>
+              <div>Is Connected: {isConnected ? 'Yes' : 'No'}</div>
+            </div>
+          </div>
         </div>
 
         {/* Payment Information */}
@@ -210,9 +255,7 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
                     {t.payment.connectWalletDescription}
                   </p>
                   <div className="w-full">
-                    <ConnectWalletButton 
-                      selectedNetwork={selectedNetwork}
-                    />
+                    <ConnectWalletButton />
                   </div>
                 </>
               ) : (
@@ -275,9 +318,7 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
                     />
                   )}
                   <div className="mt-3 text-center">
-                    <ConnectWalletButton 
-                      selectedNetwork={selectedNetwork}
-                    />
+                    <ConnectWalletButton />
                   </div>
                 </>
               )}

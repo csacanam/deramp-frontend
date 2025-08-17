@@ -62,6 +62,9 @@ export const es = {
     refunded: 'Pago reembolsado',
     refundedDescription: 'Este pedido ha sido reembolsado exitosamente.',
     amountToPay: 'Importe a pagar',
+    price: 'Precio de {symbol}',
+    lastUpdated: 'Última actualización: {time}',
+    noTokensAvailable: 'No hay tokens disponibles para la red actual',
     paymentFailed: 'El pago falló',
     networkConfigError: 'Error de configuración de red',
     unableToPrepare: 'No se pudo preparar el pago',
@@ -95,7 +98,18 @@ export const es = {
     unsupported: 'Red no soportada',
     switching: 'Cambiando red...',
     switchError: 'Error al cambiar red',
-    changeTokenNetwork: 'Cambiar token/red arriba'
+    changeTokenNetwork: 'Cambiar token/red arriba',
+    status: 'Estado de la Red',
+    refresh: 'Actualizar',
+    refreshing: 'Actualizando...',
+    refreshNetwork: 'Actualizar Red',
+    lastRefresh: 'Última actualización',
+    switchTo: 'Cambiar a',
+    connected: 'Conectado a la red correcta',
+    wrongNetwork: 'Red incorrecta detectada',
+    networkSwitchError: 'Error al cambiar red',
+    networkSwitchSuccess: 'Red cambiada exitosamente',
+    detecting: 'Detectando red...'
   },
 
   // Countdown
@@ -238,40 +252,22 @@ export const es = {
   // Powered by
   poweredBy: '⚡ Desarrollado por',
 
-  // Network
-  network: {
-    status: 'Estado de la Red',
-    refresh: 'Actualizar',
-    refreshing: 'Actualizando...',
-    refreshNetwork: 'Actualizar Red',
-    lastRefresh: 'Última actualización',
-    switching: 'Cambiando...',
-    switchTo: 'Cambiar a',
-    connected: 'Conectado a la red correcta',
-    wrongNetwork: 'Red incorrecta detectada',
-    networkSwitchError: 'Error al cambiar de red',
-    networkSwitchSuccess: 'Red cambiada exitosamente',
-    detecting: 'Detectando red...'
-  },
-
   // Wallet
   wallet: {
     connectFirst: 'Conecta tu wallet primero',
-    connectDescription: 'Necesitas conectar tu wallet para continuar con el pago',
-    wrongNetwork: 'Red no compatible detectada',
+    connectDescription: 'Elige cómo conectar tu wallet',
+    wrongNetwork: 'Red incompatible detectada',
     switchNetworkDescription: 'Necesitas cambiar a una red compatible para continuar',
     readyToPay: 'Todo listo para pagar',
     connectedToCorrectNetwork: 'Wallet conectada en una red compatible',
     connectedTitle: 'Wallet conectada',
-    changeNetwork: 'Cambiar red',
-    selectNetwork: 'Selecciona una red compatible:',
-    currentNetwork: 'Actual',
-    disconnect: 'Desconectar',
+    changeNetwork: 'Cambiar',
+    selectNetwork: 'Seleccionar Red',
+    currentNetwork: 'Red Actual',
+    compatibleNetworks: 'Redes Compatibles',
+    youAreOn: 'Estás en {network} ({type}), pero necesitas estar en una red compatible para continuar',
+    needToChange: 'Necesitas cambiar a una red compatible para continuar',
     connectedAddress: 'Dirección',
-    connect: 'Conectar Wallet',
-    connecting: 'Conectando...',
-    browserExtensions: 'Extensiones del navegador',
-    mobileWallets: 'Wallets móviles',
-    installWallet: 'Instalar Wallet'
+    disconnect: 'Desconectar'
   }
 }; 

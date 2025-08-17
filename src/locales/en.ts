@@ -62,6 +62,9 @@ export const en = {
     refunded: 'Payment refunded',
     refundedDescription: 'This order has been refunded successfully.',
     amountToPay: 'Amount to pay',
+    price: 'Price of {symbol}',
+    lastUpdated: 'Last updated: {time}',
+    noTokensAvailable: 'No tokens available for current network',
     paymentFailed: 'Payment failed',
     networkConfigError: 'Network configuration error',
     unableToPrepare: 'Unable to prepare payment',
@@ -95,7 +98,18 @@ export const en = {
     unsupported: 'Unsupported Network',
     switching: 'Switching network...',
     switchError: 'Error switching network',
-    changeTokenNetwork: 'Change token/network above'
+    changeTokenNetwork: 'Change token/network above',
+    status: 'Network Status',
+    refresh: 'Refresh',
+    refreshing: 'Refreshing...',
+    refreshNetwork: 'Refresh Network',
+    lastRefresh: 'Last refresh',
+    switchTo: 'Switch to',
+    connected: 'Connected to correct network',
+    wrongNetwork: 'Wrong network detected',
+    networkSwitchError: 'Error switching network',
+    networkSwitchSuccess: 'Network switched successfully',
+    detecting: 'Detecting network...'
   },
 
   // Countdown
@@ -238,40 +252,22 @@ export const en = {
   // Powered by
   poweredBy: '⚡ Powered by',
 
-  // Network
-  network: {
-    status: 'Network Status',
-    refresh: 'Refresh',
-    refreshing: 'Refreshing...',
-    refreshNetwork: 'Refresh Network',
-    lastRefresh: 'Last refresh',
-    switching: 'Switching...',
-    switchTo: 'Switch to',
-    connected: 'Connected to correct network',
-    wrongNetwork: 'Wrong network detected',
-    networkSwitchError: 'Error switching network',
-    networkSwitchSuccess: 'Network switched successfully',
-    detecting: 'Detecting network...'
-  },
-
   // Wallet
   wallet: {
     connectFirst: 'Connect your wallet first',
-    connectDescription: 'You need to connect your wallet to continue with the payment',
+    connectDescription: 'Choose how to connect your wallet',
     wrongNetwork: 'Incompatible network detected',
     switchNetworkDescription: 'You need to switch to a compatible network to continue',
     readyToPay: 'All ready to pay',
     connectedToCorrectNetwork: 'Wallet connected to a compatible network',
     connectedTitle: 'Wallet connected',
-    changeNetwork: 'Change network',
-    selectNetwork: 'Select a compatible network:',
-    currentNetwork: 'Current',
-    disconnect: 'Disconnect',
+    changeNetwork: 'Change',
+    selectNetwork: 'Select Network',
+    currentNetwork: 'Current Network',
+    compatibleNetworks: 'Compatible Networks',
+    youAreOn: 'You are on {network} ({type}), but you need to be on a compatible network to continue',
+    needToChange: 'You need to switch to a compatible network to continue',
     connectedAddress: 'Address',
-    connect: 'Connect Wallet',
-    connecting: 'Connecting...',
-    browserExtensions: 'Browser Extensions',
-    mobileWallets: 'Mobile Wallets',
-    installWallet: 'Install Wallet'
+    disconnect: 'Disconnect'
   }
 }; 
