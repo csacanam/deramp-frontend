@@ -74,115 +74,65 @@ export const CheckoutPage: React.FC = () => {
   const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
-    const detectWalletAndBrowser = () => {
-      const ethereum = window.ethereum as any;
-      let walletInfo = '';
-      
-      // Essential detection: Wallet vs Browser
-      if (ethereum) {
-        // Wallet detection - only show the main wallet type
-        if (ethereum.isMetaMask) {
-          walletInfo += '🦊 MetaMask Wallet\n';
-        } else if (ethereum.isCoinbaseWallet || ethereum.isBaseWallet) {
-          walletInfo += '🪙 Base Wallet\n';
-        } else if (ethereum.isTrust) {
-          walletInfo += '🛡️ Trust Wallet\n';
-        } else if (ethereum.isPhantom) {
-          walletInfo += '👻 Phantom Wallet\n';
-        } else if (ethereum.isRainbow) {
-          walletInfo += '🌈 Rainbow Wallet\n';
-        } else {
-          walletInfo += '❓ Unknown Wallet\n';
-        }
-        
-        // Essential wallet info
-        if (ethereum.selectedAddress) {
-          walletInfo += `📍 Address: ${ethereum.selectedAddress.slice(0, 6)}...${ethereum.selectedAddress.slice(-4)}\n`;
-        }
-        if (ethereum.chainId) {
-          walletInfo += `⛓️ Chain: ${ethereum.chainId}\n`;
-        }
-      } else {
-        // No wallet detected - check if we're in a wallet's in-app browser
-        const userAgent = navigator.userAgent;
-        
-        if (userAgent.includes('MetaMask')) {
-          walletInfo += '🦊 MetaMask In-App Browser\n';
-        } else if (userAgent.includes('Coinbase') || userAgent.includes('Base')) {
-          walletInfo += '🪙 Base Wallet In-App Browser\n';
-        } else if (userAgent.includes('Trust')) {
-          walletInfo += '🛡️ Trust Wallet In-App Browser\n';
-        } else if (userAgent.includes('Phantom')) {
-          walletInfo += '👻 Phantom Wallet In-App Browser\n';
-        } else if (userAgent.includes('Rainbow')) {
-          walletInfo += '🌈 Rainbow Wallet In-App Browser\n';
-        } else if (userAgent.includes('Chrome')) {
-          walletInfo += '🌐 Chrome Mobile\n';
-        } else if (userAgent.includes('Safari')) {
-          walletInfo += '🌐 Safari Mobile\n';
-        } else if (userAgent.includes('Firefox')) {
-          walletInfo += '🌐 Firefox Mobile\n';
-        } else {
-          walletInfo += '🌐 Mobile Browser (Unknown)\n';
-        }
-      }
-      
-      // Device type detection
+    const detectBrowserType = () => {
       const userAgent = navigator.userAgent;
-      if (userAgent.includes('Mobile')) {
-        walletInfo += '📱 Mobile Device\n';
-      } else if (userAgent.includes('Tablet')) {
-        walletInfo += '📱 Tablet Device\n';
+      let browserInfo = '';
+      
+      // Detect browser type regardless of wallet connection
+      if (userAgent.includes('MetaMask')) {
+        browserInfo += '🦊 MetaMask In-App Browser\n';
+      } else if (userAgent.includes('Coinbase') || userAgent.includes('Base')) {
+        browserInfo += '🪙 Base Wallet In-App Browser\n';
+      } else if (userAgent.includes('Trust')) {
+        browserInfo += '🛡️ Trust Wallet In-App Browser\n';
+      } else if (userAgent.includes('Phantom')) {
+        browserInfo += '👻 Phantom Wallet In-App Browser\n';
+      } else if (userAgent.includes('Rainbow')) {
+        browserInfo += '🌈 Rainbow Wallet In-App Browser\n';
+      } else if (userAgent.includes('Chrome')) {
+        browserInfo += '🌐 Chrome Browser\n';
+      } else if (userAgent.includes('Safari')) {
+        browserInfo += '🌐 Safari Browser\n';
+      } else if (userAgent.includes('Firefox')) {
+        browserInfo += '🌐 Firefox Browser\n';
+      } else if (userAgent.includes('Edge')) {
+        browserInfo += '🌐 Edge Browser\n';
       } else {
-        walletInfo += '💻 Desktop Device\n';
+        browserInfo += '🌐 Unknown Browser\n';
       }
       
-      // Platform detection
-      if (userAgent.includes('Android')) {
-        walletInfo += '🤖 Android\n';
-      } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
-        walletInfo += '🍎 iOS\n';
-      } else if (userAgent.includes('Windows')) {
-        walletInfo += '🪟 Windows\n';
-      } else if (userAgent.includes('Mac')) {
-        walletInfo += '🍎 macOS\n';
-      } else if (userAgent.includes('Linux')) {
-        walletInfo += '🐧 Linux\n';
-      }
-      
-      // Additional mobile-specific detection
+      // Device type
       if (userAgent.includes('Mobile')) {
-        // Check for in-app browser indicators
-        if (userAgent.includes('wv')) {
-          walletInfo += '🔍 Android WebView\n';
-        }
-        if (userAgent.includes('FBAN') || userAgent.includes('FBAV')) {
-          walletInfo += '📱 Facebook In-App\n';
-        }
-        if (userAgent.includes('Instagram')) {
-          walletInfo += '📸 Instagram In-App\n';
-        }
-        if (userAgent.includes('Twitter') || userAgent.includes('Tweetbot')) {
-          walletInfo += '🐦 Twitter In-App\n';
-        }
-        if (userAgent.includes('WhatsApp')) {
-          walletInfo += '💬 WhatsApp In-App\n';
-        }
-        if (userAgent.includes('Telegram')) {
-          walletInfo += '📬 Telegram In-App\n';
-        }
+        browserInfo += '📱 Mobile Device\n';
+      } else if (userAgent.includes('Tablet')) {
+        browserInfo += '📱 Tablet Device\n';
+      } else {
+        browserInfo += '💻 Desktop Device\n';
       }
       
-      setDebugInfo(walletInfo);
-      console.log('🔍 Wallet Detection Info:', walletInfo);
+      // Platform
+      if (userAgent.includes('Android')) {
+        browserInfo += '🤖 Android\n';
+      } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+        browserInfo += '🍎 iOS\n';
+      } else if (userAgent.includes('Windows')) {
+        browserInfo += '🪟 Windows\n';
+      } else if (userAgent.includes('Mac')) {
+        browserInfo += '🍎 macOS\n';
+      } else if (userAgent.includes('Linux')) {
+        browserInfo += '🐧 Linux\n';
+      }
+      
+      setDebugInfo(browserInfo);
+      console.log('🔍 Browser Detection Info:', browserInfo);
     };
 
-    // Try to detect wallet multiple times with increasing delays
+    // Try to detect browser multiple times with increasing delays
     const delays = [1000, 2000, 3000, 5000];
     delays.forEach((delay, index) => {
       setTimeout(() => {
-        console.log(`🔄 Attempt ${index + 1} to detect wallet (${delay}ms delay)`);
-        detectWalletAndBrowser();
+        console.log(`🔄 Attempt ${index + 1} to detect browser (${delay}ms delay)`);
+        detectBrowserType();
       }, delay);
     });
 
@@ -446,13 +396,13 @@ export const CheckoutPage: React.FC = () => {
           {debugInfo && (
             <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                🔍 Environment Detection
+                🔍 Browser Type Detection
               </h3>
               <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-white p-3 rounded border">
                 {debugInfo}
               </pre>
               <div className="mt-3 text-xs text-gray-500">
-                Shows if you're in a wallet app or regular browser, plus device details.
+                Shows if you're in a wallet in-app browser or regular browser, plus device details.
               </div>
             </div>
           )}
