@@ -33,8 +33,6 @@ export const CheckoutPage: React.FC = () => {
   const { t, language } = useLanguage();
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
   const [forceExpired, setForceExpired] = useState(false);
-  const [isWalletSelectionModalOpen, setIsWalletSelectionModalOpen] = useState(false);
-  const [isInWalletApp, setIsInWalletApp] = useState(false);
 
   // Auto-connect MetaMask when checkout loads
   useEffect(() => {
@@ -73,17 +71,92 @@ export const CheckoutPage: React.FC = () => {
     console.log('🔍 Auto-connect temporarily disabled for debugging');
   }, [isConnected]);
 
-  // Detect if we're in a wallet app or regular browser
+  // Wallet/Browser Detection Debug Component
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [isWalletSelectionModalOpen, setIsWalletSelectionModalOpen] = useState(false);
+  const [isInWalletApp, setIsInWalletApp] = useState(false);
+
   useEffect(() => {
-    const userAgent = navigator.userAgent;
-    const isWallet = userAgent.includes('MetaMask') || 
-                     userAgent.includes('Coinbase') || 
-                     userAgent.includes('Base') ||
-                     userAgent.includes('Trust') ||
-                     userAgent.includes('Phantom') ||
-                     userAgent.includes('Rainbow');
-    
-    setIsInWalletApp(isWallet);
+    const detectBrowserType = () => {
+      const userAgent = navigator.userAgent;
+      let browserInfo = '';
+      let isWallet = false;
+      
+      // Detect browser type regardless of wallet connection
+      if (userAgent.includes('MetaMask')) {
+        browserInfo += '🦊 MetaMask In-App Browser\n';
+        isWallet = true;
+      } else if (userAgent.includes('Coinbase') || userAgent.includes('Base')) {
+        browserInfo += '🪙 Base Wallet In-App Browser\n';
+        isWallet = true;
+      } else if (userAgent.includes('Trust')) {
+        browserInfo += '🛡️ Trust Wallet In-App Browser\n';
+        isWallet = true;
+      } else if (userAgent.includes('Phantom')) {
+        browserInfo += '👻 Phantom Wallet In-App Browser\n';
+        isWallet = true;
+      } else if (userAgent.includes('Rainbow')) {
+        browserInfo += '🌈 Rainbow Wallet In-App Browser\n';
+        isWallet = true;
+      } else if (userAgent.includes('Chrome')) {
+        browserInfo += '🌐 Chrome Browser\n';
+        isWallet = false;
+      } else if (userAgent.includes('Safari')) {
+        browserInfo += '🌐 Safari Browser\n';
+        isWallet = false;
+      } else if (userAgent.includes('Firefox')) {
+        browserInfo += '🌐 Firefox Browser\n';
+        isWallet = false;
+      } else if (userAgent.includes('Edge')) {
+        browserInfo += '🌐 Edge Browser\n';
+        isWallet = false;
+      } else {
+        browserInfo += '🌐 Unknown Browser\n';
+        isWallet = false;
+      }
+      
+      // Device type
+      if (userAgent.includes('Mobile')) {
+        browserInfo += '📱 Mobile Device\n';
+      } else if (userAgent.includes('Tablet')) {
+        browserInfo += '📱 Tablet Device\n';
+      } else {
+        browserInfo += '💻 Desktop Device\n';
+      }
+      
+      // Platform
+      if (userAgent.includes('Android')) {
+        browserInfo += '🤖 Android\n';
+      } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+        browserInfo += '🍎 iOS\n';
+      } else if (userAgent.includes('Windows')) {
+        browserInfo += '🪟 Windows\n';
+      } else if (userAgent.includes('Mac')) {
+        browserInfo += '🍎 macOS\n';
+      } else if (userAgent.includes('Linux')) {
+        browserInfo += '🐧 Linux\n';
+      }
+      
+      setIsInWalletApp(isWallet);
+      setDebugInfo(browserInfo);
+      console.log('🔍 Browser Detection Info:', browserInfo);
+      console.log('🔍 Is in wallet app:', isWallet);
+    };
+
+    // Try to detect browser multiple times with increasing delays
+    const delays = [1000, 2000, 3000, 5000];
+    delays.forEach((delay, index) => {
+      setTimeout(() => {
+        console.log(`🔄 Attempt ${index + 1} to detect browser (${delay}ms delay)`);
+        detectBrowserType();
+      }, delay);
+    });
+
+    return () => {
+      delays.forEach((delay) => {
+        clearTimeout(delay);
+      });
+    };
   }, []);
 
   // Update document title when invoice data is available
@@ -324,8 +397,32 @@ export const CheckoutPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <div className="max-w-md mx-auto p-4">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {t.payment?.makePayment || 'Checkout'}
+            </h1>
+            <p className="text-gray-600">
+              {t.payment?.connectWalletDescription || 'Complete your payment'}
+            </p>
+          </div>
+
+                  {/* Debug Info Panel */}
+          {debugInfo && (
+            <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                🔍 Browser Type Detection
+              </h3>
+              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-white p-3 rounded border">
+                {debugInfo}
+              </pre>
+              <div className="mt-3 text-xs text-gray-500">
+                Shows if you're in a wallet in-app browser or regular browser, plus device details.
+              </div>
+            </div>
+          )}
+
         {/* Language Selector - Top Right */}
         <div className="flex justify-end mb-2">
           <LanguageSelector />
@@ -440,12 +537,18 @@ export const CheckoutPage: React.FC = () => {
           </Link>
         </div>
 
-        {/* Wallet Selection Modal */}
-        <WalletSelectionModal
-          isOpen={isWalletSelectionModalOpen}
-          onClose={() => setIsWalletSelectionModalOpen(false)}
-        />
+          {/* Wallet Connection Flow */}
+          <WalletConnectionFlow 
+            isInWalletApp={isInWalletApp}
+            onOpenWalletSelection={() => setIsWalletSelectionModalOpen(true)}
+          />
+
+          {/* Wallet Selection Modal */}
+          <WalletSelectionModal
+            isOpen={isWalletSelectionModalOpen}
+            onClose={() => setIsWalletSelectionModalOpen(false)}
+          />
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
