@@ -23,7 +23,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     console.log('🔗 Connect wallet button clicked');
     
     if (!window.ethereum) {
-      setError('No wallet detected. Please install MetaMask or Coinbase Wallet.');
+      setError('No wallet detected. Please install MetaMask or Base Wallet.');
       return;
     }
     
@@ -51,10 +51,51 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
         return;
       }
       
-      // Simple connection attempt - works with any wallet
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
+      // Detect wallet type for better connection handling
+      const isBaseWallet = ethereum.isCoinbaseWallet || ethereum.isBaseWallet || 
+                          ethereum.providers?.some((p: any) => p.isCoinbaseWallet || p.isBaseWallet);
+      
+      console.log('🔍 Wallet detection:', {
+        isMetaMask: ethereum.isMetaMask,
+        isBaseWallet,
+        walletName: ethereum.walletName || 'Unknown'
       });
+      
+      let accounts;
+      
+      if (isBaseWallet) {
+        // Base Wallet specific connection method
+        console.log('🪙 Using Base Wallet connection method');
+        try {
+          // Try the standard method first
+          accounts = await ethereum.request({
+            method: 'eth_requestAccounts'
+          });
+        } catch (baseError: any) {
+          console.log('⚠️ Base Wallet standard method failed, trying alternative:', baseError);
+          
+          // Try alternative method for Base Wallet
+          if (ethereum.providers) {
+            const baseProvider = ethereum.providers.find((p: any) => p.isCoinbaseWallet || p.isBaseWallet);
+            if (baseProvider) {
+              accounts = await baseProvider.request({
+                method: 'eth_requestAccounts'
+              });
+            }
+          }
+          
+          // If still no success, try to enable the provider
+          if (!accounts && ethereum.enable) {
+            accounts = await ethereum.enable();
+          }
+        }
+      } else {
+        // Standard connection method for other wallets
+        console.log('🔗 Using standard connection method');
+        accounts = await ethereum.request({
+          method: 'eth_requestAccounts'
+        });
+      }
       
       if (accounts && accounts.length > 0) {
         console.log('✅ Successfully connected:', accounts[0]);
@@ -132,7 +173,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       >
         <Wallet className="w-5 h-5" />
         <span className="text-base">
-          {isConnecting ? 'Conectando...' : (t.wallet?.connect || 'Conectar Wallet')}
+          {isConnecting ? 'Conectando...' : (t.payment?.connectWallet || 'Conectar Wallet')}
         </span>
       </button>
       

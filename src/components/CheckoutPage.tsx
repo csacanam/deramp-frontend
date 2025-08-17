@@ -70,6 +70,80 @@ export const CheckoutPage: React.FC = () => {
     console.log('🔍 Auto-connect temporarily disabled for debugging');
   }, [isConnected]);
 
+  // Detect wallet/browser type and show alert
+  useEffect(() => {
+    const detectWalletAndBrowser = () => {
+      const ethereum = window.ethereum as any;
+      let walletInfo = '🔍 Wallet/Browser Detection:\n\n';
+      
+      // Browser detection
+      const userAgent = navigator.userAgent;
+      if (userAgent.includes('Chrome')) {
+        walletInfo += '🌐 Browser: Chrome\n';
+      } else if (userAgent.includes('Safari')) {
+        walletInfo += '🌐 Browser: Safari\n';
+      } else if (userAgent.includes('Firefox')) {
+        walletInfo += '🌐 Browser: Firefox\n';
+      } else {
+        walletInfo += '🌐 Browser: Unknown\n';
+      }
+      
+      // Wallet detection
+      if (ethereum) {
+        walletInfo += '✅ Ethereum Provider: Available\n';
+        
+        if (ethereum.isMetaMask) {
+          walletInfo += '🦊 Wallet: MetaMask\n';
+        } else if (ethereum.isCoinbaseWallet || ethereum.isBaseWallet) {
+          walletInfo += '🪙 Wallet: Base Wallet\n';
+        } else if (ethereum.isTrust) {
+          walletInfo += '🔒 Wallet: Trust Wallet\n';
+        } else if (ethereum.isPhantom) {
+          walletInfo += '👻 Wallet: Phantom\n';
+        } else if (ethereum.isRainbow) {
+          walletInfo += '🌈 Wallet: Rainbow\n';
+        } else {
+          walletInfo += '❓ Wallet: Unknown Type\n';
+        }
+        
+        // Additional wallet properties
+        if (ethereum.walletName) {
+          walletInfo += `📝 Wallet Name: ${ethereum.walletName}\n`;
+        }
+        if (ethereum.selectedAddress) {
+          walletInfo += `📍 Address: ${ethereum.selectedAddress.slice(0, 6)}...${ethereum.selectedAddress.slice(-4)}\n`;
+        }
+        if (ethereum.chainId) {
+          walletInfo += `🔗 Chain ID: ${ethereum.chainId}\n`;
+        }
+        
+        // Check for multiple providers
+        if (ethereum.providers && ethereum.providers.length > 0) {
+          walletInfo += `📱 Multiple Providers: ${ethereum.providers.length}\n`;
+          ethereum.providers.forEach((provider: any, index: number) => {
+            if (provider.isMetaMask) walletInfo += `  ${index + 1}. MetaMask\n`;
+            else if (provider.isCoinbaseWallet) walletInfo += `  ${index + 1}. Coinbase Wallet\n`;
+            else if (provider.isBaseWallet) walletInfo += `  ${index + 1}. Base Wallet\n`;
+            else walletInfo += `  ${index + 1}. Unknown Provider\n`;
+          });
+        }
+      } else {
+        walletInfo += '❌ Ethereum Provider: Not Available\n';
+      }
+      
+      // Show alert with wallet info
+      alert(walletInfo);
+      
+      // Also log to console for debugging
+      console.log('🔍 Wallet Detection Alert:', walletInfo);
+    };
+    
+    // Small delay to ensure page is fully loaded
+    const timer = setTimeout(detectWalletAndBrowser, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   // Update document title when invoice data is available
   useEffect(() => {
     if (invoice) {
