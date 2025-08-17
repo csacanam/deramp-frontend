@@ -35,7 +35,6 @@ export const CheckoutPage: React.FC = () => {
   const [forceExpired, setForceExpired] = useState(false);
   const [isWalletSelectionModalOpen, setIsWalletSelectionModalOpen] = useState(false);
   const [isInWalletApp, setIsInWalletApp] = useState(false);
-  const [debugWalletInfo, setDebugWalletInfo] = useState<any>(null);
 
   // Auto-connect MetaMask when checkout loads
   useEffect(() => {
@@ -92,23 +91,6 @@ export const CheckoutPage: React.FC = () => {
     const finalIsInWalletApp = !shouldShowModal;
     
     setIsInWalletApp(finalIsInWalletApp);
-    
-    // Debug logs para UI
-    const debugInfo = {
-      // Solo información esencial de window.ethereum
-      hasEthereum: !!window.ethereum,
-      ethereumIsMetaMask: (window.ethereum as any)?.isMetaMask || false,
-      ethereumIsCoinbaseWallet: (window.ethereum as any)?.isCoinbaseWallet || false,
-      ethereumIsBaseWallet: (window.ethereum as any)?.isBaseWallet || false,
-      ethereumIsTrust: (window.ethereum as any)?.isTrust || false,
-      ethereumIsPhantom: (window.ethereum as any)?.isPhantom || false,
-      ethereumIsRainbow: (window.ethereum as any)?.isRainbow || false,
-      ethereumWalletName: (window.ethereum as any)?.walletName || 'N/A',
-      ethereumProviders: (window.ethereum as any)?.providers?.length || 0
-    };
-    
-    setDebugWalletInfo(debugInfo);
-    console.log('🔍 WALLET DETECTION DEBUG:', debugInfo);
   }, []);
 
   // Update document title when invoice data is available
@@ -474,24 +456,6 @@ export const CheckoutPage: React.FC = () => {
           isOpen={isWalletSelectionModalOpen}
           onClose={() => setIsWalletSelectionModalOpen(false)}
         />
-
-        {/* Debug Panel - TEMPORAL para diagnosticar Base Wallet */}
-        {debugWalletInfo && (
-          <div className="fixed bottom-4 left-4 bg-black bg-opacity-90 text-white p-4 rounded-lg max-w-md text-xs z-50">
-            <h3 className="font-bold mb-2 text-yellow-400">🔍 WINDOW.ETHEREUM DEBUG</h3>
-            <div className="space-y-1">
-              <div><span className="text-gray-300">Has Ethereum:</span> <span className={debugWalletInfo.hasEthereum ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.hasEthereum ? 'YES' : 'NO'}</span></div>
-              <div><span className="text-gray-300">Is MetaMask:</span> <span className={debugWalletInfo.ethereumIsMetaMask ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.ethereumIsMetaMask ? 'YES' : 'NO'}</span></div>
-              <div><span className="text-gray-300">Is Coinbase:</span> <span className={debugWalletInfo.ethereumIsCoinbaseWallet ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.ethereumIsCoinbaseWallet ? 'YES' : 'NO'}</span></div>
-              <div><span className="text-gray-300">Is Base:</span> <span className={debugWalletInfo.ethereumIsBaseWallet ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.ethereumIsBaseWallet ? 'YES' : 'NO'}</span></div>
-              <div><span className="text-gray-300">Is Trust:</span> <span className={debugWalletInfo.ethereumIsTrust ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.ethereumIsTrust ? 'YES' : 'NO'}</span></div>
-              <div><span className="text-gray-300">Is Phantom:</span> <span className={debugWalletInfo.ethereumIsPhantom ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.ethereumIsPhantom ? 'YES' : 'NO'}</span></div>
-              <div><span className="text-gray-300">Is Rainbow:</span> <span className={debugWalletInfo.ethereumIsRainbow ? 'text-green-400' : 'text-red-400'}>{debugWalletInfo.ethereumIsRainbow ? 'YES' : 'NO'}</span></div>
-              <div><span className="text-gray-300">Wallet Name:</span> <span className="text-white">{debugWalletInfo.ethereumWalletName}</span></div>
-              <div><span className="text-gray-300">Providers:</span> <span className="text-white">{debugWalletInfo.ethereumProviders}</span></div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
