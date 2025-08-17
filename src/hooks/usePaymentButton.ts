@@ -231,6 +231,7 @@ export const usePaymentButton = ({
       setButtonState('confirm');
     } catch (error) {
       console.error('Error in handleAuthorize:', error);
+      // Always reset to ready state to prevent freezing
       setButtonState('ready');
       
       // Provide user-friendly error messages
@@ -245,12 +246,20 @@ export const usePaymentButton = ({
           userMessage = t.payment?.walletNotFound || 'Wallet not found';
         } else if (error.message.includes('Payment option not found')) {
           userMessage = t.payment?.paymentOptionNotFound || 'Payment option not found';
+        } else if (error.message.includes('could not coalesce') || error.message.includes('gas') || error.message.includes('nonce')) {
+          userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
         } else {
-          userMessage = error.message;
+          userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
         }
       }
       
       onError?.(userMessage);
+      
+      // Add a small delay before allowing retry
+      setTimeout(() => {
+        // Ensure button is in ready state and ready for retry
+        setButtonState('ready');
+      }, 1000);
     }
   }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t.payment]);
 
@@ -347,15 +356,31 @@ export const usePaymentButton = ({
       }
 
       // Call payInvoice directly on the contract
+      console.log('🚀 Executing payment transaction with params:', {
+        invoiceId: invoiceIdBytes32,
+        tokenAddress: tokenConfig.address,
+        amount: amount.toString(),
+        gasLimit: 300000, // Reduced from 500000 for Celo
+        maxFeePerGas: ethers.parseUnits('0.1', 'gwei'), // Celo-specific gas pricing
+        maxPriorityFeePerGas: ethers.parseUnits('0.01', 'gwei'), // Celo-specific gas pricing
+        value: 0
+      });
+
+      // Use more conservative gas settings for Celo
       const payTx = await derampProxyContract.payInvoice(
         invoiceIdBytes32,
         tokenConfig.address,
         amount,
         {
-          gasLimit: 500000,
+          gasLimit: 300000, // Reduced from 500000 for Celo
+          maxFeePerGas: ethers.parseUnits('0.1', 'gwei'), // Celo-specific gas pricing
+          maxPriorityFeePerGas: ethers.parseUnits('0.01', 'gwei'), // Celo-specific gas pricing
           value: 0
         }
       );
+
+      console.log('✅ Transaction sent:', payTx.hash);
+      console.log('⏳ Waiting for confirmation...');
 
       // Wait for transaction confirmation
       const receipt = await payTx.wait();
@@ -394,7 +419,9 @@ export const usePaymentButton = ({
         message: error.message,
         data: error.data,
         transaction: error.transaction,
-        receipt: error.receipt
+        receipt: error.receipt,
+        network: getNetworkName(chainId),
+        chainId
       });
       
       // Check if user cancelled the transaction
@@ -404,6 +431,7 @@ export const usePaymentButton = ({
         alert(isSpanish ? 'Cancelaste el pago. Puede intentar de nuevo.' : 'Payment cancelled. You can try again.');
 
       } else {
+        // Always reset to confirm state to prevent freezing
         setButtonState('confirm');
         
         // Provide user-friendly error messages
@@ -420,12 +448,40 @@ export const usePaymentButton = ({
             userMessage = t.payment?.networkIssue || 'Network issue';
           } else if (error.message.includes('Failed to fetch')) {
             userMessage = t.payment?.connectionIssue || 'Connection issue';
+          } else if (error.message.includes('could not coalesce')) {
+            userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
+          } else if (error.message.includes('gas')) {
+            userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
+          } else if (error.message.includes('nonce')) {
+            userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
+          } else if (error.message.includes('timeout') || error.message.includes('deadline')) {
+            userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
           } else {
-            userMessage = error.message;
+            userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
           }
         }
         
+        // Log specific Celo errors for debugging
+        if (chainId === 44787) { // Celo Alfajores
+          console.error('🔍 Celo Alfajores specific error:', {
+            error: error.message,
+            gasSettings: {
+              gasLimit: 300000,
+              maxFeePerGas: '0.1 gwei',
+              maxPriorityFeePerGas: '0.01 gwei'
+            },
+            suggestion: 'Try increasing gas limit or check network status'
+          });
+        }
+        
+        // Show user-friendly error and allow retry
         onError?.(userMessage);
+        
+        // Add a small delay before allowing retry to prevent rapid clicking
+        setTimeout(() => {
+          // Ensure button is in confirm state and ready for retry
+          setButtonState('confirm');
+        }, 1000);
       }
     }
   }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, language, t.payment]);

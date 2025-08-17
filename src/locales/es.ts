@@ -76,10 +76,13 @@ export const es = {
     walletNotFound: 'Wallet no encontrada',
     paymentOptionNotFound: 'Opción de pago no encontrada',
     tokenAuthRequired: 'Autorización de token requerida',
-    transactionFailed: 'La transacción falló',
+    transactionFailed: 'Transacción fallida',
     insufficientBalance: 'Saldo insuficiente',
     networkIssue: 'Problema de red',
-    connectionIssue: 'Problema de conexión'
+    connectionIssue: 'Problema de conexión',
+    gasError: 'Error de configuración de gas. Por favor intenta de nuevo.',
+    nonceError: 'Error de nonce de transacción. Por favor intenta de nuevo.',
+    networkCongestion: 'La red está congestionada. Por favor intenta de nuevo en unos minutos.'
   },
 
   // Balance

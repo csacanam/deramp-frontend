@@ -79,7 +79,10 @@ export const en = {
     transactionFailed: 'Transaction failed',
     insufficientBalance: 'Insufficient balance',
     networkIssue: 'Network issue',
-    connectionIssue: 'Connection issue'
+    connectionIssue: 'Connection issue',
+    gasError: 'Gas configuration error. Please try again.',
+    nonceError: 'Transaction nonce error. Please try again.',
+    networkCongestion: 'Network is congested. Please try again in a few minutes.'
   },
 
   // Balance
