@@ -262,7 +262,7 @@ export const es = {
     wrongNetwork: 'Red incompatible detectada',
     switchNetworkDescription: 'Necesitas cambiar a una red compatible para continuar',
     readyToPay: 'Todo listo para pagar',
-    connectedToCorrectNetwork: 'Wallet conectada en una red compatible',
+    connectedToCorrectNetwork: 'Wallet conectada a una red compatible',
     connectedTitle: 'Wallet conectada',
     changeNetwork: 'Cambiar',
     selectNetwork: 'Seleccionar Red',
@@ -274,5 +274,11 @@ export const es = {
     disconnect: 'Desconectar',
     selectWallet: 'Elige la wallet en la que vas a continuar la transacción',
     selectWalletDescription: 'Elige tu wallet para continuar',
+    connectWallet: 'Conectar Wallet',
+    connectWalletFirst: 'Conecta tu wallet primero',
+    switchNetwork: 'Cambiar Red',
+    connectionIssue: 'Problema de conexión',
+    metamaskPendingError: 'Cierra MetaMask completamente y vuelve a intentar. El error indica que hay una solicitud pendiente.',
+    metamaskPendingErrorShort: 'Cierra MetaMask y vuelve a intentar',
   }
 }; 

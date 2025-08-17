@@ -274,5 +274,11 @@ export const en = {
     disconnect: 'Disconnect',
     selectWallet: 'Choose the wallet where you will continue the transaction',
     selectWalletDescription: 'Choose your wallet to continue',
+    connectWallet: 'Connect Wallet',
+    connectWalletFirst: 'Connect your wallet first',
+    switchNetwork: 'Switch Network',
+    connectionIssue: 'Connection issue',
+    metamaskPendingError: 'Close MetaMask completely and try again. The error indicates there is a pending request.',
+    metamaskPendingErrorShort: 'Close MetaMask and try again',
   }
 }; 
