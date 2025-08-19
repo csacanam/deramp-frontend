@@ -50,14 +50,16 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
   // Format updated time to show actual date/time
   const formatUpdatedTime = (timestamp: string) => {
     try {
-      const date = new Date(timestamp);
+      // The backend timestamp is in UTC, so we need to force UTC interpretation
+      // and then convert to user's local timezone
+      const date = new Date(timestamp + 'Z'); // Force UTC interpretation
       const locale = language === 'es' ? 'es-CO' : 'en-US';
       
       // Debug: log the detected timezone
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       console.log('🌍 Detected timezone:', detectedTimezone);
       console.log('📅 Original timestamp:', timestamp);
-      console.log('🕐 Date object:', date.toISOString());
+      console.log('🕐 Date object (forced UTC):', date.toISOString());
       
       if (language === 'es') {
         // Español: formato 12h con AM/PM, mes en mayúscula
