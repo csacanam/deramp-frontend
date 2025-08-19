@@ -53,28 +53,39 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
       const date = new Date(timestamp);
       const locale = language === 'es' ? 'es-CO' : 'en-US';
       
+      // Debug: log the detected timezone
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log('🌍 Detected timezone:', detectedTimezone);
+      console.log('📅 Original timestamp:', timestamp);
+      console.log('🕐 Original date object:', date.toISOString());
+      
       if (language === 'es') {
         // Español: formato 12h con AM/PM, mes en mayúscula
-        return date.toLocaleString(locale, {
+        const formattedDate = date.toLocaleString(locale, {
           month: 'long', // 'long' para "Agosto" en lugar de "ago"
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
           hour12: true, // true para formato 12h con AM/PM
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          timeZone: detectedTimezone
         });
+        console.log('🇪🇸 Formatted Spanish date:', formattedDate);
+        return formattedDate;
       } else {
         // Inglés: formato 12h con AM/PM, mes en mayúscula
-        return date.toLocaleString(locale, {
+        const formattedDate = date.toLocaleString(locale, {
           month: 'short', // 'short' para "Aug" (ya viene en mayúscula en inglés)
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
           hour12: true, // true para formato 12h con AM/PM
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          timeZone: detectedTimezone
         });
+        console.log('🇺🇸 Formatted English date:', formattedDate);
+        return formattedDate;
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ Error formatting date:', error);
       return t.payment.dateNotAvailable;
     }
   };
