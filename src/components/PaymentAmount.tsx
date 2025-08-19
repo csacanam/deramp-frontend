@@ -57,36 +57,36 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       console.log('🌍 Detected timezone:', detectedTimezone);
       console.log('📅 Original timestamp:', timestamp);
-      console.log('🕐 Original date object:', date.toISOString());
+      console.log('🕐 Date object:', date.toISOString());
       
       if (language === 'es') {
         // Español: formato 12h con AM/PM, mes en mayúscula
+        // Sin timeZone explícito = usa automáticamente la timezone del usuario
         const formattedDate = date.toLocaleString(locale, {
           month: 'long', // 'long' para "Agosto" en lugar de "ago"
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
-          hour12: true, // true para formato 12h con AM/PM
-          timeZone: detectedTimezone
+          hour12: true // true para formato 12h con AM/PM
         });
         console.log('🇪🇸 Formatted Spanish date:', formattedDate);
         return formattedDate;
       } else {
         // Inglés: formato 12h con AM/PM, mes en mayúscula
+        // Sin timeZone explícito = usa automáticamente la timezone del usuario
         const formattedDate = date.toLocaleString(locale, {
           month: 'short', // 'short' para "Aug" (ya viene en mayúscula en inglés)
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
-          hour12: true, // true para formato 12h con AM/PM
-          timeZone: detectedTimezone
+          hour12: true // true para formato 12h con AM/PM
         });
         console.log('🇺🇸 Formatted English date:', formattedDate);
         return formattedDate;
       }
     } catch (error) {
       console.error('❌ Error formatting date:', error);
-      return t.payment.dateNotAvailable;
+      return 'Fecha no disponible';
     }
   };
 
