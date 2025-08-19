@@ -52,13 +52,28 @@ export const PaymentAmount: React.FC<PaymentAmountProps> = ({
     try {
       const date = new Date(timestamp);
       const locale = language === 'es' ? 'es-CO' : 'en-US';
-      return date.toLocaleString(locale, {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
+      
+      if (language === 'es') {
+        // Español: formato 12h con AM/PM, mes en mayúscula
+        return date.toLocaleString(locale, {
+          month: 'long', // 'long' para "Agosto" en lugar de "ago"
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true, // true para formato 12h con AM/PM
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+      } else {
+        // Inglés: formato 12h con AM/PM, mes en mayúscula
+        return date.toLocaleString(locale, {
+          month: 'short', // 'short' para "Aug" (ya viene en mayúscula en inglés)
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true, // true para formato 12h con AM/PM
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+      }
     } catch {
       return t.payment.dateNotAvailable;
     }
