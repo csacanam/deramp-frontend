@@ -82,7 +82,8 @@ export const en = {
     connectionIssue: 'Connection issue',
     gasError: 'Gas configuration error. Please try again.',
     nonceError: 'Transaction nonce error. Please try again.',
-    networkCongestion: 'Network is congested. Please try again in a few minutes.'
+    networkCongestion: 'Network is congested. Please try again in a few minutes.',
+    tokenNotWhitelisted: 'The commerce is not accepting {symbol} at the moment. Choose another token.'
   },
 
   // Balance

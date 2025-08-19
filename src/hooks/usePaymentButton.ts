@@ -145,7 +145,16 @@ export const usePaymentButton = ({
         if (error.message.includes('ENS') || error.message.includes('network does not support')) {
           userMessage = t.payment?.networkConfigError || 'Network configuration error';
         } else if (error.message.includes('HTTP error! status: 400')) {
-          userMessage = t.payment?.unableToPrepare || 'Unable to prepare payment';
+          // Check if it's a token whitelist error
+          if (error.message.includes('is not whitelisted for commerce')) {
+            // Extract token symbol from error message
+            const tokenMatch = error.message.match(/Token.*?\((.*?)\)/);
+            const tokenSymbol = tokenMatch ? tokenMatch[1] : selectedToken || 'este token';
+            userMessage = t.payment?.tokenNotWhitelisted?.replace('{symbol}', tokenSymbol) || 
+                         `El comercio no está recibiendo ${tokenSymbol} en este momento. Elige otro token.`;
+          } else {
+            userMessage = t.payment?.unableToPrepare || 'Unable to prepare payment';
+          }
         } else if (error.message.includes('Failed to create invoice on blockchain')) {
           userMessage = t.payment?.unableToCreateBlockchain || 'Unable to create blockchain invoice';
         } else if (error.message.includes('Failed to get blockchain status')) {
@@ -157,7 +166,7 @@ export const usePaymentButton = ({
       
       onError?.(userMessage);
     }
-  }, [invoiceId, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t.payment]);
+  }, [invoiceId, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t.payment, selectedToken]);
 
   const handleAuthorize = useCallback(async () => {
     if (!isConnected || !address || !chainId || !selectedToken) {
