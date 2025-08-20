@@ -8,6 +8,7 @@ export interface Token {
   rate_to_usd?: number;
   amount_to_pay?: string;
   updated_at?: string;
+  logo?: string; // URL del logo del token
 }
 
 export interface GroupedToken {
@@ -22,6 +23,7 @@ export interface GroupedToken {
     rate_to_usd?: number;
     amount_to_pay?: string;
     updated_at?: string;
+    logo?: string; // URL del logo del token
   }[];
 }
 

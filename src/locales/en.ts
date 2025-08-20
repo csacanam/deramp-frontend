@@ -83,7 +83,13 @@ export const en = {
     gasError: 'Gas configuration error. Please try again.',
     nonceError: 'Transaction nonce error. Please try again.',
     networkCongestion: 'Network is congested. Please try again in a few minutes.',
-    tokenNotWhitelisted: 'The commerce is not accepting {symbol} at the moment. Choose another token.'
+    tokenNotWhitelisted: 'The commerce is not accepting {symbol} at the moment. Choose another token.',
+    selectTokenTitle: 'Select Token',
+    selectTokenDescription: 'Choose your preferred payment token',
+    searchTokens: 'Search tokens...',
+    noTokensFound: 'No tokens found',
+    tokenPrice: 'Price: ${price}',
+    tokenAmount: 'Amount: {amount} {symbol}'
   },
 
   // Balance

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { GroupedToken } from '../types/invoice';
-import { useDropdown } from '../hooks/useDropdown';
 import { useLanguage } from '../contexts/LanguageContext';
+import { TokenSelectionModal } from './TokenSelectionModal';
 
 interface TokenDropdownProps {
   tokens: GroupedToken[];
@@ -18,7 +18,7 @@ export const TokenDropdown: React.FC<TokenDropdownProps> = ({
   currentChainId
 }) => {
   const { t } = useLanguage();
-  const { isOpen, toggleDropdown, closeDropdown, ref, zIndex } = useDropdown('token-dropdown');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter tokens by current network
   const availableTokens = currentChainId 
@@ -39,9 +39,10 @@ export const TokenDropdown: React.FC<TokenDropdownProps> = ({
   }
 
   return (
-    <div className="relative" ref={ref}>
+    <>
+      {/* Button that opens the modal */}
       <button
-        onClick={toggleDropdown}
+        onClick={() => setIsModalOpen(true)}
         className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-left flex items-center justify-between hover:border-gray-600 transition-colors"
       >
         <span className="text-white">
@@ -52,36 +53,18 @@ export const TokenDropdown: React.FC<TokenDropdownProps> = ({
             </div>
           ) : t.payment.selectTokenPlaceholder}
         </span>
-        <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className="h-5 w-5 text-gray-400 transition-transform" />
       </button>
       
-      {isOpen && (
-        <div className={`absolute ${zIndex} w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto`}>
-          {availableTokens.map((token) => {
-            // Find the network info for current chain
-            const networkInfo = token.networks.find(network => network.chain_id === currentChainId);
-            
-            return (
-              <button
-                key={token.symbol}
-                onClick={() => {
-                  onTokenSelect(token);
-                  closeDropdown();
-                }}
-                className="w-full text-left p-3 hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
-              >
-                <div className="text-white font-bold">{token.symbol}</div>
-                <div className="text-gray-400 text-sm">{token.name}</div>
-                {networkInfo && (
-                  <div className="text-gray-500 text-xs mt-1">
-                    {t.payment?.amountToPay || 'Amount to pay'}: {networkInfo.amount_to_pay} {token.symbol}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+      {/* Token Selection Modal */}
+      <TokenSelectionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        tokens={tokens}
+        selectedToken={selectedToken}
+        onTokenSelect={onTokenSelect}
+        currentChainId={currentChainId}
+      />
+    </>
   );
 };

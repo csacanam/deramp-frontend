@@ -85,6 +85,31 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     setSelectedCategory(isMobile ? 'mobile' : 'desktop');
   }, [isMobile]);
 
+  // Prevent body scroll when modal is open (standard solution for mobile scroll issues)
+  useEffect(() => {
+    if (isOpen) {
+      // Store current scroll position
+      const scrollY = window.scrollY;
+      
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      
+      // Cleanup function to restore scroll
+      return () => {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        
+        // Restore scroll position
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
+
   // REMOVED: Auto-close modal when wallet connects
   // This was causing the modal to close immediately when connected
   // useEffect(() => {
@@ -145,9 +170,9 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-700">
+      <div className="fixed inset-4 bg-gray-900 rounded-xl shadow-2xl border border-gray-700 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-gray-700">
+        <div className="flex items-start justify-between p-6 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-start space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <Wallet className="w-6 h-6 text-white" />
@@ -173,7 +198,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         {(() => {
           console.log('🔍 Rendering connected wallet section:', { isConnected, address });
           return isConnected && address ? (
-            <div className="p-6 border-b border-gray-700 bg-gray-800/50">
+            <div className="p-6 border-b border-gray-700 bg-gray-800/50 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
@@ -202,7 +227,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         })()}
         
         {/* Debug: Show connection status - Always visible for production debugging */}
-        <div className="p-4 bg-blue-900/30 border-b border-blue-600">
+        <div className="p-4 bg-blue-900/30 border-b border-blue-600 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
@@ -258,7 +283,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         </div>
 
         {/* Live Debug Logs Panel - Always visible for production debugging */}
-        <div className="p-4 bg-gray-800 border-b border-gray-600 max-h-40 overflow-y-auto">
+        <div className="p-4 bg-gray-800 border-b border-gray-600 max-h-40 overflow-y-auto flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-yellow-300">🔍 Live Debug Logs</h4>
             <button
@@ -290,8 +315,8 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Content - Scrollable area */}
+        <div className="flex-1 overflow-y-auto min-h-0 p-6">
           {isConnected ? (
             /* Connected State */
             <div className="space-y-4">
