@@ -103,22 +103,15 @@ export const CheckoutPageWithPaymentButton: React.FC = () => {
   const userBalance = balance ? Number(balance.formatted) : 0;
   const hasSufficientBalance = userBalance >= amountToPay;
 
-  // Check if invoice is expired based on expires_at field
-  const isExpiredByTime = useMemo(() => {
-    if (!invoice?.expires_at) return false;
-    const now = new Date().getTime();
-    const expiration = new Date(invoice.expires_at).getTime();
-    return now > expiration || forceExpired;
-  }, [invoice?.expires_at, forceExpired]);
-
-  // Get the effective status (considering expiration time)
+  // Get the effective status (considering countdown expiration)
   const effectiveStatus = useMemo(() => {
     if (!invoice) return null;
-    if (isExpiredByTime && invoice.status === 'Pending') {
+    // Only use forceExpired from countdown, no manual date calculation
+    if (forceExpired && invoice.status === 'Pending') {
       return 'Expired';
     }
     return invoice.status;
-  }, [invoice?.status, isExpiredByTime]);
+  }, [invoice?.status, forceExpired]);
 
   // Convert invoice tokens to PaymentOption format for the PaymentButton
   const paymentOptions: PaymentOption[] = useMemo(() => {

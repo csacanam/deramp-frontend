@@ -170,7 +170,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="fixed inset-4 bg-gray-900 rounded-xl shadow-2xl border border-gray-700 flex flex-col overflow-hidden">
+      <div className="bg-gray-900 rounded-xl shadow-2xl border border-gray-700 flex flex-col overflow-hidden max-w-md w-full max-h-[90vh]">
         {/* Header */}
         <div className="flex items-start justify-between p-6 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-start space-x-3">
