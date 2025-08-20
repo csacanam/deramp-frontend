@@ -95,23 +95,5 @@ export class BlockchainService {
     }
   }
 
-  static async updateInvoiceStatus(invoiceId: string, status: string): Promise<void> {
-    try {
-      const response = await fetch(`${baseUrl}/api/invoices/${invoiceId}/status`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error updating invoice status:', error);
-      throw error;
-    }
-  }
 } 

@@ -436,11 +436,8 @@ export const usePaymentButton = ({
             paid_amount: parseFloat(paymentOption.amount) // Convert to number as backend expects
           };
           
-          // Update payment data
+          // Update payment data (backend automatically sets status to "paid")
           await BlockchainService.updatePaymentData(invoiceId, paymentData);
-          
-          // Update invoice status to "paid"
-          await BlockchainService.updateInvoiceStatus(invoiceId, 'paid');
           
         } catch (backendError: any) {
           // Don't fail the entire process if backend update fails
