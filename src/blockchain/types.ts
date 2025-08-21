@@ -3,6 +3,11 @@ export interface PaymentOption {
   amount: string;
 }
 
+export interface BlockchainStatusRequest {
+  invoiceId: string;
+  chainId: number;
+}
+
 export interface BlockchainStatusResponse {
   success: boolean;
   data: {
@@ -12,6 +17,7 @@ export interface BlockchainStatusResponse {
     commerce: string;
     expiresAt: number;
     paymentOptions: PaymentOption[];
+    selectedNetwork?: number; // ChainId where the invoice was created
     paidAmount?: string;
     paidToken?: string;
     paidAt?: number;
@@ -21,7 +27,7 @@ export interface BlockchainStatusResponse {
 export interface BlockchainCreateRequest {
   invoiceId: string;
   paymentOptions: PaymentOption[];
-  network: string;
+  chainId: number; // Changed from network: string
   expiresAt?: number;
 }
 

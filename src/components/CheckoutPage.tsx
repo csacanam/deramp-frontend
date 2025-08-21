@@ -6,6 +6,7 @@ import { getBlockExplorerUrl } from '../blockchain/config/networks';
 import { useInvoice } from '../hooks/useInvoice';
 import { useCommerce } from '../hooks/useCommerce';
 import { useTokenBalance } from '../hooks/useTokenBalance';
+import { useNetworkMismatch } from '../hooks/useNetworkMismatch';
 import { GroupedToken } from '../types/invoice';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
@@ -17,6 +18,9 @@ import { PaymentAmount } from './PaymentAmount';
 import { CountdownTimer } from './CountdownTimer';
 import { PaymentButton } from './PaymentButton';
 import { WalletConnectionFlow } from './WalletConnectionFlow';
+import { NetworkMismatchWarning } from './NetworkMismatchWarning';
+import { ErrorModal } from './ErrorModal';
+import { BuyingSoonModal } from './BuyingSoonModal';
 import { useLanguage } from '../contexts/LanguageContext';
 import { interpolate } from '../utils/i18n';
 import { LanguageSelector } from './LanguageSelector';
@@ -28,13 +32,16 @@ import { WalletSelectionModal } from './WalletSelectionModal';
 export const CheckoutPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { invoice, error, loading, refetch } = useInvoice(invoiceId || '');
-  const { commerce, loading: commerceLoading } = useCommerce(invoice?.commerce_id || '');
+  const { commerce } = useCommerce(invoice?.commerce_id || '');
   const { isConnected, chainId: connectedChainId } = useAccount();
   const { t, language } = useLanguage();
   const [selectedToken, setSelectedToken] = useState<GroupedToken | null>(null);
   const [forceExpired, setForceExpired] = useState(false);
   const [isWalletSelectionModalOpen, setIsWalletSelectionModalOpen] = useState(false);
   const [isInWalletApp, setIsInWalletApp] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [isBuyingSoonModalOpen, setIsBuyingSoonModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Auto-connect MetaMask when checkout loads
   useEffect(() => {
@@ -70,7 +77,6 @@ export const CheckoutPage: React.FC = () => {
     
     return () => clearTimeout(timer);
     */
-    console.log('🔍 Auto-connect temporarily disabled for debugging');
   }, [isConnected]);
 
   // Detect if we're in a wallet app or regular browser
@@ -131,6 +137,15 @@ export const CheckoutPage: React.FC = () => {
     enabled: !!selectedTokenNetwork && isConnected,
   });
 
+  // Network mismatch validation
+  const {
+    hasMismatch,
+    expectedNetwork,
+    currentNetwork,
+    isSwitching,
+    switchToCorrectNetwork
+  } = useNetworkMismatch({ selectedNetwork: invoice?.selected_network });
+
   // Check if user has sufficient balance
   const amountToPay = selectedTokenNetwork?.amount_to_pay ? Number(selectedTokenNetwork.amount_to_pay) : 0;
   const userBalance = balance ? Number(balance.formatted) : 0;
@@ -165,8 +180,9 @@ export const CheckoutPage: React.FC = () => {
   const handlePaymentError = (error: string) => {
     // Handle payment error
     console.error('Payment error:', error);
-    // You could show an error message to the user
-    alert(`${t.general.error}: ${error}`);
+    // Show error in modal instead of alert
+    setErrorMessage(error);
+    setIsErrorModalOpen(true);
   };
 
   if (loading) {
@@ -178,9 +194,6 @@ export const CheckoutPage: React.FC = () => {
   }
 
   const groupedTokens = groupTokensBySymbol(invoice.tokens);
-
-  // Get available networks from invoice tokens (commented out as not currently used)
-  // const availableNetworks = [...new Set(invoice.tokens.map(token => token.network))];
 
   const formatAmount = (amount: number, currency: string) => {
     const locale = language === 'es' ? 'es-CO' : 'en-US';
@@ -225,7 +238,7 @@ export const CheckoutPage: React.FC = () => {
         <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-6 text-center">
           <RefreshCw className="h-16 w-16 text-blue-400 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold text-white mb-2">{t.payment.refunded}</h2>
-          <p className="text-blue-300">{t.payment.refundedDescription}</p>
+          <p className="text-red-300">{t.payment.refundedDescription}</p>
         </div>
       );
     }
@@ -237,93 +250,106 @@ export const CheckoutPage: React.FC = () => {
         onOpenWalletSelection={() => setIsWalletSelectionModalOpen(true)}
       >
         <div className="space-y-6">
-          {/* Token Selection */}
-          <div>
-            <label className="block text-white font-medium mb-2">{t.payment.selectToken}</label>
-            <TokenDropdown
-              tokens={groupedTokens}
-              selectedToken={selectedToken}
-              onTokenSelect={handleTokenSelect}
-              currentChainId={requiredChainId}
-            />
-            
-          </div>
-
-          {/* Payment Information */}
-          {selectedTokenNetwork && (
-            <div className="space-y-4">
-              {/* Payment Amount */}
-              <PaymentAmount
-                amountToPay={selectedTokenNetwork.amount_to_pay}
-                tokenSymbol={selectedToken?.symbol}
-                tokenDecimals={selectedTokenNetwork.decimals}
-                rateToUsd={selectedTokenNetwork.rate_to_usd}
-                updatedAt={selectedTokenNetwork.updated_at}
-                amountFiat={invoice.amount_fiat}
-                fiatCurrency={invoice.fiat_currency}
+          {/* Network Mismatch Warning or Token Selection */}
+          {(() => {
+            return hasMismatch ? (
+              <NetworkMismatchWarning
+                expectedNetwork={expectedNetwork}
+                currentNetwork={currentNetwork}
+                onSwitchNetwork={switchToCorrectNetwork}
+                isSwitching={isSwitching}
               />
-
-              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                <div className="mb-4 p-3 bg-gray-700 rounded-lg">
-                  <TokenBalance
-                    tokenAddress={selectedTokenNetwork.contract_address}
-                    tokenSymbol={selectedToken?.symbol}
-                    tokenDecimals={selectedTokenNetwork.decimals}
-                    requiredChainId={requiredChainId}
+            ) : (
+              <>
+                {/* Token Selection */}
+                <div>
+                  <label className="block text-white font-medium mb-2">{t.payment.selectToken}</label>
+                  <TokenDropdown
+                    tokens={groupedTokens}
+                    selectedToken={selectedToken}
+                    onTokenSelect={handleTokenSelect}
+                    currentChainId={requiredChainId}
                   />
                 </div>
-                
-                {/* Payment button with balance validation */}
-                {!hasSufficientBalance && amountToPay > 0 ? (
-                  <div className="space-y-3">
-                    <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 flex items-center space-x-3">
-                      <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-red-300 font-medium">{t.balance.insufficient}</p>
-                        <p className="text-red-400 text-sm">
-                          {interpolate(t.balance.insufficientDescription, {
-                            required: amountToPay.toFixed(6),
-                            current: userBalance.toFixed(6),
-                            symbol: selectedToken?.symbol || ''
-                          })}
-                        </p>
-                        <div className="mt-2">
-                          <a
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              // TODO: Integrate with exchange or buying service
-                              alert(interpolate(t.tokens.buyingSoon, { symbol: selectedToken?.symbol || '' }));
-                            }}
-                            className="inline-flex items-center space-x-1 text-blue-400 hover:text-blue-300 text-sm transition-colors"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            <span>{interpolate(t.tokens.buy, { symbol: selectedToken?.symbol || '' })}</span>
-                          </a>
-                        </div>
+
+                {/* Payment Information */}
+                {selectedTokenNetwork && (
+                  <div className="space-y-4">
+                    {/* Payment Amount */}
+                    <PaymentAmount
+                      amountToPay={selectedTokenNetwork.amount_to_pay}
+                      tokenSymbol={selectedToken?.symbol}
+                      tokenDecimals={selectedTokenNetwork.decimals}
+                      rateToUsd={selectedTokenNetwork.rate_to_usd}
+                      updatedAt={selectedTokenNetwork.updated_at}
+                      amountFiat={invoice.amount_fiat}
+                      fiatCurrency={invoice.fiat_currency}
+                    />
+
+                    <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                      <div className="mb-4 p-3 bg-gray-700 rounded-lg">
+                        <TokenBalance
+                          tokenAddress={selectedTokenNetwork.contract_address}
+                          tokenSymbol={selectedToken?.symbol}
+                          tokenDecimals={selectedTokenNetwork.decimals}
+                          requiredChainId={requiredChainId}
+                        />
                       </div>
+                      
+                      {/* Payment button with balance validation */}
+                      {!hasSufficientBalance && amountToPay > 0 ? (
+                        <div className="space-y-3">
+                          <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 flex items-center space-x-3">
+                            <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-red-300 font-medium">{t.balance.insufficient}</p>
+                              <p className="text-red-400 text-sm">
+                                {interpolate(t.balance.insufficientDescription, {
+                                  required: amountToPay.toFixed(6),
+                                  current: userBalance.toFixed(6),
+                                  symbol: selectedToken?.symbol || ''
+                                })}
+                              </p>
+                              <div className="mt-2">
+                                <a
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    // TODO: Integrate with exchange or buying service
+                                    setIsBuyingSoonModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  <span>{interpolate(t.tokens.buy, { symbol: selectedToken?.symbol || '' })}</span>
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                          <button 
+                            disabled
+                            className="w-full bg-gray-600 text-gray-400 font-medium py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
+                          >
+                            <Wallet className="h-5 w-5" />
+                            <span>{t.balance.insufficient}</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <PaymentButton
+                          invoiceId={invoiceId || ''}
+                          paymentOptions={paymentOptions}
+                          onSuccess={handlePaymentSuccess}
+                          onError={handlePaymentError}
+                          hasSufficientBalance={hasSufficientBalance}
+                          selectedNetwork={invoice?.selected_network}
+                        />
+                      )}
                     </div>
-                    <button 
-                      disabled
-                      className="w-full bg-gray-600 text-gray-400 font-medium py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
-                    >
-                      <Wallet className="h-5 w-5" />
-                      <span>{t.balance.insufficient}</span>
-                    </button>
                   </div>
-                ) : (
-                  <PaymentButton
-                    invoiceId={invoiceId || ''}
-                    paymentOptions={paymentOptions}
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                    disabled={!hasSufficientBalance || amountToPay <= 0}
-                    hasSufficientBalance={hasSufficientBalance}
-                  />
                 )}
-              </div>
-            </div>
-          )}
+              </>
+            );
+          })()}
         </div>
       </WalletConnectionFlow>
     );
@@ -450,6 +476,20 @@ export const CheckoutPage: React.FC = () => {
         <WalletSelectionModal
           isOpen={isWalletSelectionModalOpen}
           onClose={() => setIsWalletSelectionModalOpen(false)}
+        />
+
+        {/* Error Modal */}
+        <ErrorModal
+          isOpen={isErrorModalOpen}
+          onClose={() => setIsErrorModalOpen(false)}
+          message={errorMessage}
+        />
+
+        {/* Buying Soon Modal */}
+        <BuyingSoonModal
+          isOpen={isBuyingSoonModalOpen}
+          onClose={() => setIsBuyingSoonModalOpen(false)}
+          tokenSymbol={selectedToken?.symbol || ''}
         />
       </div>
     </div>

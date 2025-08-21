@@ -204,9 +204,9 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     console.log('🦊 === FIN CONEXIÓN WALLET ===');
   };
 
-  return (
+              return (
     <div className="space-y-3">
-      <button
+                    <button
         onClick={connectWallet}
         disabled={isPending}
         className={`w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2 ${className}`}
@@ -222,13 +222,13 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
             <span>{t.payment?.connectWallet || 'Connect Wallet'}</span>
           </>
         )}
-      </button>
+                    </button>
       
       {error && (
         <div className="text-red-500 text-sm text-center">
           {error}
-        </div>
+                  </div>
       )}
-    </div>
+          </div>
   );
 }; 

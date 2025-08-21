@@ -16,9 +16,13 @@ console.log('🔍 BlockchainService Config:', {
 });
 
 export class BlockchainService {
-  static async getStatus(invoiceId: string, network: string): Promise<BlockchainStatusResponse> {
+  static async getStatus(invoiceId: string, chainId: number): Promise<BlockchainStatusResponse> {
     try {
-      const url = `${baseUrl}/api/blockchain/status/${invoiceId}?network=${network}`;
+      const url = `${baseUrl}/api/blockchain/status/${invoiceId}?chainId=${chainId}`;
+      console.log('🌐 BlockchainService.getStatus - Making request to:', url);
+      console.log('🌐 Base URL:', baseUrl);
+      console.log('🌐 Invoice ID:', invoiceId);
+      console.log('🌐 Chain ID:', chainId);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -27,15 +31,24 @@ export class BlockchainService {
         },
       });
 
+      console.log('🌐 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ HTTP error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('✅ getStatus success, data:', data);
       return data;
     } catch (error) {
-      console.error('Error getting blockchain status:', error);
+      console.error('❌ getStatus error:', error);
       throw error;
     }
   }

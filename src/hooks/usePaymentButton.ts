@@ -6,12 +6,40 @@ import { BlockchainService } from '../services/blockchainService';
 import { CONTRACTS, TOKENS } from '../blockchain/config';
 import { ButtonState, PaymentOption } from '../blockchain/types';
 
+// Network validation function
+const validateNetwork = (currentChainId: number, selectedNetwork: number | undefined): { isValid: boolean; message?: string } => {
+  if (!selectedNetwork) {
+    return { isValid: true }; // No network selected yet, can proceed
+  }
+  
+  if (currentChainId === selectedNetwork) {
+    return { isValid: true };
+  }
+  
+  // Get network names for better error messages
+  const getNetworkName = (chainId: number): string => {
+    switch (chainId) {
+      case 44787: return 'Celo Alfajores';
+      case 1: return 'Ethereum Mainnet';
+      default: return `Chain ID ${chainId}`;
+    }
+  };
+  
+  return {
+    isValid: false,
+    message: `Este invoice fue creado en ${getNetworkName(selectedNetwork)}, pero estás conectado a ${getNetworkName(currentChainId)}. Por favor, cambia a la red correcta.`
+  };
+};
+
 interface UsePaymentButtonProps {
   invoiceId: string;
   paymentOptions: PaymentOption[];
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  onPaymentCancelled?: () => void;
   hasSufficientBalance?: boolean;
+  selectedNetwork?: number; // Add selectedNetwork from invoice
+  selectedTokenNetwork?: any; // Add selectedTokenNetwork for price validation
 }
 
 export const usePaymentButton = ({ 
@@ -19,7 +47,10 @@ export const usePaymentButton = ({
   paymentOptions, 
   onSuccess, 
   onError,
-  hasSufficientBalance = true
+  onPaymentCancelled,
+  hasSufficientBalance = true,
+  selectedNetwork,
+  selectedTokenNetwork
 }: UsePaymentButtonProps) => {
   const [buttonState, setButtonState] = useState<ButtonState>('initial');
   const [selectedToken, setSelectedToken] = useState<string>('');
@@ -74,13 +105,20 @@ export const usePaymentButton = ({
       return;
     }
 
+    // Network validation - check if user is on the correct network
+    const networkValidation = validateNetwork(chainId, selectedNetwork);
+    if (!networkValidation.isValid) {
+      onError?.(networkValidation.message || 'Network mismatch');
+      return;
+    }
+
     setButtonState('loading');
 
     try {
       const networkName = getNetworkName(chainId);
       
       // Step 1: Check blockchain status
-      const statusResponse = await BlockchainService.getStatus(invoiceId, networkName);
+      const statusResponse = await BlockchainService.getStatus(invoiceId, chainId);
       
       if (statusResponse.success) {
         const { exists, status } = statusResponse.data;
@@ -111,7 +149,7 @@ export const usePaymentButton = ({
           const createResponse = await BlockchainService.createInvoice({
             invoiceId,
             paymentOptions: blockchainPaymentOptions,
-            network: networkName,
+            chainId: chainId, // Use chainId instead of network
           });
           
           if (createResponse.success) {
@@ -125,8 +163,7 @@ export const usePaymentButton = ({
           setSelectedToken(paymentOptions[0].token);
           setButtonState('ready');
         } else if (['expired', 'refunded', 'paid'].includes(status)) {
-          // Update backend and refresh page
-          await BlockchainService.updateInvoiceStatus(invoiceId, status);
+          // Backend automatically handles status updates, just refresh the page
           window.location.reload();
         } else {
           throw new Error(`Unexpected invoice status: ${status}`);
@@ -135,7 +172,13 @@ export const usePaymentButton = ({
         throw new Error('Failed to get blockchain status');
       }
     } catch (error) {
-      console.error('Error in handlePayNow:', error);
+      console.error('💥 Error in handlePayNow:', error);
+      console.error('💥 Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown',
+        stack: error instanceof Error ? error.stack : 'Unknown'
+      });
+      
       setButtonState('initial');
       
       // Provide user-friendly error messages
@@ -364,18 +407,70 @@ export const usePaymentButton = ({
       // Convert invoiceId to bytes32 using ethers.id (same as backend)
       const invoiceIdBytes32 = ethers.id(invoiceId);
       
-      // Parse amount to wei (the contract expects wei, not decimal units)
-      const amount = ethers.parseUnits(paymentOption.amount, tokenConfig.decimals);
+      // IMPORTANTE: Obtener la cantidad exacta del blockchain, no de la BD
+      // La BD se actualiza cada 5 minutos, pero el smart contract espera la cantidad original
+      const statusCheck = await BlockchainService.getStatus(invoiceId, chainId);
+      
+      if (!statusCheck.success) {
+        throw new Error('Failed to get blockchain status');
+      }
+      
+      if (!statusCheck.data.exists) {
+        // Invoice doesn't exist on blockchain, create it
+        const blockchainPaymentOptions = paymentOptions.map(option => ({
+          token: option.token,
+          amount: option.amount
+        }));
+        
+        const createResponse = await BlockchainService.createInvoice({
+          invoiceId,
+          paymentOptions: blockchainPaymentOptions,
+          chainId: chainId,
+        });
+        
+        if (!createResponse.success) {
+          throw new Error('Failed to create invoice on blockchain');
+        }
+        
+        // After creating, get the status again to get the exact amounts
+        const newStatusCheck = await BlockchainService.getStatus(invoiceId, chainId);
+        if (!newStatusCheck.success || !newStatusCheck.data.exists) {
+          throw new Error('Invoice creation failed');
+        }
+      }
+      
+      // Get the exact amount from blockchain status
+      const blockchainPaymentOptions = statusCheck.data.paymentOptions;
+      if (!blockchainPaymentOptions || blockchainPaymentOptions.length === 0) {
+        throw new Error('No payment options found in blockchain status');
+      }
+      
+      // Find the selected token in blockchain options
+      const blockchainOption = blockchainPaymentOptions.find(option => 
+        option.token.toLowerCase() === tokenConfig.address.toLowerCase()
+      );
+      
+      if (!blockchainOption) {
+        throw new Error(`Token ${selectedToken} (${tokenConfig.address}) not found in blockchain payment options`);
+      }
+      
+      // Use the EXACT amount from blockchain, not from database
+      const exactAmount = blockchainOption.amount;
+      
+      console.log('🔍 Amount comparison:', {
+        databaseAmount: paymentOption.amount,
+        blockchainAmount: exactAmount,
+        difference: Math.abs(parseFloat(paymentOption.amount) - parseFloat(exactAmount))
+      });
+      
+      // Parse amount to wei using the EXACT amount from blockchain
+      const amount = ethers.parseUnits(exactAmount, tokenConfig.decimals);
 
       // Check if invoice exists first by calling a view function
       try {
-        // Let's also check the blockchain status again to make sure the invoice exists
-        const statusCheck = await BlockchainService.getStatus(invoiceId, networkName);
-        
-        if (!statusCheck.success || !statusCheck.data.exists) {
-          throw new Error('Invoice does not exist in blockchain');
-        }
-        
+        await derampProxyContract.getStatus(invoiceIdBytes32);
+      } catch (error: any) {
+        // If getStatus fails, the invoice might not exist
         if (statusCheck.data.status !== 'pending') {
           throw new Error(`Invoice is not in pending status: ${statusCheck.data.status}`);
         }
@@ -394,83 +489,66 @@ export const usePaymentButton = ({
         if (allowance < amount) {
           throw new Error('Insufficient allowance. Please approve tokens first.');
         }
-        
-      } catch (error) {
-        throw error;
       }
 
       // Call payInvoice directly on the contract - let wallet handle gas automatically
-      console.log('🚀 Executing payment transaction with params:', {
-        invoiceId: invoiceIdBytes32,
+      console.log('🔍 Payment parameters:', {
+        invoiceId: invoiceId,
+        invoiceIdBytes32: invoiceIdBytes32,
         tokenAddress: tokenConfig.address,
+        tokenSymbol: tokenConfig.symbol,
         amount: amount.toString(),
-        gasHandling: 'Automatic (wallet decides)',
-        value: 0
+        amountHuman: paymentOption.amount,
+        decimals: tokenConfig.decimals,
+        networkName,
+        chainId
       });
-
-      // Let wallet handle gas estimation and pricing automatically
+      
+      // Also log what the backend expects
+      console.log('🔍 Backend payment data:', {
+        paymentOptions,
+        selectedToken,
+        hasSufficientBalance
+      });
+      
       const payTx = await derampProxyContract.payInvoice(
         invoiceIdBytes32,
         tokenConfig.address,
         amount,
-        {
-          value: 0
-          // No gas configuration - let wallet decide automatically
-        }
+        { value: 0 } // No ETH value needed for token payments
       );
-
-      console.log('✅ Transaction sent:', payTx.hash);
-      console.log('⏳ Waiting for confirmation...');
 
       // Wait for transaction confirmation
       const receipt = await payTx.wait();
+      
+      if (receipt.status === 1) {
+        // Transaction successful
+        const paymentData = {
+          paid_token: selectedToken,
+          paid_network: networkName,
+          paid_tx_hash: payTx.hash,
+          wallet_address: address,
+          paid_amount: parseFloat(paymentOption.amount),
+          reason: 'Payment completed successfully'
+        };
 
-      if (receipt && receipt.status === 1) {
-        // Payment successful - try to update backend with payment data and status
-        try {
-          const paymentData = {
-            paid_token: tokenConfig.address,
-            paid_network: networkName,
-            paid_tx_hash: payTx.hash,
-            wallet_address: address,
-            paid_amount: parseFloat(paymentOption.amount) // Convert to number as backend expects
-          };
-          
-          // Update payment data (backend automatically sets status to "paid")
-          await BlockchainService.updatePaymentData(invoiceId, paymentData);
-          
-        } catch (backendError: any) {
-          // Don't fail the entire process if backend update fails
-        }
+        // Update payment data in backend (this also sets status to "paid")
+        await BlockchainService.updatePaymentData(invoiceId, paymentData);
         
-        // Call success callback
+        // Success!
+        setButtonState('initial');
+        setSelectedToken('');
         onSuccess?.();
       } else {
         throw new Error('Transaction failed');
       }
-
     } catch (error: any) {
-      console.error('Error in handleConfirm:', error);
-      console.error('Error details:', {
-        code: error.code,
-        message: error.message,
-        data: error.data,
-        transaction: error.transaction,
-        receipt: error.receipt,
-        network: getNetworkName(chainId),
-        chainId
-      });
+      setButtonState('confirm');
       
       // Check if user cancelled the transaction
       if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
-        setButtonState('confirm');
-        const isSpanish = language === 'es';
-        alert(isSpanish ? 'Cancelaste el pago. Puede intentar de nuevo.' : 'Payment cancelled. You can try again.');
-
+        onPaymentCancelled?.();
       } else {
-        // Always reset to confirm state to prevent freezing
-        setButtonState('confirm');
-        
         // Provide user-friendly error messages
         let userMessage = t.payment?.paymentFailed || 'Payment failed';
         
@@ -501,28 +579,14 @@ export const usePaymentButton = ({
             userMessage = t.payment?.networkCongestion || 'Network is congested. Please try again in a few minutes.';
           } else {
             // Use the original error message for unknown errors
-            userMessage = error.message || t.payment?.paymentFailed || 'Payment failed';
+            userMessage = error.message || t.payment?.tokenAuthFailed || 'Token authorization failed';
           }
         }
         
-        // Log specific Celo errors for debugging
-        if (chainId === 44787) { // Celo Alfajores
-          console.error('🔍 Celo Alfajores specific error:', {
-            error: error.message,
-            gasSettings: {
-              gasLimit: 300000,
-              maxFeePerGas: '0.1 gwei',
-              maxPriorityFeePerGas: '0.01 gwei'
-            },
-            suggestion: 'Try increasing gas limit or check network status'
-          });
-        }
-        
-        // Show user-friendly error and allow retry
         onError?.(userMessage);
       }
     }
-  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, language, t.payment]);
+  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, t.payment, onPaymentCancelled, selectedTokenNetwork]);
 
   const handleButtonClick = useCallback(() => {
     switch (buttonState) {

@@ -89,7 +89,15 @@ export const es = {
     searchTokens: 'Buscar tokens...',
     noTokensFound: 'No se encontraron tokens',
     tokenPrice: 'Precio: ${price}',
-    tokenAmount: 'Importe: {amount} {symbol}'
+    tokenAmount: 'Cantidad: {amount} {symbol}',
+    networkMismatchTitle: 'Red incorrecta detectada',
+    networkMismatchDescription: 'Esta orden fue creada en {expected}, pero estás conectado a otra red.',
+    switchToCorrectNetwork: 'Cambiar a red correcta',
+    switchingNetwork: 'Cambiando red...',
+    refreshPage: 'Recargar página',
+    title: 'Método de Pago',
+    connectWalletToContinue: 'Conecta tu wallet para continuar',
+    close: 'Cerrar'
   },
 
   // Balance
