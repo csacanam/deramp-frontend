@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
+import { useCallback, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { CONTRACTS, TOKENS, findChainConfigByChainId } from '../config/chains';
 import { BlockchainService } from '../services/blockchainService';
-import { CONTRACTS, TOKENS } from '../blockchain/config';
 import { ButtonState, PaymentOption } from '../blockchain/types';
 
 // Network validation function
@@ -58,16 +58,6 @@ export const usePaymentButton = ({
   const chainId = useChainId();
   const { language, t } = useLanguage();
 
-  // Get network name from chainId
-  const getNetworkName = (chainId: number): string => {
-    switch (chainId) {
-      case 44787:
-        return 'alfajores';
-      default:
-        return 'alfajores'; // Default to alfajores for now
-    }
-  };
-
   const getButtonText = useCallback((state: ButtonState, tokenSymbol?: string) => {
     const isSpanish = language === 'es';
     
@@ -88,6 +78,29 @@ export const usePaymentButton = ({
         return isSpanish ? 'Pagar ahora' : 'Pay Now';
     }
   }, [language]);
+
+  // Validate network if selectedNetwork is provided
+  const validateNetwork = (currentChainId: number, selectedNetwork: number | undefined): { isValid: boolean; message?: string } => {
+    if (!selectedNetwork) {
+      return { isValid: true };
+    }
+    
+    if (currentChainId === selectedNetwork) {
+      return { isValid: true };
+    }
+    
+    const getNetworkName = (chainId: number): string => {
+      switch (chainId) {
+        case 44787: return 'Celo Alfajores';
+        default: return `Chain ID ${chainId}`;
+      }
+    };
+    
+    return {
+      isValid: false,
+      message: `Este invoice fue creado en ${getNetworkName(selectedNetwork)}, pero estás conectado a ${getNetworkName(currentChainId)}. Por favor, cambia a la red correcta.`
+    };
+  };
 
   const handlePayNow = useCallback(async () => {
     if (!isConnected || !address || !chainId) {
@@ -115,7 +128,11 @@ export const usePaymentButton = ({
     setButtonState('loading');
 
     try {
-      const networkName = getNetworkName(chainId);
+      // Get chain configuration using the new consolidated approach
+      const chainConfig = findChainConfigByChainId(chainId);
+      if (!chainConfig) {
+        throw new Error('Unsupported network');
+      }
       
       // Step 1: Check blockchain status
       const statusResponse = await BlockchainService.getStatus(invoiceId, chainId);
@@ -125,7 +142,7 @@ export const usePaymentButton = ({
         
         if (!exists) {
           // Convert token symbols to addresses for blockchain creation
-          const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
+          const networkTokens = chainConfig.tokens;
           if (!networkTokens) {
             throw new Error('Unsupported network');
           }
@@ -209,7 +226,7 @@ export const usePaymentButton = ({
       
       onError?.(userMessage);
     }
-  }, [invoiceId, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t.payment, selectedToken]);
+  }, [invoiceId, paymentOptions, isConnected, address, chainId, onError, t.payment, selectedToken, hasSufficientBalance, selectedNetwork]);
 
   const handleAuthorize = useCallback(async () => {
     if (!isConnected || !address || !chainId || !selectedToken) {
@@ -220,10 +237,14 @@ export const usePaymentButton = ({
     setButtonState('approving');
 
     try {
-      const networkName = getNetworkName(chainId);
-      
+      // Get chain configuration using the new consolidated approach
+      const chainConfig = findChainConfigByChainId(chainId);
+      if (!chainConfig) {
+        throw new Error('Unsupported network');
+      }
+
       // Get token configuration
-      const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
+      const networkTokens = chainConfig.tokens;
       if (!networkTokens) {
         throw new Error('Unsupported network');
       }
@@ -234,6 +255,17 @@ export const usePaymentButton = ({
       );
       if (!tokenConfig) {
         throw new Error('Unsupported token');
+      }
+
+      // Get payment option for selected token
+      const paymentOption = paymentOptions.find(option => option.token === selectedToken);
+      if (!paymentOption) {
+        throw new Error('Payment option not found for selected token');
+      }
+
+      const networkContracts = chainConfig.contracts;
+      if (!networkContracts) {
+        throw new Error('Network contracts not found');
       }
 
       // Create provider and signer
@@ -268,17 +300,6 @@ export const usePaymentButton = ({
         ],
         signer
       );
-
-      // Get payment option for selected token
-      const paymentOption = paymentOptions.find(option => option.token === selectedToken);
-      if (!paymentOption) {
-        throw new Error('Payment option not found for selected token');
-      }
-
-      const networkContracts = CONTRACTS[networkName as keyof typeof CONTRACTS];
-      if (!networkContracts) {
-        throw new Error('Network contracts not found');
-      }
 
       // Check if approval is needed
       const allowance = await tokenContract.allowance(address, networkContracts.DERAMP_PROXY);
@@ -333,7 +354,7 @@ export const usePaymentButton = ({
       
       onError?.(userMessage);
     }
-  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, getNetworkName, t.payment]);
+  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, t.payment]);
 
   const handleConfirm = useCallback(async () => {
     if (!isConnected || !address || !chainId || !selectedToken) {
@@ -344,10 +365,14 @@ export const usePaymentButton = ({
     setButtonState('processing');
 
     try {
-      const networkName = getNetworkName(chainId);
+      // Get chain configuration using the new consolidated approach
+      const chainConfig = findChainConfigByChainId(chainId);
+      if (!chainConfig) {
+        throw new Error('Unsupported network');
+      }
       
       // Get token configuration
-      const networkTokens = TOKENS[networkName as keyof typeof TOKENS];
+      const networkTokens = chainConfig.tokens;
       if (!networkTokens) {
         throw new Error('Unsupported network');
       }
@@ -366,7 +391,7 @@ export const usePaymentButton = ({
         throw new Error('Payment option not found for selected token');
       }
 
-      const networkContracts = CONTRACTS[networkName as keyof typeof CONTRACTS];
+      const networkContracts = chainConfig.contracts;
       if (!networkContracts) {
         throw new Error('Network contracts not found');
       }
@@ -500,7 +525,7 @@ export const usePaymentButton = ({
         amount: amount.toString(),
         amountHuman: paymentOption.amount,
         decimals: tokenConfig.decimals,
-        networkName,
+        networkName: chainConfig.chain.name,
         chainId
       });
       
@@ -525,7 +550,7 @@ export const usePaymentButton = ({
         // Transaction successful
         const paymentData = {
           paid_token: selectedToken,
-          paid_network: networkName,
+          paid_network: chainConfig.chain.name,
           paid_tx_hash: payTx.hash,
           wallet_address: address,
           paid_amount: parseFloat(paymentOption.amount),
@@ -586,7 +611,7 @@ export const usePaymentButton = ({
         onError?.(userMessage);
       }
     }
-  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, getNetworkName, t.payment, onPaymentCancelled, selectedTokenNetwork]);
+  }, [selectedToken, paymentOptions, isConnected, address, chainId, onError, onSuccess, t.payment, onPaymentCancelled, selectedTokenNetwork]);
 
   const handleButtonClick = useCallback(() => {
     switch (buttonState) {

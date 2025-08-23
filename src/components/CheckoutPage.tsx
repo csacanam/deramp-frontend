@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Wallet, CheckCircle, XCircle, Store, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { getBlockExplorerUrl } from '../blockchain/config/networks';
+import { getBlockExplorerUrl } from '../config/chains';
 import { useInvoice } from '../hooks/useInvoice';
 import { useCommerce } from '../hooks/useCommerce';
 import { useTokenBalance } from '../hooks/useTokenBalance';

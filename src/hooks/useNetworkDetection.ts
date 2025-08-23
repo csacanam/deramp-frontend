@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount, useChainId, useWalletClient } from 'wagmi';
-import { NETWORKS } from '../blockchain/config/networks';
+import { NETWORKS } from '../config/chains';
 
 export interface NetworkInfo {
   chainId: number;
